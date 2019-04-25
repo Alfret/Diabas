@@ -1,8 +1,9 @@
-#include <iostream>
 #include <SDL.h>
+#include <iostream>
 
-int main(int, char**) {
-
+int
+main(int, char**)
+{
   std::cout << "diabas\n";
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
