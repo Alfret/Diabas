@@ -4,10 +4,16 @@ set(CMAKE_CXX_STANDARD 17)
 
 
 # Where are our headers? Here!
+# #include "..."
 include_directories(
   source/
-  thirdparty/
-)
+
+  )
+
+# #include <...>
+include_directories(SYSTEM
+  thirdparty/SDL2-2.0.9/include
+  )
 
 
 # Set extra compile flags here
@@ -24,12 +30,16 @@ set(COMMON_SOURCE
   )
 
 
+# SDL
+add_subdirectory(thirdparty/SDL2-2.0.9)
+
+
 # Thidparty
 #aux_source_directory(thirdparty/chif_net/chif_net COMMON_SOURCE)
 
 
 # Our executables / builds
-add_executable(${PROJECT_NAME} diabas ${COMMON_SOURCE})
+add_executable(${PROJECT_NAME} ${COMMON_SOURCE})
 
 
 # Compile definitions?
@@ -40,5 +50,5 @@ add_executable(${PROJECT_NAME} diabas ${COMMON_SOURCE})
 if (WIN32)
   target_link_libraries(${PROJECT_NAME} ws2_32)
 else()
-  target_link_libraries(${PROJECT_NAME} pthread)
+  target_link_libraries(${PROJECT_NAME} pthread SDL2-static)
 endif()
