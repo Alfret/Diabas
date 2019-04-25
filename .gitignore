@@ -30,3 +30,24 @@
 *.exe
 *.out
 *.app
+
+# dirs
+.idea/
+build/
+
+# windows cmake generated files
+.vs/
+*.vcxproj*
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.sln
+
+# windows debug files
+Debug/
+Win32/
+dnet.dir/
+cmake-build-debug/
+
+.ccls-cache/
+compile_commands.json
