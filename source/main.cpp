@@ -1,26 +1,25 @@
-#include <SDL.h>
+#include "app/app.hpp"
+
 #include <iostream>
 
 int
 main(int, char**)
 {
-  std::cout << "diabas\n";
+  using namespace dib;
 
-  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-    std::cout << "SDL_Init Error: " << SDL_GetError() << std::endl;
-    return 1;
-  }
+  Application::Descriptor appDescriptor{};
+  appDescriptor.title = "Diabas";
+  appDescriptor.width = 1280;
+  appDescriptor.height = 720;
+  appDescriptor.api = Graphics::API::D3D11;
 
-  SDL_Window* win =
-    SDL_CreateWindow("Hello World!", 100, 100, 640, 480, SDL_WINDOW_SHOWN);
-  if (win == nullptr) {
-    std::cout << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
-    SDL_Quit();
-    return 1;
-  }
+  Application app(appDescriptor);
+  app.GetGraphics().SetClearColor(100/255.0f, 149/255.0f, 237/255.0f, 1.0f);
 
-  char a;
-  std::cin >> a;
+  const String& deviceName = app.GetGraphics().DeviceName();
+
+  app.Run();
+
 
   return 0;
 }
