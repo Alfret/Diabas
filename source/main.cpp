@@ -1,5 +1,5 @@
 #include "app/app.hpp"
-
+#include <dlog/dlog.hpp>
 #include <iostream>
 
 int
@@ -7,11 +7,20 @@ main(int, char**)
 {
   using namespace dib;
 
+  DLOG_INIT();
+  DLOG_SET_LEVEL(dlog::Level::kVerbose);
+  DLOG_VERBOSE("we can log");
+
   Application::Descriptor appDescriptor{};
   appDescriptor.title = "Diabas";
   appDescriptor.width = 1280;
   appDescriptor.height = 720;
+
+#if defined(DIB_TARGET_WINDOWS)
   appDescriptor.api = Graphics::API::D3D11;
+#elif defined(DIB_TARGET_LINUX)
+  appDescriptor.api = Graphics::API::OpenGL;
+#endif
 
   Application app(appDescriptor);
   app.GetGraphics().SetClearColor(100/255.0f, 149/255.0f, 237/255.0f, 1.0f);

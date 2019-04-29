@@ -7,6 +7,8 @@
 // GraphicsD3D11 Implementation
 // ========================================================================== //
 
+//TODO @Filip fix
+#if defined(DIB_TAREGT_WINDOWS)
 namespace dib {
 
 GraphicsD3D11::GraphicsD3D11(const Graphics::Descriptor& descriptor)
@@ -71,7 +73,7 @@ GraphicsD3D11::Present()
 // -------------------------------------------------------------------------- //
 
 
-void 
+void
 GraphicsD3D11::CreateFactory()
 {
   UINT factoryFlags = 0;
@@ -303,3 +305,4 @@ GraphicsD3D11::ResizeSwapChain(u32 width, u32 height)
 }
 
 }
+#endif

@@ -14,6 +14,7 @@ include_directories(
 include_directories(SYSTEM
   thirdparty
   thirdparty/SDL2-2.0.9/include
+  thirdparty/fmt/include
   )
 
 # Set extra compile flags here
@@ -44,6 +45,9 @@ add_subdirectory(thirdparty/SDL2-2.0.9)
 # Thidparty
 aux_source_directory(thirdparty/alflib COMMON_SOURCE)
 aux_source_directory(thirdparty/glad COMMON_SOURCE)
+aux_source_directory(thirdparty/fmt/src COMMON_SOURCE)
+aux_source_directory(thirdparty/dlog COMMON_SOURCE)
+aux_source_directory(thirdparty/dutil COMMON_SOURCE)
 
 
 # Our executables / builds
@@ -52,8 +56,10 @@ add_executable(${PROJECT_NAME} ${COMMON_SOURCE})
 # Compile definitions?
 add_compile_definitions(${PROJECT_NAME} DIB_DEBUG)
 add_compile_definitions(${PROJECT_NAME} SDL_MAIN_HANDLED)
+add_compile_definitions(${PROJECT_NAME} DLOG_TIMESTAMP DLOG_DATESTAMP)
+#add_compile_definitions(${PROJECT_NAME} DLOG_LOG_TO_FILE)
 if (WIN32)
-  add_compile_definitions(${PROJECT_NAME} DIB_TARGET_WINDOWS)  
+  add_compile_definitions(${PROJECT_NAME} DIB_TARGET_WINDOWS)
 else()
   add_compile_definitions(${PROJECT_NAME} DIB_TARGET_LINUX)
 endif()

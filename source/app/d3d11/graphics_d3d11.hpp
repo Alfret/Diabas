@@ -7,6 +7,8 @@
 // GraphicsD3D11 Declaration
 // ========================================================================== //
 
+//TODO @Filip fix
+#if defined(DIB_TAREGT_WINDOWS)
 namespace dib {
 
 class GraphicsD3D11 : public GraphicsImpl
@@ -83,3 +85,4 @@ private:
 };
 
 }
+#endif
