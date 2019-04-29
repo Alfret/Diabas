@@ -9,7 +9,7 @@ main(int, char**)
 
   DLOG_INIT();
   DLOG_SET_LEVEL(dlog::Level::kVerbose);
-  DLOG_VERBOSE("we can log");
+  DLOG_INFO("¸,ø¤º°`°º¤ø,¸  D I A B A S  ¸,ø¤º°`°º¤ø,¸");
 
   Application::Descriptor appDescriptor{};
   appDescriptor.title = "Diabas";
