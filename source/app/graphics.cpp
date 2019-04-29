@@ -20,9 +20,12 @@ Graphics::Graphics(const Descriptor& descriptor)
     case API::OpenGL:
       mImplementation = new GraphicsOpenGL(descriptor);
       break;
+      //TODO @Filip fix
+#if defined(DIB_TARGET_WINDOWS)
     case API::D3D11:
       mImplementation = new GraphicsD3D11(descriptor);
       break;
+#endif
   }
   DIB_ASSERT(mImplementation != nullptr, "Failed to create graphics interface");
 }

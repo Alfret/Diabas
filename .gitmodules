@@ -1,0 +1,9 @@
+[submodule "thirdparty/dlog"]
+	path = thirdparty/dlog
+	url = https://github.com/dumheter/dlog
+[submodule "thirdparty/fmt"]
+	path = thirdparty/fmt
+	url = https://github.com/fmtlib/fmt
+[submodule "thirdparty/dutil"]
+	path = thirdparty/dutil
+	url = https://github.com/dumheter/dutil
