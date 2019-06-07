@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <string>
 
+using char8 = char;
+
 using s8 = int8_t;
 using u8 = uint8_t;
 using s16 = int16_t;

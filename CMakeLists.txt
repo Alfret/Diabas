@@ -11,10 +11,15 @@ include_directories(
 # #include <...>
 include_directories(SYSTEM
   thirdparty
-  thirdparty/SDL2-2.0.9/include
+  thirdparty/glfw/include
+ # thirdparty/fmt/include
+#  thirdparty/dlog/source
   )
 
 # Set extra compile flags here
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
 if (WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 else ()
@@ -26,11 +31,10 @@ endif ()
 
 # Add our .cpp files, will automatically re-run cmake when new ones are added
 set(COMMON_SOURCE
+  source/game.cpp
   source/main.cpp
   source/app/app.cpp
-  source/app/graphics.cpp
-  source/app/d3d11/graphics_d3d11.cpp
-  source/app/ogl/graphics_ogl.cpp
+  source/app/graphics/graphics.cpp
   source/core/string.cpp
   source/mods/loader.cpp
   source/mods/loader.hpp
@@ -42,14 +46,14 @@ set(CPPTOML_BUILD_EXAMLES OFF)
 include_directories(SYSTEM thirdparty/cpptoml/include)
 add_subdirectory(thirdparty/cpptoml)
 
-# SDL
-add_subdirectory(thirdparty/SDL2-2.0.9)
-
 # dlog
 add_subdirectory(thirdparty/dlog)
 
 # dutil
 add_subdirectory(thirdparty/dutil)
+
+# GLFW
+add_subdirectory(thirdparty/glfw)
 
 # Thidparty
 aux_source_directory(thirdparty/alflib COMMON_SOURCE)
@@ -58,8 +62,8 @@ aux_source_directory(thirdparty/glad COMMON_SOURCE)
 # binary output folder
 set(bin_dir ${PROJECT_SOURCE_DIR}/bin/)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${bin_dir})
-set(CMAKE_BINARY_DIR ${bin_dir})
-set(EXECUTABLE_OUTPUT_PATH ${bin_dir})
+#set(CMAKE_BINARY_DIR ${bin_dir})
+#set(EXECUTABLE_OUTPUT_PATH ${bin_dir})
 
 # Our executables / builds
 add_executable(${PROJECT_NAME} ${COMMON_SOURCE})
@@ -77,7 +81,7 @@ endif()
 
 # Link libraries
 if (WIN32)
-  target_link_libraries(${PROJECT_NAME} d3d11 dxgi dxguid ws2_32 SDL2-static cpptoml dlog dutil)
+  target_link_libraries(${PROJECT_NAME} ws2_32 cpptoml dlog dutil glfw)
 else()
-  target_link_libraries(${PROJECT_NAME} pthread SDL2-static cpptoml dlog dutil)
+  target_link_libraries(${PROJECT_NAME} pthread cpptoml dlog dutil glfw)
 endif()
