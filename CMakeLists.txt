@@ -8,13 +8,6 @@ include_directories(
   source/
   )
 
-# #include <...>
-include_directories(SYSTEM
-  thirdparty
-  thirdparty/glfw/include
- # thirdparty/fmt/include
-#  thirdparty/dlog/source
-  )
 
 # Set extra compile flags here
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
@@ -41,6 +34,7 @@ set(COMMON_SOURCE
   source/mods/mod_info.hpp
   )
 
+
 # TOML
 set(CPPTOML_BUILD_EXAMLES OFF)
 include_directories(SYSTEM thirdparty/cpptoml/include)
@@ -53,9 +47,11 @@ add_subdirectory(thirdparty/dlog)
 add_subdirectory(thirdparty/dutil)
 
 # GLFW
+include_directories(SYSTEM thirdparty/glfw/include)
 add_subdirectory(thirdparty/glfw)
 
 # Thidparty
+include_directories(SYSTEM thirdparty)
 aux_source_directory(thirdparty/alflib COMMON_SOURCE)
 aux_source_directory(thirdparty/glad COMMON_SOURCE)
 
