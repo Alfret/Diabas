@@ -1,6 +1,8 @@
 #include "app/app.hpp"
 #include <dlog/dlog.hpp>
 #include <iostream>
+#include <steam/isteamnetworkingutils.h>
+#include <steam/steamnetworkingsockets.h>
 
 int
 main(int, char**)
@@ -10,6 +12,10 @@ main(int, char**)
   DLOG_INIT();
   DLOG_SET_LEVEL(dlog::Level::kVerbose);
   DLOG_INFO("¸,ø¤º°`°º¤ø,¸  D I A B A S  ¸,ø¤º°`°º¤ø,¸");
+
+  SteamDatagramErrMsg errMsg;
+  if (!GameNetworkingSockets_Init(nullptr, errMsg))
+    DLOG_ERROR("GameNetworkingSockets_Init failed.  {}", errMsg);
 
   Application::Descriptor appDescriptor{};
   appDescriptor.title = "Diabas";

@@ -41,6 +41,9 @@ set(COMMON_SOURCE
 # SDL
 add_subdirectory(thirdparty/SDL2-2.0.9)
 
+# Steam Sockets
+include_directories(SYSTEM thirdparty/gamenetworkingsockets/include)
+add_subdirectory(thirdparty/gamenetworkingsockets)
 
 # Thidparty
 aux_source_directory(thirdparty/alflib COMMON_SOURCE)
@@ -66,7 +69,7 @@ endif()
 
 # Link libraries
 if (WIN32)
-  target_link_libraries(${PROJECT_NAME} d3d11 dxgi dxguid ws2_32 SDL2-static)
+  target_link_libraries(${PROJECT_NAME} d3d11 dxgi dxguid ws2_32 SDL2-static GameNetworkingSockets)
 else()
-  target_link_libraries(${PROJECT_NAME} pthread SDL2-static)
+  target_link_libraries(${PROJECT_NAME} pthread SDL2-static GameNetworkingSockets)
 endif()
