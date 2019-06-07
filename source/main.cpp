@@ -5,7 +5,7 @@
 // ========================================================================== //
 
 #include "app/app.hpp"
-#include <dlog/dlog.hpp>
+#include <dlog.hpp>
 
 int
 main(int, char**)

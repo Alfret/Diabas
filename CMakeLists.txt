@@ -14,6 +14,7 @@ include_directories(SYSTEM
   thirdparty
   thirdparty/glfw/include
   thirdparty/fmt/include
+  thirdparty/dlog/source
   )
 
 # Set extra compile flags here
@@ -37,12 +38,11 @@ set(COMMON_SOURCE
 
 # GLFW
 add_subdirectory(thirdparty/glfw)
+add_subdirectory(thirdparty/dlog)
 
 # Thidparty
 aux_source_directory(thirdparty/alflib COMMON_SOURCE)
 aux_source_directory(thirdparty/glad COMMON_SOURCE)
-aux_source_directory(thirdparty/fmt/src COMMON_SOURCE)
-aux_source_directory(thirdparty/dlog COMMON_SOURCE)
 aux_source_directory(thirdparty/dutil COMMON_SOURCE)
 
 # Our executables / builds
@@ -61,7 +61,7 @@ endif()
 
 # Link libraries
 if (WIN32)
-  target_link_libraries(${PROJECT_NAME} ws2_32 glfw)
+  target_link_libraries(${PROJECT_NAME} ws2_32 dlog glfw)
 else()
-  target_link_libraries(${PROJECT_NAME} pthread glfw)
+  target_link_libraries(${PROJECT_NAME} pthread dlog glfw)
 endif()
