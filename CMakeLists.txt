@@ -7,14 +7,14 @@ set(CMAKE_CXX_STANDARD 17)
 # #include "..."
 include_directories(
   source/
-
   )
 
 # #include <...>
 include_directories(SYSTEM
   thirdparty
-  thirdparty/SDL2-2.0.9/include
+  thirdparty/glfw/include
   thirdparty/fmt/include
+  thirdparty/dlog/source
   )
 
 # Set extra compile flags here
@@ -29,26 +29,21 @@ endif ()
 
 # Add our .cpp files, will automatically re-run cmake when new ones are added
 set(COMMON_SOURCE
+  source/game.cpp
   source/main.cpp
   source/app/app.cpp
-  source/app/graphics.cpp
-  source/app/d3d11/graphics_d3d11.cpp
-  source/app/ogl/graphics_ogl.cpp
+  source/app/graphics/graphics.cpp
   source/core/string.cpp
   )
 
-
-# SDL
-add_subdirectory(thirdparty/SDL2-2.0.9)
-
+# GLFW
+add_subdirectory(thirdparty/glfw)
+add_subdirectory(thirdparty/dlog)
 
 # Thidparty
 aux_source_directory(thirdparty/alflib COMMON_SOURCE)
 aux_source_directory(thirdparty/glad COMMON_SOURCE)
-aux_source_directory(thirdparty/fmt/src COMMON_SOURCE)
-aux_source_directory(thirdparty/dlog COMMON_SOURCE)
 aux_source_directory(thirdparty/dutil COMMON_SOURCE)
-
 
 # Our executables / builds
 add_executable(${PROJECT_NAME} ${COMMON_SOURCE})
@@ -66,7 +61,7 @@ endif()
 
 # Link libraries
 if (WIN32)
-  target_link_libraries(${PROJECT_NAME} d3d11 dxgi dxguid ws2_32 SDL2-static)
+  target_link_libraries(${PROJECT_NAME} ws2_32 dlog glfw)
 else()
-  target_link_libraries(${PROJECT_NAME} pthread SDL2-static)
+  target_link_libraries(${PROJECT_NAME} pthread dlog glfw)
 endif()
