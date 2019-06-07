@@ -3,19 +3,11 @@ project(diabas)
 set(CMAKE_CXX_STANDARD 17)
 
 
-# Where are our headers? Here!
 # #include "..."
 include_directories(
   source/
   )
 
-# #include <...>
-include_directories(SYSTEM
-  thirdparty
-  thirdparty/glfw/include
-  thirdparty/fmt/include
-  thirdparty/dlog/source
-  )
 
 # Set extra compile flags here
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
@@ -37,16 +29,37 @@ set(COMMON_SOURCE
   source/app/app.cpp
   source/app/graphics/graphics.cpp
   source/core/string.cpp
+  source/mods/loader.cpp
+  source/mods/loader.hpp
+  source/mods/mod_info.hpp
   )
 
-# GLFW
-add_subdirectory(thirdparty/glfw)
+
+# TOML
+set(CPPTOML_BUILD_EXAMLES OFF)
+include_directories(SYSTEM thirdparty/cpptoml/include)
+add_subdirectory(thirdparty/cpptoml)
+
+# dlog
 add_subdirectory(thirdparty/dlog)
 
+# dutil
+add_subdirectory(thirdparty/dutil)
+
+# GLFW
+include_directories(SYSTEM thirdparty/glfw/include)
+add_subdirectory(thirdparty/glfw)
+
 # Thidparty
+include_directories(SYSTEM thirdparty)
 aux_source_directory(thirdparty/alflib COMMON_SOURCE)
 aux_source_directory(thirdparty/glad COMMON_SOURCE)
-aux_source_directory(thirdparty/dutil COMMON_SOURCE)
+
+# binary output folder
+set(bin_dir ${PROJECT_SOURCE_DIR}/bin/)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${bin_dir})
+#set(CMAKE_BINARY_DIR ${bin_dir})
+#set(EXECUTABLE_OUTPUT_PATH ${bin_dir})
 
 # Our executables / builds
 add_executable(${PROJECT_NAME} ${COMMON_SOURCE})
@@ -64,7 +77,7 @@ endif()
 
 # Link libraries
 if (WIN32)
-  target_link_libraries(${PROJECT_NAME} ws2_32 dlog glfw)
+  target_link_libraries(${PROJECT_NAME} ws2_32 cpptoml dlog dutil glfw)
 else()
-  target_link_libraries(${PROJECT_NAME} pthread dlog glfw)
+  target_link_libraries(${PROJECT_NAME} pthread cpptoml dlog dutil glfw)
 endif()

@@ -18,10 +18,14 @@ public:
 
   String(const u16* wstring);
 
+  String(std::string string);
+
   String();
 
   const char* CString() const { return mString.c_str(); }
 
+  const std::string& StdString() const { return mString; }
 
+  std::string& StdString() { return mString; }
 };
 }
