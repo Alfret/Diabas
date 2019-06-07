@@ -3,18 +3,15 @@ project(diabas)
 set(CMAKE_CXX_STANDARD 17)
 
 
-# Where are our headers? Here!
 # #include "..."
 include_directories(
   source/
-
   )
 
 # #include <...>
 include_directories(SYSTEM
   thirdparty
   thirdparty/SDL2-2.0.9/include
-  thirdparty/fmt/include
   )
 
 # Set extra compile flags here
@@ -35,20 +32,34 @@ set(COMMON_SOURCE
   source/app/d3d11/graphics_d3d11.cpp
   source/app/ogl/graphics_ogl.cpp
   source/core/string.cpp
+  source/mods/loader.cpp
+  source/mods/loader.hpp
+  source/mods/mod_info.hpp
   )
 
+# TOML
+set(CPPTOML_BUILD_EXAMLES OFF)
+include_directories(SYSTEM thirdparty/cpptoml/include)
+add_subdirectory(thirdparty/cpptoml)
 
 # SDL
 add_subdirectory(thirdparty/SDL2-2.0.9)
 
+# dlog
+add_subdirectory(thirdparty/dlog)
+
+# dutil
+add_subdirectory(thirdparty/dutil)
 
 # Thidparty
 aux_source_directory(thirdparty/alflib COMMON_SOURCE)
 aux_source_directory(thirdparty/glad COMMON_SOURCE)
-aux_source_directory(thirdparty/fmt/src COMMON_SOURCE)
-aux_source_directory(thirdparty/dlog COMMON_SOURCE)
-aux_source_directory(thirdparty/dutil COMMON_SOURCE)
 
+# binary output folder
+set(bin_dir ${PROJECT_SOURCE_DIR}/bin/)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${bin_dir})
+set(CMAKE_BINARY_DIR ${bin_dir})
+set(EXECUTABLE_OUTPUT_PATH ${bin_dir})
 
 # Our executables / builds
 add_executable(${PROJECT_NAME} ${COMMON_SOURCE})
@@ -66,7 +77,7 @@ endif()
 
 # Link libraries
 if (WIN32)
-  target_link_libraries(${PROJECT_NAME} d3d11 dxgi dxguid ws2_32 SDL2-static)
+  target_link_libraries(${PROJECT_NAME} d3d11 dxgi dxguid ws2_32 SDL2-static cpptoml dlog dutil)
 else()
-  target_link_libraries(${PROJECT_NAME} pthread SDL2-static)
+  target_link_libraries(${PROJECT_NAME} pthread SDL2-static cpptoml dlog dutil)
 endif()

@@ -2,6 +2,7 @@
 #include "core/assert.hpp"
 #include "string.hpp"
 #include "alflib/alf_unicode.h"
+#include <utility>
 
 // ========================================================================== //
 // String Implementation
@@ -16,7 +17,7 @@ String::String(const char* string)
   : mString(string) {}
 
 String::String(const u16* wstring)
-{ 
+{
   u32 numBytes;
   AlfBool success = alfUTF16ToUTF8(wstring, &numBytes, nullptr);
   DIB_ASSERT(success, "Failed to convert UTF-16 to UTF-8");
@@ -27,6 +28,9 @@ String::String(const u16* wstring)
   mString = buffer;
   delete[] buffer;
 }
+
+String::String(std::string string)
+    : mString(std::forward<std::string>(string)) {}
 
 String::String()
   : mString()
