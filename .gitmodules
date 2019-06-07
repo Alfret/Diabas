@@ -7,3 +7,6 @@
 [submodule "thirdparty/dutil"]
 	path = thirdparty/dutil
 	url = https://github.com/dumheter/dutil
+[submodule "thirdparty/cppfs"]
+	path = thirdparty/cppfs
+	url = https://github.com/cginternals/cppfs
