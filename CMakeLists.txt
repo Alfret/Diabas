@@ -25,7 +25,6 @@ endif ()
 # Add our .cpp files, will automatically re-run cmake when new ones are added
 set(COMMON_SOURCE
   source/game.cpp
-  source/main.cpp
   source/app/app.cpp
   source/app/graphics/graphics.cpp
   source/core/string.cpp
@@ -34,6 +33,10 @@ set(COMMON_SOURCE
   source/mods/mod_info.hpp
   )
 
+set(TEST_SOURCE
+  tests/main.test.hpp
+  tests/toml.test.cpp
+  )
 
 # TOML
 set(CPPTOML_BUILD_EXAMLES OFF)
@@ -50,6 +53,10 @@ add_subdirectory(thirdparty/dutil)
 include_directories(SYSTEM thirdparty/glfw/include)
 add_subdirectory(thirdparty/glfw)
 
+# Doctest
+include_directories(SYSTEM thirdparty/doctest)
+add_subdirectory(thirdparty/doctest)
+
 # Thidparty
 include_directories(SYSTEM thirdparty)
 aux_source_directory(thirdparty/alflib COMMON_SOURCE)
@@ -62,7 +69,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${bin_dir})
 #set(EXECUTABLE_OUTPUT_PATH ${bin_dir})
 
 # Our executables / builds
-add_executable(${PROJECT_NAME} ${COMMON_SOURCE})
+add_executable(${PROJECT_NAME} source/main.cpp ${COMMON_SOURCE})
+add_executable(test tests/main.test.cpp ${COMMON_SOURCE} ${TEST_SOURCE})
 
 # Compile definitions?
 add_compile_definitions(${PROJECT_NAME} DIB_DEBUG)
@@ -77,7 +85,10 @@ endif()
 
 # Link libraries
 if (WIN32)
-  target_link_libraries(${PROJECT_NAME} ws2_32 cpptoml dlog dutil glfw)
+  set(DIB_LIBS ws2_32 cpptoml dlog dutil glfw)
 else()
-  target_link_libraries(${PROJECT_NAME} pthread cpptoml dlog dutil glfw)
+  set(DIB_LIBS pthread cpptoml dlog dutil glfw)
 endif()
+
+target_link_libraries(${PROJECT_NAME} ${DIB_LIBS})
+target_link_libraries(test doctest ${DIB_LIBS})

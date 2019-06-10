@@ -13,3 +13,6 @@
 [submodule "thirdparty/cppfs"]
 	path = thirdparty/cppfs
 	url = https://github.com/cginternals/cppfs
+[submodule "thirdparty/doctest"]
+	path = thirdparty/doctest
+	url = https://github.com/onqtam/doctest
