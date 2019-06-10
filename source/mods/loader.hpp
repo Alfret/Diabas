@@ -11,8 +11,6 @@ namespace dib
 
 namespace ModLoader{
 
-void Test();
-
 enum class LoadResult {
   kSuccess,
   kParseFail,
