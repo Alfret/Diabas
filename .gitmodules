@@ -10,3 +10,9 @@
 [submodule "thirdparty/gamenetworkingsockets"]
 	path = thirdparty/gamenetworkingsockets
 	url = https://github.com/valvesoftware/gamenetworkingsockets
+[submodule "thirdparty/cpptoml"]
+	path = thirdparty/cpptoml
+	url = https://github.com/skystrife/cpptoml
+[submodule "thirdparty/cppfs"]
+	path = thirdparty/cppfs
+	url = https://github.com/cginternals/cppfs
