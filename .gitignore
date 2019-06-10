@@ -1,28 +1,16 @@
-# Prerequisites
-*.d
+# Project
+local/
+out/
+.vs/
 
 # Compiled Object files
-*.slo
-*.lo
 *.o
 *.obj
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
+# Libraries
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
 *.a
 *.lib
 
@@ -30,24 +18,3 @@
 *.exe
 *.out
 *.app
-
-# dirs
-.idea/
-build/
-
-# windows cmake generated files
-.vs/
-*.vcxproj*
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-*.sln
-
-# windows debug files
-Debug/
-Win32/
-dnet.dir/
-cmake-build-debug/
-
-.ccls-cache/
-compile_commands.json
