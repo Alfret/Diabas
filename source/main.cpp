@@ -8,7 +8,6 @@
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
 #include <dlog.hpp>
-#include "mods/loader.hpp"
 
 int
 main(int, char**)
@@ -20,8 +19,6 @@ main(int, char**)
   SteamDatagramErrMsg errMsg;
   if (!GameNetworkingSockets_Init(nullptr, errMsg))
     DLOG_ERROR("GameNetworkingSockets_Init failed.  {}", errMsg);
-
-  dib::ModLoader::Test();
 
   // Create and run game
   dib::Application::Descriptor appDescriptor{};
