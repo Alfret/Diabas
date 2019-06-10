@@ -81,13 +81,7 @@ endif()
 
 # Link libraries
 if (WIN32)
-<<<<<<< HEAD
-  target_link_libraries(${PROJECT_NAME} d3d11 dxgi dxguid ws2_32 SDL2-static GameNetworkingSockets)
+  target_link_libraries(${PROJECT_NAME} ws2_32 cpptoml dlog dutil glfw GameNetworkingSockets)
 else()
-  target_link_libraries(${PROJECT_NAME} pthread SDL2-static GameNetworkingSockets)
-=======
-  target_link_libraries(${PROJECT_NAME} ws2_32 cpptoml dlog dutil glfw)
-else()
-  target_link_libraries(${PROJECT_NAME} pthread cpptoml dlog dutil glfw)
->>>>>>> development
+  target_link_libraries(${PROJECT_NAME} pthread cpptoml dlog dutil glfw GameNetworkingSockets)
 endif()
