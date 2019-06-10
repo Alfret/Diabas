@@ -15,6 +15,8 @@ include_directories(SYSTEM
   thirdparty/glfw/include
   thirdparty/fmt/include
   thirdparty/dlog/source
+  thirdparty/cppfs/source/cppfs/include
+  lib/chakracore/include
   )
 
 # Set extra compile flags here
@@ -37,7 +39,15 @@ set(COMMON_SOURCE
   source/app/app.cpp
   source/app/graphics/graphics.cpp
   source/core/string.cpp
+  source/script/script.cpp
   )
+
+# ChakraCore
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+link_directories(${CMAKE_SOURCE_DIR}/lib/chakracore/lib/debug)
+elseif ()
+link_directories(${CMAKE_SOURCE_DIR}/lib/chakracore/lib/release)
+endif ()
 
 # GLFW
 add_subdirectory(thirdparty/glfw)
@@ -64,7 +74,7 @@ endif()
 
 # Link libraries
 if (WIN32)
-  target_link_libraries(${PROJECT_NAME} ws2_32 dlog glfw)
+  target_link_libraries(${PROJECT_NAME} ws2_32 dlog glfw ChakraCore)
 else()
   target_link_libraries(${PROJECT_NAME} pthread dlog glfw)
 endif()
