@@ -18,11 +18,7 @@ public:
 
   virtual ~Client();
 
-  /**
-   * Poll and check for new packets. If new packet, store it in packet_out and
-   * return true.
-   */
-  bool Poll(Packet& packet_out);
+  void Poll();
 
   /**
    * The result of the connection attempt will be reported later when polling.

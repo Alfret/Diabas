@@ -14,10 +14,11 @@ Client::~Client()
   CloseConnection();
 }
 
-bool Client::Poll(Packet& packet_out)
+void Client::Poll()
 {
   PollSocketStateChanges();
-  return PollIncomingPackets(packet_out);
+  Packet packet_out{};
+  PollIncomingPackets(packet_out);
 }
 
 void
