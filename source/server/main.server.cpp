@@ -3,6 +3,10 @@
 #include <dlog.hpp>
 #include "network/network.hpp"
 
+#include "network/server.hpp"
+#include <thread>
+#include <chrono>
+
 int
 main(int, char**)
 {
@@ -12,7 +16,15 @@ main(int, char**)
   DLOG_INFO("running as server");
 
   if (!dib::Network::InitNetwork()) {
+    DLOG_ERROR("Failed to init network.");
     return 1;
+  }
+
+  dib::Server server{};
+  server.StartServer(24812);
+  for (;;) {
+    server.Poll();
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
   // Create and run game
@@ -22,6 +34,8 @@ main(int, char**)
   appDescriptor.height = 720;
   dib::Game app(appDescriptor);
   app.Run();
+
+  dib::Network::ShutdownNetwork();
 
   return 0;
 }

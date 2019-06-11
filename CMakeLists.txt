@@ -31,8 +31,15 @@ set(COMMON_SOURCE
   source/mods/loader.cpp
   source/mods/loader.hpp
   source/mods/mod_info.hpp
-  source/network/network.hpp
   source/network/network.cpp
+  source/network/network.hpp
+  source/network/server.cpp
+  source/network/server.hpp
+  source/network/client.cpp
+  source/network/client.hpp
+  source/network/packet.hpp
+  source/network/common.cpp
+  source/network/common.hpp
   )
 
 set(TEST_SOURCE

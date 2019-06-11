@@ -1,7 +1,5 @@
 #include "network.hpp"
 #include <dlog.hpp>
-#include <steam/isteamnetworkingutils.h>
-#include <steam/steamnetworkingsockets.h>
 #include <thread>
 #include <chrono>
 
@@ -15,7 +13,7 @@ DebugOutputCallback(ESteamNetworkingSocketsDebugOutputType type,
   DLOG_VERBOSE("Steam Socket debug output: [{}] [{}]", type, msg);
 }
 
-  bool Network::InitNetwork()
+bool Network::InitNetwork()
 {
   SteamDatagramErrMsg errMsg;
   if (!GameNetworkingSockets_Init(nullptr, errMsg)) {
@@ -24,8 +22,8 @@ DebugOutputCallback(ESteamNetworkingSocketsDebugOutputType type,
   }
 
 
-    auto detail_level = ESteamNetworkingSocketsDebugOutputType::
-      k_ESteamNetworkingSocketsDebugOutputType_Everything;
+  auto detail_level = ESteamNetworkingSocketsDebugOutputType::
+                      k_ESteamNetworkingSocketsDebugOutputType_Everything;
 
   SteamNetworkingUtils()->SetDebugOutputFunction(detail_level, DebugOutputCallback);
 
@@ -34,8 +32,13 @@ DebugOutputCallback(ESteamNetworkingSocketsDebugOutputType type,
 
 void Network::ShutdownNetwork()
 {
+  // Give the sockets time to finish up, not sure if needed.
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
   GameNetworkingSockets_Kill();
 }
+
+// ============================================================ //
+
 
 }

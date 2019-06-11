@@ -1,8 +1,19 @@
 #ifndef NETWORK_HPP_
 #define NETWORK_HPP_
+#include <steam/isteamnetworkingutils.h>
+#include <steam/steamnetworkingsockets.h>
+#include <variant>
+#include "core/types.hpp"
 
 namespace dib
 {
+
+enum class NetworkMode : bool
+{
+  kClient,
+  kServer
+};
+
 class Network
 {
  public:
@@ -20,6 +31,10 @@ class Network
  private:
 
 };
+
+
+
+
 }
 
 #endif//NETWORK_HPP_
