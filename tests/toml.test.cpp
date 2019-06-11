@@ -1,6 +1,5 @@
 #include "main.test.hpp"
 #include <mods/loader.hpp>
-#include <core/string.hpp>
 
 TEST_SUITE("toml") {
   TEST_CASE("basic loading") {
