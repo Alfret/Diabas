@@ -48,10 +48,10 @@ private:
 
 public:
   /** Returns the runtime handle **/
-  JsRuntimeHandle GetRuntime() const { return mRuntime; }
+  static JsRuntimeHandle GetRuntime() { return Instance().mRuntime; }
 
   /** Returns the context handle **/
-  JsContextRef GetContext() const { return mContext; }
+  static JsContextRef GetContext() { return Instance().mContext; }
 
 private:
   /** Returns the singleton script manager instance **/
