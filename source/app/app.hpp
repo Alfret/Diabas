@@ -5,7 +5,6 @@
 #include <GLFW/glfw3.h>
 
 // Diabas headers
-#include "core/string.hpp"
 #include "core/types.hpp"
 #include "core/common.hpp"
 #include "app/key.hpp"

@@ -2,7 +2,9 @@
 CMakeSettings.json
 local/
 out/
+bin/
 .vs/
+CMakeSettings.json
 
 # Compiled Object files
 *.o
