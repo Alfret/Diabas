@@ -7,3 +7,15 @@
 [submodule "thirdparty/dutil"]
 	path = thirdparty/dutil
 	url = https://github.com/dumheter/dutil
+[submodule "thirdparty/cpptoml"]
+	path = thirdparty/cpptoml
+	url = https://github.com/skystrife/cpptoml
+[submodule "thirdparty/cppfs"]
+	path = thirdparty/cppfs
+	url = https://github.com/cginternals/cppfs
+[submodule "thirdparty/doctest"]
+	path = thirdparty/doctest
+	url = https://github.com/onqtam/doctest
+[submodule "thirdparty/alflibcpp"]
+	path = thirdparty/alflibcpp
+	url = https://github.com/Alfret/AlfLibCpp

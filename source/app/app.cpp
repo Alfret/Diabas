@@ -28,7 +28,7 @@ Application::Application(const Descriptor& descriptor)
   glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   mWindow =
-    glfwCreateWindow(mWidth, mHeight, mTitle.CString(), nullptr, nullptr);
+    glfwCreateWindow(mWidth, mHeight, mTitle.GetUTF8(), nullptr, nullptr);
   DIB_ASSERT(mWindow != nullptr, "Failed to create window");
 
   // Setup graphics
