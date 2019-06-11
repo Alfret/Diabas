@@ -2,6 +2,9 @@
 
 #include <cstdint>
 #include <string>
+#include <alflib/string.hpp>
+
+namespace dib {
 
 using char8 = char;
 
@@ -16,3 +19,7 @@ using u64 = uint64_t;
 
 using f32 = float;
 using f64 = double;
+
+using String = alflib::String;
+
+}

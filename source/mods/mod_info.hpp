@@ -1,7 +1,7 @@
 #ifndef MOD_INFO_HPP_
 #define MOD_INFO_HPP_
 
-#include <core/string.hpp>
+#include <core/common.hpp>
 #include <core/types.hpp>
 #include <vector>
 

@@ -27,7 +27,6 @@ set(COMMON_SOURCE
   source/game.cpp
   source/app/app.cpp
   source/app/graphics/graphics.cpp
-  source/core/string.cpp
   source/mods/loader.cpp
   source/mods/loader.hpp
   source/mods/mod_info.hpp
@@ -42,6 +41,11 @@ set(TEST_SOURCE
 set(CPPTOML_BUILD_EXAMLES OFF)
 include_directories(SYSTEM thirdparty/cpptoml/include)
 add_subdirectory(thirdparty/cpptoml)
+
+# alflibcpp
+set(ALFLIBCPP_BUILD_TESTS OFF)
+include_directories(SYSTEM thirdparty/alflibcpp/include)
+add_subdirectory(thirdparty/alflibcpp)
 
 # dlog
 add_subdirectory(thirdparty/dlog)
@@ -59,14 +63,11 @@ add_subdirectory(thirdparty/doctest)
 
 # Thidparty
 include_directories(SYSTEM thirdparty)
-aux_source_directory(thirdparty/alflib COMMON_SOURCE)
 aux_source_directory(thirdparty/glad COMMON_SOURCE)
 
 # binary output folder
 set(bin_dir ${PROJECT_SOURCE_DIR}/bin/)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${bin_dir})
-#set(CMAKE_BINARY_DIR ${bin_dir})
-#set(EXECUTABLE_OUTPUT_PATH ${bin_dir})
 
 # Our executables / builds
 add_executable(${PROJECT_NAME} source/main.cpp ${COMMON_SOURCE})
@@ -85,9 +86,9 @@ endif()
 
 # Link libraries
 if (WIN32)
-  set(DIB_LIBS ws2_32 cpptoml dlog dutil glfw)
+  set(DIB_LIBS ws2_32 cpptoml dlog dutil glfw alflibcpp)
 else()
-  set(DIB_LIBS pthread cpptoml dlog dutil glfw)
+  set(DIB_LIBS pthread cpptoml dlog dutil glfw alflibcpp)
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${DIB_LIBS})

@@ -6,7 +6,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "core/string.hpp"
+#include <alflib/string.hpp>
 #include "core/types.hpp"
 
 // ========================================================================== //
