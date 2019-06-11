@@ -27,7 +27,6 @@ set(COMMON_SOURCE
   source/game.cpp
   source/app/app.cpp
   source/app/graphics/graphics.cpp
-  source/core/string.cpp
   source/mods/loader.cpp
   source/mods/loader.hpp
   source/mods/mod_info.hpp
@@ -52,6 +51,11 @@ set(CPPTOML_BUILD_EXAMLES OFF)
 include_directories(SYSTEM thirdparty/cpptoml/include)
 add_subdirectory(thirdparty/cpptoml)
 
+# alflibcpp
+set(ALFLIBCPP_BUILD_TESTS OFF)
+include_directories(SYSTEM thirdparty/alflibcpp/include)
+add_subdirectory(thirdparty/alflibcpp)
+
 # dlog
 add_subdirectory(thirdparty/dlog)
 
@@ -72,7 +76,6 @@ add_subdirectory(thirdparty/doctest)
 
 # Thidparty
 include_directories(SYSTEM thirdparty)
-aux_source_directory(thirdparty/alflib COMMON_SOURCE)
 aux_source_directory(thirdparty/glad COMMON_SOURCE)
 
 # binary output folder
@@ -98,9 +101,9 @@ endif()
 
 # Link libraries
 if (WIN32)
-  set(DIB_LIBS ws2_32 cpptoml dlog dutil GameNetworkingSockets)
+  set(DIB_LIBS ws2_32 cpptoml dlog dutil GameNetworkingSockets alflibcpp)
 else()
-  set(DIB_LIBS pthread cpptoml dlog dutil GameNetworkingSockets)
+  set(DIB_LIBS pthread cpptoml dlog dutil GameNetworkingSockets alflibcpp)
 endif()
 
 target_link_libraries(${PROJECT_NAME} glfw ${DIB_LIBS})

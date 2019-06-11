@@ -37,17 +37,17 @@ Load(const String& file_path)
   LoadResult result = LoadResult::kSuccess;
   ModInfo mod_info{};
 
-  DLOG_VERBOSE("parsing [{}]", file_path.StdString());
+  DLOG_VERBOSE("parsing [{}]", file_path.GetStdString());
 
   try {
 
     // Parse the TOML file
     std::shared_ptr<cpptoml::table> toml;
     try {
-      toml = cpptoml::parse_file(file_path.StdString());
+      toml = cpptoml::parse_file(file_path.GetStdString());
     } catch (const cpptoml::parse_exception& e) {
       DLOG_WARNING("failed to parse [{}] with error [{}]",
-                   file_path.StdString(), e.what());
+                   file_path.GetStdString(), e.what());
       result = LoadResult::kParseFail;
       goto load_return;
     }
@@ -57,7 +57,7 @@ Load(const String& file_path)
 
     auto maybe_name = info->get_as<std::string>("name");
     if (!maybe_name) {
-      DLOG_WARNING("failed to parse name in [{}]", file_path.StdString());
+      DLOG_WARNING("failed to parse name in [{}]", file_path.GetStdString());
       result = LoadResult::kParseFail;
       goto load_return;
     }
@@ -65,7 +65,7 @@ Load(const String& file_path)
 
     auto maybe_authors = info->get_array_of<std::string>("authors");
     if (!maybe_authors) {
-      DLOG_WARNING("failed to parse authors in [{}]", file_path.StdString());
+      DLOG_WARNING("failed to parse authors in [{}]", file_path.GetStdString());
       result = LoadResult::kParseFail;
       goto load_return;
     }
@@ -75,7 +75,7 @@ Load(const String& file_path)
 
     auto maybe_version_array = info->get_array_of<s64>("version");
     if (!maybe_version_array || maybe_version_array->size() != 3) {
-      DLOG_WARNING("failed to parse version in [{}]", file_path.StdString());
+      DLOG_WARNING("failed to parse version in [{}]", file_path.GetStdString());
       result = LoadResult::kParseFail;
       goto load_return;
     }
