@@ -3,7 +3,8 @@
 // ========================================================================== //
 // Game Implementation
 // ========================================================================== //
-
+#include <chrono>
+#include <thread>
 namespace dib
 {
 
@@ -25,6 +26,8 @@ Game::Update(f64 delta)
   if (IsKeyDown(Key::KEY_ESCAPE)) {
     Exit();
   }
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
 // -------------------------------------------------------------------------- //
