@@ -9,10 +9,13 @@ include_directories(
   )
 
 
+# binary output folder
+set(out_dir ${PROJECT_SOURCE_DIR}/out)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${out_dir}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${out_dir}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${out_dir}/bin)
+
 # Set extra compile flags here
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
 if (WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 else ()
@@ -20,7 +23,6 @@ else ()
 endif ()
 
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDIB_DEBUG")
-
 
 # Add our .cpp files, will automatically re-run cmake when new ones are added
 set(COMMON_SOURCE
@@ -30,6 +32,8 @@ set(COMMON_SOURCE
   source/mods/loader.cpp
   source/mods/loader.hpp
   source/mods/mod_info.hpp
+  source/mods/mod_info.cpp
+  source/mods/mod.hpp
   source/network/network.cpp
   source/network/network.hpp
   source/network/server.cpp
@@ -44,6 +48,7 @@ set(COMMON_SOURCE
 set(TEST_SOURCE
   tests/main.test.hpp
   tests/toml.test.cpp
+  tests/mods.test.cpp
   )
 
 # TOML
@@ -77,10 +82,6 @@ add_subdirectory(thirdparty/doctest)
 # Thidparty
 include_directories(SYSTEM thirdparty)
 aux_source_directory(thirdparty/glad COMMON_SOURCE)
-
-# binary output folder
-set(bin_dir ${PROJECT_SOURCE_DIR}/bin/)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${bin_dir})
 
 # Our executables / builds
 add_executable(${PROJECT_NAME} source/main.cpp ${COMMON_SOURCE})

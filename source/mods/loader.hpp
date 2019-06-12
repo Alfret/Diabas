@@ -4,24 +4,21 @@
 #include <tuple>
 #include <vector>
 #include <core/types.hpp>
-#include <mods/mod_info.hpp>
+#include "mods/mod_info.hpp"
+#include <alflib/file/file.hpp>
+#include <dlog.hpp>
+#include "mods/mod.hpp"
 
-namespace dib
+namespace dib::mods
 {
 
-namespace ModLoader{
+bool ExcludedPath(const alflib::Path& path);
 
-enum class LoadResult {
-  kSuccess,
-  kParseFail,
-  kInternalFail
-};
+/**
+ * Load all mods from the mods folder.
+ */
+std::vector<Mod> LoadMods(const alflib::Path& mods_folder_path);
 
-std::string LoadResultToString(const LoadResult load_result);
-
-std::tuple<LoadResult, ModInfo> Load(const String& file_path);
-
-}
 }
 
 #endif//LOADER_HPP_

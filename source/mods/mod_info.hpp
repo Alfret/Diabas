@@ -5,8 +5,13 @@
 #include <core/types.hpp>
 #include <vector>
 
-namespace dib
+namespace dib::mods
 {
+
+// ============================================================ //
+// Structures
+// ============================================================ //
+
 struct ModVersion
 {
   s32 version_major;
@@ -27,6 +32,22 @@ struct ModInfo
   ModVersion version;
   std::vector<ModDependency> dependencies;
 };
+
+enum class ParseResult
+{
+  kSuccess,
+  kParseFail,
+  kInternalFail
+};
+
+// ============================================================ //
+// Functions
+// ============================================================ //
+
+std::string ParseResultToString(const ParseResult load_result);
+
+std::tuple<ParseResult, ModInfo>
+Parse(const String& file_path);
 }
 
 #endif//MOD_INFO_HPP_
