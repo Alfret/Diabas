@@ -1,0 +1,6 @@
+[info]
+name = "test"
+authors = ["Christoffer Gustafsson", "Filip Björklund"]
+version = [17, 1337, 30002000100] #[major, minor, patch]
+#dependencies = [ ["name", [0, 1, 0] ], ... ]
+
