@@ -10,13 +10,13 @@
 namespace dib
 {
 
-class Client : private ISteamNetworkingSocketsCallbacks
+class Client : public ISteamNetworkingSocketsCallbacks
 {
 public:
 
   Client();
 
-  virtual ~Client();
+  virtual ~Client() final;
 
   void Poll();
 
@@ -28,6 +28,8 @@ public:
   void CloseConnection();
 
   SendResult SendPacket(const Packet& packet, const SendStrategy send_strategy);
+
+  NetworkState GetNetworkState() const { return network_state_; }
 
  private:
 
@@ -41,6 +43,7 @@ public:
 private:
   HSteamNetConnection connection_;
   ISteamNetworkingSockets* socket_interface_;
+  NetworkState network_state_;
 };
 }
 

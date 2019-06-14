@@ -26,9 +26,11 @@ endif ()
 
 # Add our .cpp files, will automatically re-run cmake when new ones are added
 set(COMMON_SOURCE
-  source/game.cpp
   source/app/app.cpp
   source/app/graphics/graphics.cpp
+  source/game/game.cpp
+  source/game/world.cpp
+  source/game/world.hpp
   source/mods/loader.cpp
   source/mods/loader.hpp
   source/mods/mod_info.hpp
@@ -43,6 +45,8 @@ set(COMMON_SOURCE
   source/network/packet.hpp
   source/network/common.cpp
   source/network/common.hpp
+  source/network/side.cpp
+  source/network/side.hpp
   )
 
 set(TEST_SOURCE
@@ -85,7 +89,7 @@ aux_source_directory(thirdparty/glad COMMON_SOURCE)
 
 # Our executables / builds
 add_executable(${PROJECT_NAME} source/main.cpp ${COMMON_SOURCE})
-add_executable(server source/server/main.server.cpp ${COMMON_SOURCE})
+add_executable(server source/main.cpp ${COMMON_SOURCE})
 add_executable(test tests/main.test.cpp ${COMMON_SOURCE} ${TEST_SOURCE})
 
 # Compile definitions?
@@ -99,6 +103,8 @@ if (WIN32)
 else()
   add_compile_definitions( DIB_TARGET_LINUX)
 endif()
+
+target_compile_definitions(server PRIVATE DIB_IS_SERVER)
 
 # Link libraries
 if (WIN32)

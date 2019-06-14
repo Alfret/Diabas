@@ -1,5 +1,3 @@
-#include "game.hpp"
-
 // ========================================================================== //
 // Main
 // ========================================================================== //
@@ -7,6 +5,7 @@
 #include "app/app.hpp"
 #include "network/network.hpp"
 #include <dlog.hpp>
+#include "game/game.hpp"
 
 int
 main(int, char**)

@@ -9,6 +9,13 @@
 namespace dib
 {
 
+enum class NetworkState
+{
+  kClientOffline = 0,
+  kServer,
+  kClientOnline
+};
+
 enum class SendResult
 {
   kSuccess = 0,
