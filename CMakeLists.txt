@@ -72,8 +72,19 @@ add_subdirectory(thirdparty/dlog)
 add_subdirectory(thirdparty/dutil)
 
 # Steam Sockets
+if (WIN32)
+  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    link_directories(${CMAKE_SOURCE_DIR}/lib/gamenetworkingsockets/lib/debug)
+  elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    link_directories(${CMAKE_SOURCE_DIR}/lib/gamenetworkingsockets/lib/relwithdebinfo)
+  else ()
+    link_directories(${CMAKE_SOURCE_DIR}/lib/gamenetworkingsockets/lib/release)
+  endif ()
+  include_directories(SYSTEM lib/gamenetworkingsockets/include)
+else ()
 include_directories(SYSTEM thirdparty/gamenetworkingsockets/include)
 add_subdirectory(thirdparty/gamenetworkingsockets)
+endif ()
 
 # GLFW
 include_directories(SYSTEM thirdparty/glfw/include)
@@ -108,7 +119,7 @@ target_compile_definitions(server PRIVATE DIB_IS_SERVER)
 
 # Link libraries
 if (WIN32)
-  set(DIB_LIBS ws2_32 cpptoml dlog dutil GameNetworkingSockets alflibcpp)
+  set(DIB_LIBS ws2_32 cpptoml dlog dutil gamenetworkingsockets alflibcpp)
 else()
   set(DIB_LIBS pthread cpptoml dlog dutil GameNetworkingSockets alflibcpp)
 endif()
