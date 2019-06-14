@@ -1,12 +1,11 @@
 #ifndef NETWORK_HPP_
 #define NETWORK_HPP_
+#include "core/types.hpp"
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
 #include <variant>
-#include "core/types.hpp"
 
-namespace dib
-{
+namespace dib {
 
 enum class NetworkMode : bool
 {
@@ -16,8 +15,7 @@ enum class NetworkMode : bool
 
 class Network
 {
- public:
-
+public:
   /**
    * Call once at startup.
    */
@@ -28,13 +26,9 @@ class Network
    */
   static void ShutdownNetwork();
 
- private:
-
+private:
 };
-
-
-
 
 }
 
-#endif//NETWORK_HPP_
+#endif // NETWORK_HPP_

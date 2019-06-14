@@ -2,12 +2,11 @@
 #define COMMON_HPP_
 
 #include "core/types.hpp"
+#include "network/packet.hpp"
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
-#include "network/packet.hpp"
 
-namespace dib
-{
+namespace dib {
 
 enum class NetworkState
 {
@@ -39,7 +38,8 @@ enum class SendStrategy : int
 namespace Common {
 
 SendResult
-SendPacket(const Packet& packet, const SendStrategy send_strategy,
+SendPacket(const Packet& packet,
+           const SendStrategy send_strategy,
            const HSteamNetConnection connection,
            ISteamNetworkingSockets* socket_interface);
 
@@ -47,4 +47,4 @@ SendPacket(const Packet& packet, const SendStrategy send_strategy,
 
 }
 
-#endif//COMMON_HPP_
+#endif // COMMON_HPP_

@@ -2,18 +2,16 @@
 #define CLIENT_HPP_
 
 #include "core/types.hpp"
+#include "network/common.hpp"
+#include "network/packet.hpp"
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
-#include "network/packet.hpp"
-#include "network/common.hpp"
 
-namespace dib
-{
+namespace dib {
 
 class Client : public ISteamNetworkingSocketsCallbacks
 {
 public:
-
   Client();
 
   virtual ~Client() final;
@@ -31,14 +29,13 @@ public:
 
   NetworkState GetNetworkState() const { return network_state_; }
 
- private:
-
+private:
   void PollSocketStateChanges();
 
   bool PollIncomingPackets(Packet& packet_out);
 
   virtual void OnSteamNetConnectionStatusChanged(
-      SteamNetConnectionStatusChangedCallback_t* status) override;
+    SteamNetConnectionStatusChangedCallback_t* status) override;
 
 private:
   HSteamNetConnection connection_;
@@ -47,4 +44,4 @@ private:
 };
 }
 
-#endif//CLIENT_HPP_
+#endif // CLIENT_HPP_

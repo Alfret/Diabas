@@ -2,15 +2,14 @@
 #include "core/fixed_time_update.hpp"
 #include <functional>
 
-namespace dib
-{
+namespace dib {
 
 /**
  * Note, ordering in this file is weird because of template specialization
  * initialization requirements.
  */
 
-template <>
+template<>
 void
 World<Side::kClient>::Update()
 {
@@ -30,7 +29,7 @@ World<Side::kServer>::Update()
   FixedTimeUpdate(kNetTicksPerSec, callback_fn);
 }
 
-template <>
+template<>
 void
 World<Side::kClient>::ConnectToServer()
 {
@@ -40,7 +39,7 @@ World<Side::kClient>::ConnectToServer()
   client->Connect(addr);
 }
 
-template <>
+template<>
 void
 World<Side::kServer>::StartServer()
 {
@@ -48,9 +47,9 @@ World<Side::kServer>::StartServer()
   server->StartServer(kPort);
 }
 
-template <>
+template<>
 World<Side::kClient>::World()
-    : base_(new Client())
+  : base_(new Client())
 {
   ConnectToServer();
 }
@@ -76,7 +75,7 @@ World<Side::kServer>::~World()
   server->~Server();
 }
 
-template <>
+template<>
 NetworkState
 World<Side::kClient>::GetNetworkState() const
 {

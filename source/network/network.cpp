@@ -1,10 +1,9 @@
 #include "network.hpp"
+#include <chrono>
 #include <dlog.hpp>
 #include <thread>
-#include <chrono>
 
-namespace dib
-{
+namespace dib {
 
 static void
 DebugOutputCallback(ESteamNetworkingSocketsDebugOutputType type,
@@ -13,7 +12,8 @@ DebugOutputCallback(ESteamNetworkingSocketsDebugOutputType type,
   DLOG_VERBOSE("Steam Socket debug output: [{}] [{}]", type, msg);
 }
 
-bool Network::InitNetwork()
+bool
+Network::InitNetwork()
 {
   SteamDatagramErrMsg errMsg;
   if (!GameNetworkingSockets_Init(nullptr, errMsg)) {
@@ -21,16 +21,17 @@ bool Network::InitNetwork()
     return false;
   }
 
-
   auto detail_level = ESteamNetworkingSocketsDebugOutputType::
-                      k_ESteamNetworkingSocketsDebugOutputType_Everything;
+    k_ESteamNetworkingSocketsDebugOutputType_Everything;
 
-  SteamNetworkingUtils()->SetDebugOutputFunction(detail_level, DebugOutputCallback);
+  SteamNetworkingUtils()->SetDebugOutputFunction(detail_level,
+                                                 DebugOutputCallback);
 
   return true;
 }
 
-void Network::ShutdownNetwork()
+void
+Network::ShutdownNetwork()
 {
   // Give the sockets time to finish up, not sure if needed.
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -39,6 +40,5 @@ void Network::ShutdownNetwork()
 }
 
 // ============================================================ //
-
 
 }

@@ -11,11 +11,10 @@
 // ========================================================================== //
 #include <chrono>
 #include <thread>
-namespace dib
-{
+namespace dib {
 
 Game::Game(const Descriptor& descriptor)
-    : Application(descriptor)
+  : Application(descriptor)
 {
   GetGraphics().SetClearColor(100 / 255.0f, 149 / 255.0f, 237 / 255.0f, 1.0f);
   DLOG_INFO("running as {}", SideToString(world.GetSide()));
@@ -23,9 +22,7 @@ Game::Game(const Descriptor& descriptor)
 
 // -------------------------------------------------------------------------- //
 
-Game::~Game() {
-
-}
+Game::~Game() {}
 
 // -------------------------------------------------------------------------- //
 
@@ -44,7 +41,7 @@ Game::Update(f64 delta)
 // -------------------------------------------------------------------------- //
 
 void
-Game::Render() {}
-
+Game::Render()
+{}
 
 }

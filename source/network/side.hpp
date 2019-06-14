@@ -3,8 +3,7 @@
 
 #include <string>
 
-namespace dib
-{
+namespace dib {
 
 enum class Side : bool
 {
@@ -16,4 +15,4 @@ std::string
 SideToString(const Side side);
 }
 
-#endif//SIDE_HPP_
+#endif // SIDE_HPP_

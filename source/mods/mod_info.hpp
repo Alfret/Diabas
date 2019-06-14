@@ -5,8 +5,7 @@
 #include <core/types.hpp>
 #include <vector>
 
-namespace dib::mods
-{
+namespace dib::mods {
 
 // ============================================================ //
 // Structures
@@ -44,10 +43,11 @@ enum class ParseResult
 // Functions
 // ============================================================ //
 
-std::string ParseResultToString(const ParseResult load_result);
+std::string
+ParseResultToString(const ParseResult load_result);
 
 std::tuple<ParseResult, ModInfo>
 Parse(const String& file_path);
 }
 
-#endif//MOD_INFO_HPP_
+#endif // MOD_INFO_HPP_

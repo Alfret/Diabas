@@ -1,22 +1,21 @@
 #include "client.hpp"
 #include <dlog.hpp>
 
-namespace dib
-{
+namespace dib {
 
 Client::Client()
-    : connection_(k_HSteamNetConnection_Invalid),
-      socket_interface_(SteamNetworkingSockets()),
-      network_state_(NetworkState::kClientOffline)
-{
-}
+  : connection_(k_HSteamNetConnection_Invalid)
+  , socket_interface_(SteamNetworkingSockets())
+  , network_state_(NetworkState::kClientOffline)
+{}
 
 Client::~Client()
 {
   CloseConnection();
 }
 
-void Client::Poll()
+void
+Client::Poll()
 {
   PollSocketStateChanges();
   Packet packet_out{};
@@ -45,7 +44,8 @@ Client::CloseConnection()
 SendResult
 Client::SendPacket(const Packet& packet, const SendStrategy send_strategy)
 {
-  return Common::SendPacket(packet, send_strategy, connection_, socket_interface_);
+  return Common::SendPacket(
+    packet, send_strategy, connection_, socket_interface_);
 }
 
 void

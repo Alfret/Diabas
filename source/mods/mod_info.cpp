@@ -2,8 +2,7 @@
 #include <cpptoml.h>
 #include <dlog.hpp>
 
-namespace dib::mods
-{
+namespace dib::mods {
 
 std::string
 ParseResultToString(const ParseResult load_result)
@@ -35,7 +34,8 @@ Parse(const String& file_path)
       toml = cpptoml::parse_file(file_path.GetStdString());
     } catch (const cpptoml::parse_exception& e) {
       DLOG_WARNING("failed to parse [{}] with error [{}]",
-                   file_path.GetStdString(), e.what());
+                   file_path.GetStdString(),
+                   e.what());
       result = ParseResult::kParseFail;
       goto load_return;
     }
