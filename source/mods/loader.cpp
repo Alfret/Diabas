@@ -5,37 +5,20 @@
 namespace dib::mods
 {
 
-bool
-ExcludedPath(const alflib::Path& path)
-{
-  if (path == alflib::Path{ "." } || path == alflib::Path{ ".." }) {
-    return true;
-  }
-  return false;
-}
-
 std::vector<Mod> LoadMods(const alflib::Path& mods_folder_path)
 {
   std::vector<Mod> mods;
 
   const alflib::File mods_folder(mods_folder_path);
-  const alflib::ArrayList<alflib::File> mods_folders = mods_folder.Enumerate();
+  const alflib::ArrayList<alflib::File> mods_folders = mods_folder.Enumerate(false);
 
   DLOG_INFO("Loading mods.");
   for (u32 i=0; i<mods_folders.GetSize(); i++) {
-    if (ExcludedPath(mods_folders[i].GetPath())) {
-      continue;
-    }
-
     const alflib::File mod_folder = mods_folder.Open(mods_folders[i].GetPath());
-    const alflib::ArrayList<alflib::File> mod_folders = mod_folder.Enumerate();
+    const alflib::ArrayList<alflib::File> mod_folders = mod_folder.Enumerate(false);
     for (u32 c=0; c<mod_folders.GetSize(); c++) {
-      if (ExcludedPath(mod_folders[c].GetPath())) {
-        continue;
-      }
-
       // Mod top directory must contain a .toml file that describes it.
-      if (mod_folders[c].GetPath().GetExtensionString() != ".toml") {
+      if (mod_folders[c].GetPath().GetExtension() != alflib::Path::Extension::kToml) {
         continue;
       }
 
@@ -68,8 +51,8 @@ std::vector<Mod> LoadMods(const alflib::Path& mods_folder_path)
       }
 
       // check if scripts folder empty
-      const alflib::ArrayList<alflib::File> scripts = scripts_folder.Enumerate();
-      if (scripts_folder.GetSize() < 3) {
+      const alflib::ArrayList<alflib::File> scripts = scripts_folder.Enumerate(false);
+      if (scripts.GetSize() < 1) {
         DLOG_WARNING("no script files found for [{}]",
                      mods_folders[i].GetPath().GetName());
         continue;
@@ -78,9 +61,6 @@ std::vector<Mod> LoadMods(const alflib::Path& mods_folder_path)
       // store all the script files
       s32 js_files_found = 0;
       for(u32 s=0; s<scripts.GetSize(); s++) {
-        if (ExcludedPath(scripts[s].GetPath())) {
-          continue;
-        }
         if (scripts[s].GetPath().GetExtensionString() == ".js") {
           ++js_files_found;
           alflib::File script = scripts_folder.Open(scripts[s].GetPath());
