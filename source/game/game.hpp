@@ -9,9 +9,6 @@
 
 namespace dib {
 
-void
-Ayy();
-
 /** Game class**/
 class Game : public Application
 {
