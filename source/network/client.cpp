@@ -5,7 +5,9 @@ namespace dib
 {
 
 Client::Client()
-    : socket_interface_(SteamNetworkingSockets())
+    : connection_(k_HSteamNetConnection_Invalid),
+      socket_interface_(SteamNetworkingSockets()),
+      network_state_(NetworkState::kClientOffline)
 {
 }
 
@@ -37,6 +39,7 @@ Client::CloseConnection()
     socket_interface_->CloseConnection(connection_, 0, nullptr, false);
     connection_ = k_HSteamNetConnection_Invalid;
   }
+  network_state_ = NetworkState::kClientOffline;
 }
 
 SendResult
@@ -67,8 +70,10 @@ Client::PollIncomingPackets(Packet& packet_out)
     retval = true;
 
   } else if (msg_count < 0) {
-    DLOG_ERROR("failed to check for messages");
-    // TODO close connection and retry to connect?
+    if (network_state_ == NetworkState::kClientOnline) {
+      DLOG_ERROR("failed to check for messages");
+      // TODO close connection and retry to connect?
+    }
   }
 
   return retval;
@@ -111,6 +116,7 @@ Client::OnSteamNetConnectionStatusChanged(
 
     case k_ESteamNetworkingConnectionState_Connected: {
       DLOG_INFO("connected");
+      network_state_ = NetworkState::kClientOnline;
       break;
     }
 

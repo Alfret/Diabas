@@ -41,12 +41,12 @@ struct ClientConnection {
 
 // ============================================================ //
 
-class Server : private ISteamNetworkingSocketsCallbacks
+class Server : public ISteamNetworkingSocketsCallbacks
 {
 public:
   Server();
 
-  ~Server();
+  virtual ~Server() final;
 
   void Poll();
 
@@ -54,7 +54,7 @@ public:
 
   void CloseConnection(HSteamNetConnection connection);
 
-
+  NetworkState GetNetworkState() const { return network_state_; }
 
 private:
 
@@ -77,6 +77,7 @@ private:
   ISteamNetworkingSockets* socket_interface_;
   std::vector<ClientConnection> clients_{};
   Packet packet_{};
+  NetworkState network_state_ = NetworkState::kServer;
 };
 }
 

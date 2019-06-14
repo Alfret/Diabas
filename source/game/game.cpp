@@ -18,13 +18,13 @@ Game::Game(const Descriptor& descriptor)
     : Application(descriptor)
 {
   GetGraphics().SetClearColor(100 / 255.0f, 149 / 255.0f, 237 / 255.0f, 1.0f);
-  ConnectToServer();
+  DLOG_INFO("running as {}", SideToString(world.GetSide()));
 }
 
 // -------------------------------------------------------------------------- //
 
 Game::~Game() {
-  client_.CloseConnection();
+
 }
 
 // -------------------------------------------------------------------------- //
@@ -36,7 +36,7 @@ Game::Update(f64 delta)
     Exit();
   }
 
-  UpdateNetwork();
+  world.Update();
 
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
@@ -46,18 +46,5 @@ Game::Update(f64 delta)
 void
 Game::Render() {}
 
-void
-Game::UpdateNetwork() {
-  static const auto callback_fn =
-      std::bind(&Client::Poll, &client_);
-
-  FixedTimeUpdate(kNetTicksPerSec, callback_fn);
-}
-
-void Game::ConnectToServer() {
-  SteamNetworkingIPAddr addr{};
-  addr.SetIPv4(0x7F000001, 24812);
-  client_.Connect(addr);
-}
 
 }

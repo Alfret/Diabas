@@ -1,19 +1,16 @@
 #pragma once
 
 #include "app/app.hpp"
-#include "core/fixed_time_update.hpp"
-#include "network/client.hpp"
+#include "game/world.hpp"
 
 // ========================================================================== //
 // Game Declaration
 // ========================================================================== //
 
+namespace dib {
 
-
-namespace dib
-{
-
-void Ayy();
+void
+Ayy();
 
 /** Game class**/
 class Game : public Application
@@ -27,14 +24,14 @@ public:
 
   void Render() override;
 
- private:
-   void UpdateNetwork();
-
-  void ConnectToServer();
-
- private:
-  static constexpr s64 kNetTicksPerSec = 32;
-   Client client_{};
+private:
+#ifdef DIB_IS_SERVER
+#define DIB_SIDE Side::kServer
+#else
+#define DIB_SIDE Side::kClient
+#endif
+  World<DIB_SIDE> world;
+#undef DIB_SIDE
 };
 
 }
