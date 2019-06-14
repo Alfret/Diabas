@@ -4,8 +4,9 @@
 // Headers
 // ========================================================================== //
 
+#include "alflib/file/file.hpp"
+#include "core/types.hpp"
 #include <ChakraCore.h>
-#include "core/string.hpp"
 
 // ========================================================================== //
 // Script Declaration
@@ -16,47 +17,83 @@ namespace dib {
 /** Script **/
 class Script
 {
-private:
+public:
+  /** Script-related errors **/
+  enum class Error
+  {
+    /** No error **/
+    kNoError,
+    /** Unknown error **/
+    kUnknownError,
+    /** Script file could not be found **/
+    kScriptNotFound,
+    /** Main class could not be found **/
+    kMainClassNotFound,
+    /** Compilation error **/
+    kCompileError
+  };
 
+protected:
+  /** File **/
+  alflib::File mFile;
+  /** Source **/
+  String mSource;
+  /** Script **/
+  JsValueRef mScript;
+  /** Serialized script **/
+  JsValueRef mScriptBuffer;
 
 public:
-  explicit Script(const String& path);
+  /** Load a script from file **/
+  explicit Script(const alflib::File& file);
 
-  void Run(const String& function);
+  /** Serialize/Compile the script **/
+  Error Compile();
+
+  /** Returns whether script is compiled **/
+  bool IsCompiled() const { return mScriptBuffer != JS_INVALID_REFERENCE; }
 
 };
 
 }
 
 // ========================================================================== //
-// ScriptManager Declaration
+// ModScript Declaration
 // ========================================================================== //
 
 namespace dib {
 
-/** Script manager **/
-class ScriptManager
+/** Script that represents the main 'Mod' script **/
+class ModScript : Script
 {
 private:
-  /** Runtime **/
-  JsRuntimeHandle mRuntime;
-  /** Javascript context **/
-  JsContextRef mContext;
+  /** 'Mod' class name **/
+  String mClassName;
+  /** Mod object instance **/
+  JsValueRef mInstance;
 
-private:
-  ScriptManager();
+  /** 'init' function **/
+  JsValueRef mInitFunction;
+  /** 'update' function **/
+  JsValueRef mUpdateFunction;
 
 public:
-  /** Returns the runtime handle **/
-  static JsRuntimeHandle GetRuntime() { return Instance().mRuntime; }
+  /** Load mod script from path. The name of the main 'Mod' class must be
+   * specified so that it can be instantiated **/
+  ModScript(const alflib::File& file, const String& className);
 
-  /** Returns the context handle **/
-  static JsContextRef GetContext() { return Instance().mContext; }
+  /** Load the script **/
+  Error Load();
+
+  /** Call the 'init' function in the mod **/
+  void Init() const;
+
+  /** Call the 'update' function in the mod **/
+  void Update(f32 delta) const;
 
 private:
-  /** Returns the singleton script manager instance **/
-  static ScriptManager& Instance();
-
+  /** Load a function from the instance **/
+  JsErrorCode LoadFunction(const String& name, JsValueRef* function) const;
 };
 
 }

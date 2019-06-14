@@ -19,9 +19,6 @@ include_directories(SYSTEM
   )
 
 # Set extra compile flags here
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
 if (WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 else ()
@@ -36,6 +33,7 @@ set(COMMON_SOURCE
   source/game.cpp
   source/app/app.cpp
   source/app/graphics/graphics.cpp
+  source/script/environment.cpp
   source/script/script.cpp
   source/mods/loader.cpp
   source/mods/loader.hpp
@@ -45,7 +43,7 @@ set(COMMON_SOURCE
 # ChakraCore
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 link_directories(${CMAKE_SOURCE_DIR}/lib/chakracore/lib/debug)
-elseif ()
+else ()
 link_directories(${CMAKE_SOURCE_DIR}/lib/chakracore/lib/release)
 endif ()
 
@@ -83,8 +81,9 @@ include_directories(SYSTEM thirdparty)
 aux_source_directory(thirdparty/glad COMMON_SOURCE)
 
 # binary output folder
-set(bin_dir ${PROJECT_SOURCE_DIR}/bin/)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${bin_dir})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
 
 # Our executables / builds
 add_executable(${PROJECT_NAME} source/main.cpp ${COMMON_SOURCE})

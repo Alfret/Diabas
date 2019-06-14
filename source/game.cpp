@@ -13,10 +13,12 @@ Game::Game(const Descriptor& descriptor)
 {
   GetGraphics().SetClearColor(100 / 255.0f, 149 / 255.0f, 237 / 255.0f, 1.0f);
 
-
-  Script s0("res/demo.js");
-
-
+  ModScript core(alflib::File{ "res/demo.js" }, "CoreMod");
+  Script::Error e = core.Load();
+  core.Init();
+  core.Update(2.0f);
+  core.Update(3.14f);
+  core.Update(1000.0f);
 }
 
 // -------------------------------------------------------------------------- //
@@ -31,6 +33,7 @@ Game::Update(f64 delta)
   if (IsKeyDown(Key::KEY_ESCAPE)) {
     Exit();
   }
+
 }
 
 // -------------------------------------------------------------------------- //
