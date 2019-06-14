@@ -1,16 +1,15 @@
 #ifndef SERVER_HPP_
 #define SERVER_HPP_
 
-#include <steam/isteamnetworkingutils.h>
-#include <steam/steamnetworkingsockets.h>
 #include "core/types.hpp"
-#include <vector>
 #include "network/common.hpp"
 #include "network/packet.hpp"
 #include <optional>
+#include <steam/isteamnetworkingutils.h>
+#include <steam/steamnetworkingsockets.h>
+#include <vector>
 
-namespace dib
-{
+namespace dib {
 
 struct ClientId
 {
@@ -22,19 +21,22 @@ struct ClientId
 class ClientIdGenerator
 {
 public:
-  static ClientId Next() {
+  static ClientId Next()
+  {
     static ClientIdGenerator gen{};
     const ClientId value = gen.client_id_;
     ++gen.client_id_.id;
     return value;
   }
- private:
-  ClientId client_id_{0};
+
+private:
+  ClientId client_id_{ 0 };
 };
 
 // ============================================================ //
 
-struct ClientConnection {
+struct ClientConnection
+{
   ClientId client_id;
   HSteamNetConnection connection;
 };
@@ -57,8 +59,8 @@ public:
   NetworkState GetNetworkState() const { return network_state_; }
 
 private:
-
-  SendResult SendPacket(const Packet& packet, const SendStrategy send_strategy,
+  SendResult SendPacket(const Packet& packet,
+                        const SendStrategy send_strategy,
                         const HSteamNetConnection connection);
 
   void PollSocketStateChanges();
@@ -66,11 +68,12 @@ private:
   void PollIncomingPackets();
 
   virtual void OnSteamNetConnectionStatusChanged(
-      SteamNetConnectionStatusChangedCallback_t* status) override;
+    SteamNetConnectionStatusChangedCallback_t* status) override;
 
   void DisconnectClient(const HSteamNetConnection connection);
 
-  std::optional<ClientId> ClientIdFromConnection(const HSteamNetConnection connection);
+  std::optional<ClientId> ClientIdFromConnection(
+    const HSteamNetConnection connection);
 
 private:
   HSteamListenSocket socket_;
@@ -81,4 +84,4 @@ private:
 };
 }
 
-#endif//SERVER_HPP_
+#endif // SERVER_HPP_

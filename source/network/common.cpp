@@ -4,11 +4,13 @@
 namespace dib::Common {
 
 SendResult
-SendPacket(const Packet& packet, const SendStrategy send_strategy,
+SendPacket(const Packet& packet,
+           const SendStrategy send_strategy,
            const HSteamNetConnection connection,
            ISteamNetworkingSockets* socket_interface)
 {
-  const EResult res = socket_interface->SendMessageToConnection(connection, packet.data(), packet.size(), static_cast<int>(send_strategy));
+  const EResult res = socket_interface->SendMessageToConnection(
+    connection, packet.data(), packet.size(), static_cast<int>(send_strategy));
 
   SendResult result = SendResult::kSuccess;
   if (res != EResult::k_EResultOK) {
@@ -16,7 +18,7 @@ SendPacket(const Packet& packet, const SendStrategy send_strategy,
     switch (res) {
       case k_EResultInvalidParam:
         DLOG_WARNING(
-            "invalid connection handle, or the individual message is too big.");
+          "invalid connection handle, or the individual message is too big.");
         result = SendResult::kReconnect;
         if (packet.size() > k_cbMaxSteamNetworkingSocketsMessageSizeSend) {
           DLOG_ERROR(

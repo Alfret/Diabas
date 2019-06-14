@@ -1,7 +1,6 @@
 #include "side.hpp"
 
-namespace dib
-{
+namespace dib {
 std::string
 SideToString(const Side side)
 {

@@ -1,8 +1,7 @@
 #include "server.hpp"
 #include <dlog.hpp>
 
-namespace dib
-{
+namespace dib {
 
 Server::Server()
   : socket_interface_(SteamNetworkingSockets())
@@ -48,7 +47,8 @@ Server::SendPacket(const Packet& packet,
                    const SendStrategy send_strategy,
                    const HSteamNetConnection connection)
 {
-  return Common::SendPacket(packet, send_strategy, connection, socket_interface_);
+  return Common::SendPacket(
+    packet, send_strategy, connection, socket_interface_);
 }
 
 void
@@ -57,7 +57,8 @@ Server::PollSocketStateChanges()
   socket_interface_->RunCallbacks(this);
 }
 
-void Server::PollIncomingPackets()
+void
+Server::PollIncomingPackets()
 {
   ISteamNetworkingMessage* msg = nullptr;
   const int msg_count =
@@ -76,12 +77,11 @@ void Server::PollIncomingPackets()
     }
 
     if (packet_.size() < 100) {
-      std::string str{packet_.begin(), packet_.end()};
+      std::string str{ packet_.begin(), packet_.end() };
       DLOG_INFO("TODO handle packet [{}] from [{}]", str, maybe_clientid->id);
     } else {
       DLOG_INFO("TODO handle packet from [{}]", maybe_clientid->id);
     }
-
 
   } else if (msg_count < 0) {
     DLOG_WARNING("failed to check for messages, closing connection");
@@ -93,8 +93,7 @@ void
 Server::OnSteamNetConnectionStatusChanged(
   SteamNetConnectionStatusChangedCallback_t* status)
 {
-  switch (status->m_info.m_eState)
-  {
+  switch (status->m_info.m_eState) {
     case k_ESteamNetworkingConnectionState_None: {
       DLOG_VERBOSE("state none");
       break;
@@ -119,10 +118,14 @@ Server::OnSteamNetConnectionStatusChanged(
           }
         }
 
-        DLOG_INFO("Connection [{}] on [{}], disconnected with reason [{}], [{}].",
-                  removed_id.id, status->m_info.m_szConnectionDescription,
-                  status->m_info.m_eEndReason, status->m_info.m_szEndDebug);
-      } else if (status->m_eOldState != k_ESteamNetworkingConnectionState_Connecting) {
+        DLOG_INFO(
+          "Connection [{}] on [{}], disconnected with reason [{}], [{}].",
+          removed_id.id,
+          status->m_info.m_szConnectionDescription,
+          status->m_info.m_eEndReason,
+          status->m_info.m_szEndDebug);
+      } else if (status->m_eOldState !=
+                 k_ESteamNetworkingConnectionState_Connecting) {
         DLOG_WARNING("unknown state");
       }
 
@@ -146,8 +149,9 @@ Server::OnSteamNetConnectionStatusChanged(
         }
       }
       if (already_exists) {
-        DLOG_WARNING("Client [{}] attempted to connect while already being connected.",
-                     existing_id.id);
+        DLOG_WARNING(
+          "Client [{}] attempted to connect while already being connected.",
+          existing_id.id);
         break;
       }
 
@@ -156,7 +160,7 @@ Server::OnSteamNetConnectionStatusChanged(
         DLOG_WARNING("Failed to accept a client");
       }
 
-      clients_.push_back({ClientIdGenerator::Next(), status->m_hConn});
+      clients_.push_back({ ClientIdGenerator::Next(), status->m_hConn });
 
       // TODO do a handshake with the client, and maybe send some welcome
       // information
@@ -175,9 +179,10 @@ Server::OnSteamNetConnectionStatusChanged(
   }
 }
 
-void Server::DisconnectClient(const HSteamNetConnection connection)
+void
+Server::DisconnectClient(const HSteamNetConnection connection)
 {
-  for (auto it = clients_.begin(); it<clients_.end(); it++) {
+  for (auto it = clients_.begin(); it < clients_.end(); it++) {
     if (it->connection == connection) {
       DLOG_INFO("Disconnected client [{}].", it->client_id.id);
       clients_.erase(it);

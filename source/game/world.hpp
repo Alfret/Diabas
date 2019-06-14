@@ -1,23 +1,22 @@
 #ifndef WORLD_HPP_
 #define WORLD_HPP_
 
+#include "core/assert.hpp"
+#include "network/client.hpp"
+#include "network/common.hpp"
+#include "network/server.hpp"
 #include "network/side.hpp"
 #include <memory>
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
-#include "core/assert.hpp"
-#include "network/client.hpp"
-#include "network/server.hpp"
-#include "network/common.hpp"
 
-namespace dib
-{
+namespace dib {
 
 // ============================================================ //
 // class Declaration
 // ============================================================ //
 
-template <Side side>
+template<Side side>
 class World
 {
 
@@ -25,7 +24,7 @@ class World
   // Lifetime
   // ============================================================ //
 
- public:
+public:
   World();
 
   ~World();
@@ -34,17 +33,17 @@ class World
   // Core Methods
   // ============================================================ //
 
- public:
+public:
   void Update();
 
   // ============================================================ //
   // Getters & Setters
   // ============================================================ //
 
- public:
+public:
   Side GetSide() { return kSide; }
 
- private:
+private:
   Client* GetClient() const { return static_cast<Client*>(base_); }
   Server* GetServer() const { return static_cast<Server*>(base_); }
 
@@ -54,7 +53,7 @@ class World
   // Network Specific
   // ============================================================ //
 
- private:
+private:
   void ConnectToServer();
 
   void StartServer();
@@ -63,7 +62,7 @@ class World
   // Constants
   // ============================================================ //
 
- public:
+public:
   static constexpr Side kSide = side;
 
   static constexpr u16 kPort = 24812;
@@ -74,27 +73,25 @@ class World
   // Member Variables
   // ============================================================ //
 
- private:
-
+private:
   /**
    * Use GetClient and GetServer to access.
    */
   ISteamNetworkingSocketsCallbacks* base_;
-
 };
 
 // ============================================================ //
 // Template Definition
 // ============================================================ //
 
-template <Side side>
+template<Side side>
 void
 World<side>::ConnectToServer()
 {
   DIB_ASSERT(false, "attempting to run non specialized code");
 }
 
-template <Side side>
+template<Side side>
 void
 World<side>::StartServer()
 {
@@ -103,4 +100,4 @@ World<side>::StartServer()
 
 }
 
-#endif//WORLD_HPP_
+#endif // WORLD_HPP_

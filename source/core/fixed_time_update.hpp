@@ -3,15 +3,17 @@
 
 #include <dutil/stopwatch.hpp>
 
-namespace dib
-{
+namespace dib {
 
-struct FixedTimeUpdateInfo {
+struct FixedTimeUpdateInfo
+{
   dutil::Stopwatch sw;
   double timer_ms;
 
   FixedTimeUpdateInfo()
-      : sw(), timer_ms(0) {
+    : sw()
+    , timer_ms(0)
+  {
     sw.Start();
     timer_ms = sw.fnow_ms();
   }
@@ -34,10 +36,8 @@ bool
 FixedTimeUpdate(const s64 ticks_per_s, TUpdateCallback update_callback)
 {
   static FixedTimeUpdateInfo info{};
-  const s64 tick_ms = static_cast<s64>(1000) /
-                      ticks_per_s;
-  if (info.sw.fnow_ms() - info.timer_ms > tick_ms)
-  {
+  const s64 tick_ms = static_cast<s64>(1000) / ticks_per_s;
+  if (info.sw.fnow_ms() - info.timer_ms > tick_ms) {
     info.timer_ms += tick_ms;
     update_callback();
     return true;
@@ -46,4 +46,4 @@ FixedTimeUpdate(const s64 ticks_per_s, TUpdateCallback update_callback)
 }
 }
 
-#endif//FIXED_TIME_UPDATE_HPP_
+#endif // FIXED_TIME_UPDATE_HPP_
