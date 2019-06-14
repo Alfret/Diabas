@@ -71,7 +71,7 @@ include_directories(SYSTEM thirdparty)
 aux_source_directory(thirdparty/glad COMMON_SOURCE)
 
 # Our executables / builds
-#add_executable(${PROJECT_NAME} source/main.cpp ${COMMON_SOURCE})
+add_executable(${PROJECT_NAME} source/main.cpp ${COMMON_SOURCE})
 add_executable(test tests/main.test.cpp ${COMMON_SOURCE} ${TEST_SOURCE})
 
 # Compile definitions?
@@ -92,5 +92,5 @@ else()
   set(DIB_LIBS pthread cpptoml dlog dutil glfw alflibcpp)
 endif()
 
-#target_link_libraries(${PROJECT_NAME} ${DIB_LIBS})
+target_link_libraries(${PROJECT_NAME} ${DIB_LIBS})
 target_link_libraries(test doctest ${DIB_LIBS})
