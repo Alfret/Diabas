@@ -9,6 +9,7 @@ CMakeSettings.json
 # Compiled Object files
 *.o
 *.obj
+*.ink
 
 # Libraries
 *.so
