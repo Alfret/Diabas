@@ -5,7 +5,7 @@
 
 int main(int argc, char** argv) {
   DLOG_INIT();
-  //DLOG_SET_LEVEL(dlog::Level::kError);
+  DLOG_SET_LEVEL(dlog::Level::kError);
 
   doctest::Context context;
   const int res = context.run();
