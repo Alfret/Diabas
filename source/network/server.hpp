@@ -58,10 +58,15 @@ public:
 
   NetworkState GetNetworkState() const { return network_state_; }
 
-private:
+  void NetworkInfo() const;
+
+  void BroadcastPacket(const Packet& packet, const SendStrategy send_strategy);
+
   SendResult SendPacket(const Packet& packet,
                         const SendStrategy send_strategy,
                         const HSteamNetConnection connection);
+
+private:
 
   void PollSocketStateChanges();
 

@@ -58,6 +58,11 @@ private:
 
   void StartServer();
 
+ public:
+  void NetworkInfo(alflib::String extra) const;
+
+  void Broadcast(alflib::String message) const;
+
   // ============================================================ //
   // Constants
   // ============================================================ //
@@ -97,7 +102,6 @@ World<side>::StartServer()
 {
   DIB_ASSERT(false, "attempting to run non specialized code");
 }
-
 }
 
 #endif // WORLD_HPP_
