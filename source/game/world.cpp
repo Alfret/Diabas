@@ -1,6 +1,7 @@
 #include "world.hpp"
 #include "core/fixed_time_update.hpp"
 #include <functional>
+#include <dlog.hpp>
 
 namespace dib {
 
@@ -46,6 +47,37 @@ World<Side::kServer>::StartServer()
   auto server = GetServer();
   server->StartServer(kPort);
 }
+
+template<>
+void World<Side::kServer>::NetworkInfo([[maybe_unused]] alflib::String extra) const
+{
+  auto server = GetServer();
+  server->NetworkInfo();
+}
+
+template<>
+void
+World<Side::kClient>::NetworkInfo([[maybe_unused]] alflib::String extra) const
+{
+}
+
+template<>
+void
+World<Side::kServer>::Broadcast(alflib::String message) const
+{
+  auto server = GetServer();
+
+  // TODO fix when alflibcpp is updated
+  auto str = message.GetStdString();
+  Packet packet{str.begin(), str.end()};
+
+  server->BroadcastPacket(packet, SendStrategy::kReliable);
+}
+
+template<>
+void
+World<Side::kClient>::Broadcast([[maybe_unused]] alflib::String message) const
+{}
 
 template<>
 World<Side::kClient>::World()

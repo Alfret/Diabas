@@ -42,6 +42,30 @@ Server::CloseConnection(HSteamNetConnection connection)
   }
 }
 
+void
+Server::NetworkInfo() const
+{
+  DLOG_RAW("{:=^30}\n", " Network Connections ");
+  if (clients_.size() > 0) {
+    for (const auto client : clients_) {
+      DLOG_RAW("\tid: {}\n", client.client_id.id);
+    }
+  } else {
+    DLOG_RAW("\tnone\n");
+  }
+
+  DLOG_RAW("\n");
+}
+
+void
+Server::BroadcastPacket(const Packet& packet,
+                   const SendStrategy send_strategy)
+{
+  for (auto client : clients_) {
+    Common::SendPacket(packet, send_strategy, client.connection, socket_interface_);
+  }
+}
+
 SendResult
 Server::SendPacket(const Packet& packet,
                    const SendStrategy send_strategy,

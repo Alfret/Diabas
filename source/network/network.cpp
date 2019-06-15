@@ -21,8 +21,10 @@ Network::InitNetwork()
     return false;
   }
 
+  // auto detail_level = ESteamNetworkingSocketsDebugOutputType::
+  //   k_ESteamNetworkingSocketsDebugOutputType_Everything;
   auto detail_level = ESteamNetworkingSocketsDebugOutputType::
-    k_ESteamNetworkingSocketsDebugOutputType_Everything;
+                      k_ESteamNetworkingSocketsDebugOutputType_Important;
 
   SteamNetworkingUtils()->SetDebugOutputFunction(detail_level,
                                                  DebugOutputCallback);
