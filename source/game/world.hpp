@@ -9,6 +9,7 @@
 #include <memory>
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
+#include <string_view>
 
 namespace dib {
 
@@ -58,6 +59,11 @@ private:
 
   void StartServer();
 
+ public:
+  void NetworkInfo(const std::string_view message) const;
+
+  void Broadcast(const std::string_view message) const;
+
   // ============================================================ //
   // Constants
   // ============================================================ //
@@ -97,7 +103,6 @@ World<side>::StartServer()
 {
   DIB_ASSERT(false, "attempting to run non specialized code");
 }
-
 }
 
 #endif // WORLD_HPP_
