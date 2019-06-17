@@ -49,7 +49,9 @@ World<Side::kServer>::StartServer()
 }
 
 template<>
-void World<Side::kServer>::NetworkInfo([[maybe_unused]] alflib::String extra) const
+void
+World<Side::kServer>::NetworkInfo([
+  [maybe_unused]] const std::string_view message) const
 {
   auto server = GetServer();
   server->NetworkInfo();
@@ -57,26 +59,25 @@ void World<Side::kServer>::NetworkInfo([[maybe_unused]] alflib::String extra) co
 
 template<>
 void
-World<Side::kClient>::NetworkInfo([[maybe_unused]] alflib::String extra) const
+World<Side::kClient>::NetworkInfo([
+  [maybe_unused]] const std::string_view message) const
 {
 }
 
 template<>
 void
-World<Side::kServer>::Broadcast(alflib::String message) const
+World<Side::kServer>::Broadcast(const std::string_view message) const
 {
   auto server = GetServer();
 
-  // TODO fix when alflibcpp is updated
-  auto str = message.GetStdString();
-  Packet packet{str.begin(), str.end()};
-
+  Packet packet{message.begin(), message.end()};
   server->BroadcastPacket(packet, SendStrategy::kReliable);
 }
 
 template<>
 void
-World<Side::kClient>::Broadcast([[maybe_unused]] alflib::String message) const
+World<Side::kClient>::Broadcast([
+  [maybe_unused]] const std::string_view message) const
 {}
 
 template<>

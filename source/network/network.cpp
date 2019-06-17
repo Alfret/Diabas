@@ -5,6 +5,21 @@
 
 namespace dib {
 
+Network::Network()
+{
+  if (!dib::Network::InitNetwork()) {
+    DLOG_ERROR("Failed to init network.");
+    std::exit(1);
+  }
+}
+
+Network::~Network()
+{
+  Network::ShutdownNetwork();
+}
+
+// ============================================================ //
+
 static void
 DebugOutputCallback(ESteamNetworkingSocketsDebugOutputType type,
                     const char* msg)

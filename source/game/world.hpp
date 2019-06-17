@@ -9,6 +9,7 @@
 #include <memory>
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
+#include <string_view>
 
 namespace dib {
 
@@ -59,9 +60,9 @@ private:
   void StartServer();
 
  public:
-  void NetworkInfo(alflib::String extra) const;
+  void NetworkInfo(const std::string_view message) const;
 
-  void Broadcast(alflib::String message) const;
+  void Broadcast(const std::string_view message) const;
 
   // ============================================================ //
   // Constants

@@ -13,9 +13,20 @@ enum class NetworkMode : bool
   kServer
 };
 
+/**
+ * Use either InitNetwork & ShutdownNetwork in your main function,
+ * or construct an instance of this class and let RAII do the work for you.
+ */
 class Network
 {
 public:
+
+  Network();
+
+  ~Network();
+
+  // ============================================================ //
+
   /**
    * Call once at startup.
    */
@@ -25,9 +36,9 @@ public:
    * Call once before closing program.
    */
   static void ShutdownNetwork();
-
-private:
 };
+
+
 
 }
 
