@@ -6,7 +6,7 @@ namespace dib {
 Server::Server()
   : socket_interface_(SteamNetworkingSockets())
 {
-  packet_.reserve(10000);
+  packet_.SetCapacity(100000);
 }
 
 Server::~Server()
@@ -89,23 +89,30 @@ Server::PollIncomingPackets()
     socket_interface_->ReceiveMessagesOnListenSocket(socket_, &msg, 1);
 
   if (msg_count > 0) {
-    packet_.resize(msg->m_cbSize);
-    memcpy(packet_.data(), msg->m_pData, msg->m_cbSize);
+    bool ok =
+      packet_.SetPacket(static_cast<const u8*>(msg->m_pData), msg->m_cbSize);
+    if (ok) {
+      auto maybe_clientid = ClientIdFromConnection(msg->m_conn);
+      if (!maybe_clientid) {
+        DLOG_WARNING("received packet from unknown connection, dropping it");
+        DisconnectClient(msg->m_conn);
+      }
+
+      if (packet_.GetPayloadSize() < 100) {
+        std::string msg(packet_.GetPacketSize(), 0);
+        std::memcpy(
+          msg.data(), packet_.GetPacket(), packet_.GetPacketSize());
+        DLOG_INFO("TODO handle packet [{}] from [{}]", msg, maybe_clientid->id);
+      } else {
+        DLOG_INFO("TODO handle packet from [{}]", maybe_clientid->id);
+      }
+    } else {
+      DLOG_ERROR("could not parse packet, too big [{}/{}]",
+                 msg->m_cbSize,
+                 packet_.GetCapacity());
+    }
 
     msg->Release();
-
-    auto maybe_clientid = ClientIdFromConnection(msg->m_conn);
-    if (!maybe_clientid) {
-      DLOG_WARNING("received packet from unknown connection, dropping it");
-      DisconnectClient(msg->m_conn);
-    }
-
-    if (packet_.size() < 100) {
-      std::string str{ packet_.begin(), packet_.end() };
-      DLOG_INFO("TODO handle packet [{}] from [{}]", str, maybe_clientid->id);
-    } else {
-      DLOG_INFO("TODO handle packet from [{}]", maybe_clientid->id);
-    }
 
   } else if (msg_count < 0) {
     DLOG_WARNING("failed to check for messages, closing connection");
