@@ -16,9 +16,42 @@ GetLine()
 
 // ============================================================ //
 
-InputCommand::InputCommand(const Category category,
+class InputCommand
+{
+public:
+  InputCommand(const InputCommandCategory category,
                const alflib::String& command,
-                           std::function<void(alflib::String)> callback)
+               std::function<void(const std::string_view)> callback);
+
+  static alflib::String CategoryToString(const InputCommandCategory category);
+
+  static InputCommandCategory StringToCategory(const alflib::String& string);
+
+  alflib::String GetCategoryAsString() const
+  {
+    return CategoryToString(category_);
+  }
+
+  InputCommandCategory GetCategory() const { return category_; }
+
+  const alflib::String& GetCommand() const { return command_; }
+
+  void Run(const alflib::String& input) const
+  {
+    callback_(std::string_view{ input.GetUTF8(), input.GetSize() });
+  }
+
+private:
+  InputCommandCategory category_;
+  alflib::String command_;
+  std::function<void(const std::string_view)> callback_;
+};
+
+// ============================================================ //
+
+InputCommand::InputCommand(const InputCommandCategory category,
+               const alflib::String& command,
+                           std::function<void(const std::string_view)> callback)
     : category_(category),
       command_(command),
       callback_(callback)
@@ -27,35 +60,32 @@ InputCommand::InputCommand(const Category category,
 }
 
 alflib::String
-InputCommand::CategoryToString(const Category category)
+InputCommand::CategoryToString(const InputCommandCategory category)
 {
   switch (category) {
-    case InputCommand::Category::kInfo:
+    case InputCommandCategory::kInfo:
       return "info";
 
-    case InputCommand::Category::kChat:
+    case InputCommandCategory::kChat:
       return "chat";
 
-    case InputCommand::Category::kNone:
-      return "none";
-
-    case InputCommand::Category::kUnknown:
+    case InputCommandCategory::kUnknown:
     default:
       return "unknown";
   }
 }
 
-InputCommand::Category
+InputCommandCategory
 InputCommand::StringToCategory(const alflib::String& string)
 {
-  Category category;
+  InputCommandCategory category;
   if (string == "info") {
-    category = Category::kInfo;
+    category = InputCommandCategory::kInfo;
   } else if (string == "chat") {
-    category = Category::kChat;
+    category = InputCommandCategory::kChat;
   }
   else {
-    category = Category::kUnknown;
+    category = InputCommandCategory::kUnknown;
   }
   return category;
 }
@@ -64,18 +94,29 @@ InputCommand::StringToCategory(const alflib::String& string)
 
 template <>
 InputHandler<Side::kServer>::InputHandler()
+    : commands_()
 {
   input_ = std::async(std::launch::async, GetLine);
 }
 
 template<>
-InputHandler<Side::kClient>::InputHandler() {}
+InputHandler<Side::kClient>::InputHandler()
+    : commands_()
+{}
+
+template<>
+InputHandler<Side::kServer>::~InputHandler()
+{}
+
+template<>
+InputHandler<Side::kClient>::~InputHandler()
+{}
 
 template<>
 void
-InputHandler<Side::kServer>::AddCommand(const InputCommand::Category category,
+InputHandler<Side::kServer>::AddCommand(const InputCommandCategory category,
                          const alflib::String& command,
-                                        std::function<void(alflib::String)> callback)
+                                        std::function<void(const std::string_view)> callback)
 {
   commands_.emplace_back(category, command, callback);
 }
@@ -83,27 +124,27 @@ InputHandler<Side::kServer>::AddCommand(const InputCommand::Category category,
 template<>
 void
 InputHandler<Side::kClient>::AddCommand(
-  [[maybe_unused]] const InputCommand::Category category,
+  [[maybe_unused]] const InputCommandCategory category,
   [[maybe_unused]] const alflib::String& command,
-  [[maybe_unused]] std::function<void(alflib::String)> callback) {}
+  [[maybe_unused]] std::function<void(const std::string_view)> callback) {}
 
 template<>
 void
-InputHandler<Side::kServer>::RunCommand(const alflib::String& input)
+InputHandler<Side::kServer>::RunCommand(const alflib::String& input) const
 {
   if (input.GetSize() < 1) {
     return;
   }
 
-  InputCommand::Category category = InputCommand::Category::kUnknown;
+  InputCommandCategory category = InputCommandCategory::kUnknown;
   alflib::String command{};
   alflib::String command_input{};
+
   const s64 space = input.Find(" ");
   constexpr s64 kNotFound = -1;
   if (space == kNotFound) {
-    // only a command
-    category = InputCommand::Category::kNone;
-    command = input;
+    // only a category
+    category = InputCommand::StringToCategory(input);
   } else {
     // category and command
     category = InputCommand::StringToCategory(input.Substring(0, space));
@@ -116,25 +157,38 @@ InputHandler<Side::kServer>::RunCommand(const alflib::String& input)
     }
   }
 
-  if (category == InputCommand::Category::kUnknown) {
-    DLOG_RAW("Unknown command\n");
+  if (category == InputCommandCategory::kUnknown) {
+    DLOG_RAW("Unknown category, available categories are:\n"
+             "\tinfo - Information type commands.\n"
+             "\tchat - Send chat messages.\n");
     return;
   }
 
+  bool found = false;
   for (const auto& input_command : commands_) {
     if (input_command.GetCategory() == category &&
         input_command.GetCommand() == command) {
+      found = true;
       input_command.Run(command_input);
     }
   }
 
-
+  if (!found) {
+    std::string str{};
+    for (const auto& input_command : commands_) {
+      if (input_command.GetCategory() == category) {
+        str += "\t" + input_command.GetCommand().GetStdString() + "\n";
+      }
+    }
+    DLOG_RAW("Unknown command, available commands for [{}] are:\n{}",
+             InputCommand::CategoryToString(category), str);
+  }
 }
 
 template<>
 void
 InputHandler<Side::kClient>::RunCommand([
-  [maybe_unused]] const alflib::String& command)
+  [maybe_unused]] const alflib::String& command) const
 {}
 
 template<>
@@ -151,4 +205,5 @@ InputHandler<Side::kServer>::Update()
 template<>
 void
 InputHandler<Side::kClient>::Update() {}
+
 }

@@ -3,6 +3,7 @@
 #include "app/app.hpp"
 #include "game/world.hpp"
 #include "server/input.hpp"
+#include "network/network.hpp"
 
 // ========================================================================== //
 // Game Declaration
@@ -50,6 +51,10 @@ public:
   // Member Variables
   // ============================================================ //
  private:
+
+  // MUST be before any other network code.
+  Network network_{};
+
   World<kSide> world_{};
 
   InputHandler<kSide> input_handler_{};
