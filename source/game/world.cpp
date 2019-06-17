@@ -70,7 +70,8 @@ World<Side::kServer>::Broadcast(const std::string_view message) const
 {
   auto server = GetServer();
 
-  Packet packet{message.begin(), message.end()};
+
+  Packet packet{message.data(), message.size()};
   server->BroadcastPacket(packet, SendStrategy::kReliable);
 }
 

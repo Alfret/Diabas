@@ -63,15 +63,20 @@ Client::PollIncomingPackets(Packet& packet_out)
 
   bool retval = false;
   if (msg_count > 0) {
-    packet_out.resize(msg->m_cbSize);
-    memcpy(packet_out.data(), msg->m_pData, msg->m_cbSize);
-
+    bool ok =
+        packet_out.SetPacket(static_cast<const u8*>(msg->m_pData), msg->m_cbSize);
+    if (ok) {
+      retval = true;
+      // TODO not this
+      std::string msg(packet_out.GetPacketSize(), 0);
+      std::memcpy(msg.data(), packet_out.GetPacket(), packet_out.GetPacketSize());
+      DLOG_RAW("Server: {}\n", msg);
+    } else {
+      DLOG_ERROR("could not parse packet, too big [{}/{}]",
+                 msg->m_cbSize,
+                 packet_out.GetCapacity());
+    }
     msg->Release();
-    retval = true;
-
-    // TODO not this
-    std::string msg{ packet_out.begin(), packet_out.end() };
-    DLOG_RAW("Server: {}\n", msg);
 
   } else if (msg_count < 0) {
     if (network_state_ == NetworkState::kClientOnline) {

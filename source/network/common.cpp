@@ -10,7 +10,7 @@ SendPacket(const Packet& packet,
            ISteamNetworkingSockets* socket_interface)
 {
   const EResult res = socket_interface->SendMessageToConnection(
-    connection, packet.data(), packet.size(), static_cast<int>(send_strategy));
+    connection, packet.GetPacket(), packet.GetPacketSize(), static_cast<int>(send_strategy));
 
   SendResult result = SendResult::kSuccess;
   if (res != EResult::k_EResultOK) {
@@ -20,7 +20,7 @@ SendPacket(const Packet& packet,
         DLOG_WARNING(
           "invalid connection handle, or the individual message is too big.");
         result = SendResult::kReconnect;
-        if (packet.size() > k_cbMaxSteamNetworkingSocketsMessageSizeSend) {
+        if (packet.GetPacketSize() > k_cbMaxSteamNetworkingSocketsMessageSizeSend) {
           DLOG_ERROR(
             "packet size is too big to send, this case is not handled");
         }

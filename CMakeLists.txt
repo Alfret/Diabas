@@ -42,7 +42,9 @@ set(COMMON_SOURCE
   source/network/server.hpp
   source/network/client.cpp
   source/network/client.hpp
+  source/network/packet.cpp
   source/network/packet.hpp
+  source/network/packet_header.hpp
   source/network/common.cpp
   source/network/common.hpp
   source/network/side.cpp
@@ -55,6 +57,7 @@ set(TEST_SOURCE
   tests/main.test.hpp
   tests/toml.test.cpp
   tests/mods.test.cpp
+  tests/packet.test.cpp
   )
 
 # TOML
