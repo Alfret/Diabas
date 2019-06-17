@@ -69,6 +69,10 @@ Client::PollIncomingPackets(Packet& packet_out)
     msg->Release();
     retval = true;
 
+    // TODO not this
+    std::string msg{ packet_out.begin(), packet_out.end() };
+    DLOG_RAW("Server: {}\n", msg);
+
   } else if (msg_count < 0) {
     if (network_state_ == NetworkState::kClientOnline) {
       DLOG_ERROR("failed to check for messages");

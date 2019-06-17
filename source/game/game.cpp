@@ -1,6 +1,6 @@
 #include "game.hpp"
 #include <dlog.hpp>
-#include <functional>
+#include "network/network.hpp"
 
 // TEMP (for thread sleep to not overwork my linux machine)
 #include <chrono>
@@ -17,12 +17,16 @@ Game::Game(const Descriptor& descriptor)
   : Application(descriptor)
 {
   GetGraphics().SetClearColor(100 / 255.0f, 149 / 255.0f, 237 / 255.0f, 1.0f);
-  DLOG_INFO("running as {}", SideToString(world.GetSide()));
+  DLOG_INFO("running as {}", SideToString(world_.GetSide()));
+  SetupInputCommands();
 }
 
 // -------------------------------------------------------------------------- //
 
-Game::~Game() {}
+Game::~Game() {
+  Network::ShutdownNetwork();
+  std::exit(0);
+}
 
 // -------------------------------------------------------------------------- //
 
@@ -33,7 +37,9 @@ Game::Update(f64 delta)
     Exit();
   }
 
-  world.Update();
+  input_handler_.Update();
+
+  world_.Update();
 
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
@@ -43,5 +49,20 @@ Game::Update(f64 delta)
 void
 Game::Render()
 {}
+
+// -------------------------------------------------------------------------- //
+
+void Game::SetupInputCommands()
+{
+  input_handler_.AddCommand(InputCommandCategory::kInfo,
+                           "network",
+                            std::bind(&World<kSide>::NetworkInfo, &world_,
+                                      std::placeholders::_1));
+
+  input_handler_.AddCommand(InputCommandCategory::kChat,
+                            "broadcast",
+                            std::bind(&World<kSide>::Broadcast, &world_,
+                                      std::placeholders::_1));
+}
 
 }

@@ -1,6 +1,7 @@
 #include "world.hpp"
 #include "core/fixed_time_update.hpp"
 #include <functional>
+#include <dlog.hpp>
 
 namespace dib {
 
@@ -46,6 +47,38 @@ World<Side::kServer>::StartServer()
   auto server = GetServer();
   server->StartServer(kPort);
 }
+
+template<>
+void
+World<Side::kServer>::NetworkInfo([
+  [maybe_unused]] const std::string_view message) const
+{
+  auto server = GetServer();
+  server->NetworkInfo();
+}
+
+template<>
+void
+World<Side::kClient>::NetworkInfo([
+  [maybe_unused]] const std::string_view message) const
+{
+}
+
+template<>
+void
+World<Side::kServer>::Broadcast(const std::string_view message) const
+{
+  auto server = GetServer();
+
+  Packet packet{message.begin(), message.end()};
+  server->BroadcastPacket(packet, SendStrategy::kReliable);
+}
+
+template<>
+void
+World<Side::kClient>::Broadcast([
+  [maybe_unused]] const std::string_view message) const
+{}
 
 template<>
 World<Side::kClient>::World()

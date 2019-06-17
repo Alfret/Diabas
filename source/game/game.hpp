@@ -2,6 +2,8 @@
 
 #include "app/app.hpp"
 #include "game/world.hpp"
+#include "server/input.hpp"
+#include "network/network.hpp"
 
 // ========================================================================== //
 // Game Declaration
@@ -12,23 +14,51 @@ namespace dib {
 /** Game class**/
 class Game : public Application
 {
+
+  // ============================================================ //
+  // Lifetime
+  // ============================================================ //
 public:
   explicit Game(const Descriptor& descriptor);
 
   ~Game() override;
 
+  // ============================================================ //
+  // Methods
+  // ============================================================ //
+ public:
   void Update(f64 delta) override;
 
   void Render() override;
 
-private:
+  // ============================================================ //
+  // Constants
+  // ============================================================ //
+ public:
 #ifdef DIB_IS_SERVER
-#define DIB_SIDE Side::kServer
+   static constexpr Side kSide = Side::kServer;
 #else
-#define DIB_SIDE Side::kClient
+   static constexpr Side kSide = Side::kClient;
 #endif
-  World<DIB_SIDE> world;
-#undef DIB_SIDE
+
+  // ============================================================ //
+  // Private Methods
+  // ============================================================ //
+ private:
+   void SetupInputCommands();
+
+  // ============================================================ //
+  // Member Variables
+  // ============================================================ //
+ private:
+
+  // MUST be before any other network code.
+  Network network_{};
+
+  World<kSide> world_{};
+
+  InputHandler<kSide> input_handler_{};
+
 };
 
 }

@@ -5,6 +5,21 @@
 
 namespace dib {
 
+Network::Network()
+{
+  if (!dib::Network::InitNetwork()) {
+    DLOG_ERROR("Failed to init network.");
+    std::exit(1);
+  }
+}
+
+Network::~Network()
+{
+  Network::ShutdownNetwork();
+}
+
+// ============================================================ //
+
 static void
 DebugOutputCallback(ESteamNetworkingSocketsDebugOutputType type,
                     const char* msg)
@@ -21,8 +36,10 @@ Network::InitNetwork()
     return false;
   }
 
+  // auto detail_level = ESteamNetworkingSocketsDebugOutputType::
+  //   k_ESteamNetworkingSocketsDebugOutputType_Everything;
   auto detail_level = ESteamNetworkingSocketsDebugOutputType::
-    k_ESteamNetworkingSocketsDebugOutputType_Everything;
+                      k_ESteamNetworkingSocketsDebugOutputType_Important;
 
   SteamNetworkingUtils()->SetDebugOutputFunction(detail_level,
                                                  DebugOutputCallback);

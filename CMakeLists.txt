@@ -47,6 +47,8 @@ set(COMMON_SOURCE
   source/network/common.hpp
   source/network/side.cpp
   source/network/side.hpp
+  source/server/input.cpp
+  source/server/input.hpp
   )
 
 set(TEST_SOURCE
