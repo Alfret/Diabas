@@ -34,5 +34,14 @@ TEST_SUITE("packet")
     CHECK(packet.GetPayloadSize() == 0);
   }
 
+  TEST_CASE("string")
+  {
+    alflib::String str = "this is a string";
+    Packet packet(str);
 
+    CHECK(str.GetSize() == packet.GetPacketSize() - packet.GetHeaderSize());
+    CHECK(std::memcmp(str.GetUTF8(), packet.GetPayload(), str.GetSize()) == 0);
+    alflib::String packet_str = packet.ToString();
+    CHECK(str == packet_str);
+  }
 }

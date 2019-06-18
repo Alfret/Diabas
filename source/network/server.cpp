@@ -6,7 +6,7 @@ namespace dib {
 Server::Server()
   : socket_interface_(SteamNetworkingSockets())
 {
-  packet_.SetCapacity(100000);
+  packet_.SetPacketCapacity(100000);
 }
 
 Server::~Server()
@@ -99,9 +99,7 @@ Server::PollIncomingPackets()
       }
 
       if (packet_.GetPayloadSize() < 100) {
-        std::string msg(packet_.GetPacketSize(), 0);
-        std::memcpy(
-          msg.data(), packet_.GetPacket(), packet_.GetPacketSize());
+        alflib::String msg = packet_.ToString();
         DLOG_INFO("TODO handle packet [{}] from [{}]", msg, maybe_clientid->id);
       } else {
         DLOG_INFO("TODO handle packet from [{}]", maybe_clientid->id);
@@ -109,7 +107,7 @@ Server::PollIncomingPackets()
     } else {
       DLOG_ERROR("could not parse packet, too big [{}/{}]",
                  msg->m_cbSize,
-                 packet_.GetCapacity());
+                 packet_.GetPacketCapacity());
     }
 
     msg->Release();

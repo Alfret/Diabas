@@ -68,13 +68,12 @@ Client::PollIncomingPackets(Packet& packet_out)
     if (ok) {
       retval = true;
       // TODO not this
-      std::string msg(packet_out.GetPacketSize(), 0);
-      std::memcpy(msg.data(), packet_out.GetPacket(), packet_out.GetPacketSize());
+      alflib::String msg = packet_out.ToString();
       DLOG_RAW("Server: {}\n", msg);
     } else {
       DLOG_ERROR("could not parse packet, too big [{}/{}]",
                  msg->m_cbSize,
-                 packet_out.GetCapacity());
+                 packet_out.GetPacketCapacity());
     }
     msg->Release();
 
