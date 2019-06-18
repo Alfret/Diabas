@@ -28,6 +28,8 @@ endif ()
 set(COMMON_SOURCE
   source/app/app.cpp
   source/app/graphics/graphics.cpp
+  source/core/hash.cpp
+  source/core/hash.hpp
   source/game/game.cpp
   source/game/world.cpp
   source/game/world.hpp
@@ -44,6 +46,8 @@ set(COMMON_SOURCE
   source/network/client.hpp
   source/network/packet.cpp
   source/network/packet.hpp
+  source/network/packet_handler.cpp
+  source/network/packet_handler.hpp
   source/network/packet_header.hpp
   source/network/common.cpp
   source/network/common.hpp
@@ -58,6 +62,7 @@ set(TEST_SOURCE
   tests/toml.test.cpp
   tests/mods.test.cpp
   tests/packet.test.cpp
+  tests/packet_handler.test.cpp
   )
 
 # TOML

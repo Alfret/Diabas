@@ -56,7 +56,8 @@ public:
   Packet();
 
   /**
-   * Construct a packet with given size.
+   * Construct a packet.
+   * @param size How large payload size to allocate
    */
   explicit Packet(const std::size_t size);
 
@@ -169,7 +170,7 @@ public:
 
   PayloadIterator end();
 
-  alflib::String ToString();
+  alflib::String ToString() const;
 
   // ============================================================ //
   // Constants

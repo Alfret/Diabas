@@ -42,26 +42,27 @@ Packet::Packet()
 Packet::Packet(const std::size_t size)
   : size_(kHeaderSize)
 {
-  DIB_ASSERT(size >= kHeaderSize,
-             "size must be larger or equal to header size");
-  SetPacketCapacity(size);
+  SetPacketCapacity(kHeaderSize + size);
 }
 
 Packet::Packet(const u8* data, const std::size_t data_count)
-  : Packet(data_count)
+    : size_(data_count)
 {
+  DIB_ASSERT(data_count >= kHeaderSize,
+             "data_count must be larger or equal to header size");
+  SetPacketCapacity(data_count);
   SetPacket(data, data_count);
 }
 
 Packet::Packet(const char8* data, const std::size_t data_count)
-  : Packet(data_count + GetHeaderSize())
+  : Packet(data_count)
 {
   ClearHeader();
   SetPayload(data, data_count);
 }
 
 Packet::Packet(const alflib::String& string)
-  : Packet(string.GetSize() + GetHeaderSize())
+  : Packet(string.GetSize())
 {
   ClearHeader();
   SetPayload(string.GetUTF8(), string.GetSize());
@@ -209,17 +210,13 @@ Packet::end()
   return PayloadIterator{ GetPayload(), GetPayloadCapacity() };
 }
 
+#include <string>
 alflib::String
-Packet::ToString()
+Packet::ToString() const
 {
-  // TODO when alflib is updated remove the null termination.
-  if (size_ == GetPayloadCapacity()) {
-    DLOG_ERROR("could not construct string from buffer since it is full.");
-    return alflib::String{};
-  }
-
-  container_[size_] = 0;
-  alflib::String str{ reinterpret_cast<const char8*>(GetPayload()) };
+  // TODO when alflib is updated remove the std::string
+  std::string stdstr{reinterpret_cast<const char8*>(GetPayload()), GetPayloadSize()};
+  alflib::String str{stdstr.c_str()};
   return str;
 }
 }
