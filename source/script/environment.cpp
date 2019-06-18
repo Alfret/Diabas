@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2019 Filip Björklund
+// Copyright (c) 2019 Filip BjÃ¶rklund
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,49 +26,27 @@
 // Headers
 // ========================================================================== //
 
-// Library headers
-#include <dlog.hpp>
-
-// Project headers
 #include "core/assert.hpp"
-#include "core/types.hpp"
+#include "dlog.hpp"
+#include "script/module.hpp"
 
 // ========================================================================== //
-// Functions
+// Exposed Functions
 // ========================================================================== //
 
 namespace dib {
+namespace script {
 
 /** Logs a verbose message **/
-JsValueRef CALLBACK
+JsValueRef CHAKRA_CALLBACK
 ScriptLogVerboseFunction(JsValueRef callee,
-                      bool isConstructCall,
-                      JsValueRef* arguments,
-                      u16 argumentCount,
-                      void* callbackState)
+                         bool isConstructCall,
+                         JsValueRef* arguments,
+                         u16 argumentCount,
+                         void* callbackState)
 {
-  JsValueRef messageValue;
-  const JsErrorCode error = JsConvertValueToString(arguments[1], &messageValue);
-  if (error != JsNoError) {
-    return JS_INVALID_REFERENCE;
-  }
-  const char16* message;
-  size_t messageLength;
-  JsStringToPointer(messageValue, &message, &messageLength);
-  DLOG_VERBOSE(String(message).GetUTF8());
-  return JS_INVALID_REFERENCE;
-}
+  DIB_ASSERT(!isConstructCall, "Function is not a destructor call");
 
-// -------------------------------------------------------------------------- //
-
-/** Logs an info message **/
-JsValueRef CALLBACK
-ScriptLogInfoFunction(JsValueRef callee,
-                  bool isConstructCall,
-                  JsValueRef* arguments,
-                  u16 argumentCount,
-                  void* callbackState)
-{
   // Output string
   String output = "";
 
@@ -84,6 +62,52 @@ ScriptLogInfoFunction(JsValueRef callee,
         buffer[bufferSize] = 0;
         JsCopyString(arguments[i], buffer, bufferSize, &bufferSize);
         output += buffer;
+        delete[] buffer;
+      }
+    } else if (type == JsNumber) {
+      f64 doubleValue;
+      JsNumberToDouble(arguments[i], &doubleValue);
+      output += String::ToString(doubleValue);
+    } else if (type == JsBoolean) {
+      bool boolValue;
+      JsBooleanToBool(arguments[i], &boolValue);
+      output += boolValue ? "true" : "false";
+    }
+  }
+
+  // Log
+  DLOG_VERBOSE(output.GetUTF8());
+  return JS_INVALID_REFERENCE;
+}
+
+// -------------------------------------------------------------------------- //
+
+/** Logs an info message **/
+JsValueRef CHAKRA_CALLBACK
+ScriptLogInfoFunction(JsValueRef callee,
+                      bool isConstructCall,
+                      JsValueRef* arguments,
+                      u16 argumentCount,
+                      void* callbackState)
+{
+  DIB_ASSERT(!isConstructCall, "Function is not a destructor call");
+
+  // Output string
+  String output = "";
+
+  // Combine all arguments
+  for (u16 i = 1; i < argumentCount; i++) {
+    JsValueType type;
+    JsGetValueType(arguments[i], &type);
+
+    if (type == JsString) {
+      size_t bufferSize = 0;
+      if (JsCopyString(arguments[i], nullptr, 0, &bufferSize) == JsNoError) {
+        char8* buffer = new char8[bufferSize + 1];
+        buffer[bufferSize] = 0;
+        JsCopyString(arguments[i], buffer, bufferSize, &bufferSize);
+        output += buffer;
+        delete[] buffer;
       }
     } else if (type == JsNumber) {
       f64 doubleValue;
@@ -104,50 +128,158 @@ ScriptLogInfoFunction(JsValueRef callee,
 // -------------------------------------------------------------------------- //
 
 /** Logs an info message **/
-JsValueRef CALLBACK
+JsValueRef CHAKRA_CALLBACK
 ScriptLogWarningFunction(JsValueRef callee,
-                      bool isConstructCall,
-                      JsValueRef* arguments,
-                      u16 argumentCount,
-                      void* callbackState)
+                         bool isConstructCall,
+                         JsValueRef* arguments,
+                         u16 argumentCount,
+                         void* callbackState)
 {
-  JsValueRef messageValue;
-  const JsErrorCode error = JsConvertValueToString(arguments[1], &messageValue);
-  if (error != JsNoError) {
-    return JS_INVALID_REFERENCE;
+  DIB_ASSERT(!isConstructCall, "Function is not a destructor call");
+
+  // Output string
+  String output = "";
+
+  // Combine all arguments
+  for (u16 i = 1; i < argumentCount; i++) {
+    JsValueType type;
+    JsGetValueType(arguments[i], &type);
+
+    if (type == JsString) {
+      size_t bufferSize = 0;
+      if (JsCopyString(arguments[i], nullptr, 0, &bufferSize) == JsNoError) {
+        char8* buffer = new char8[bufferSize + 1];
+        buffer[bufferSize] = 0;
+        JsCopyString(arguments[i], buffer, bufferSize, &bufferSize);
+        output += buffer;
+        delete[] buffer;
+      }
+    } else if (type == JsNumber) {
+      f64 doubleValue;
+      JsNumberToDouble(arguments[i], &doubleValue);
+      output += String::ToString(doubleValue);
+    } else if (type == JsBoolean) {
+      bool boolValue;
+      JsBooleanToBool(arguments[i], &boolValue);
+      output += boolValue ? "true" : "false";
+    }
   }
-  const char16* message;
-  size_t messageLength;
-  JsStringToPointer(messageValue, &message, &messageLength);
-  DLOG_WARNING(String(message).GetUTF8());
+
+  // Log
+  DLOG_WARNING(output.GetUTF8());
   return JS_INVALID_REFERENCE;
 }
 
 // -------------------------------------------------------------------------- //
 
 /** Logs an info message **/
-JsValueRef CALLBACK
+JsValueRef CHAKRA_CALLBACK
 ScriptLogErrorFunction(JsValueRef callee,
-                      bool isConstructCall,
-                      JsValueRef* arguments,
-                      u16 argumentCount,
-                      void* callbackState)
+                       bool isConstructCall,
+                       JsValueRef* arguments,
+                       u16 argumentCount,
+                       void* callbackState)
 {
-  JsValueRef messageValue;
-  const JsErrorCode error = JsConvertValueToString(arguments[1], &messageValue);
-  if (error != JsNoError) {
-    return JS_INVALID_REFERENCE;
+  DIB_ASSERT(!isConstructCall, "Function is not a destructor call");
+
+  // Output string
+  String output = "";
+
+  // Combine all arguments
+  for (u16 i = 1; i < argumentCount; i++) {
+    JsValueType type;
+    JsGetValueType(arguments[i], &type);
+
+    if (type == JsString) {
+      size_t bufferSize = 0;
+      if (JsCopyString(arguments[i], nullptr, 0, &bufferSize) == JsNoError) {
+        char8* buffer = new char8[bufferSize + 1];
+        buffer[bufferSize] = 0;
+        JsCopyString(arguments[i], buffer, bufferSize, &bufferSize);
+        output += buffer;
+        delete[] buffer;
+      }
+    } else if (type == JsNumber) {
+      f64 doubleValue;
+      JsNumberToDouble(arguments[i], &doubleValue);
+      output += String::ToString(doubleValue);
+    } else if (type == JsBoolean) {
+      bool boolValue;
+      JsBooleanToBool(arguments[i], &boolValue);
+      output += boolValue ? "true" : "false";
+    }
   }
-  const char16* message;
-  size_t messageLength;
-  JsStringToPointer(messageValue, &message, &messageLength);
-  DLOG_ERROR(String(message).GetUTF8());
+
+  // Log
+  DLOG_ERROR(output.GetUTF8());
   return JS_INVALID_REFERENCE;
 }
 
+}
+}
 
+// ========================================================================== //
+// Private Functions
+// ========================================================================== //
 
+namespace dib {
+namespace script {
 
+/** Callback for fetching imported module **/
+static JsErrorCode
+OnEnvFetchImported(JsModuleRecord referencingModule,
+                   JsValueRef specifier,
+                   JsModuleRecord* dependentModule)
+{
+  // Retrieve referencing module
+  Module* module;
+  JsGetModuleHostInfo(referencingModule,
+                      JsModuleHostInfo_HostDefined,
+                      reinterpret_cast<void**>(&module));
+  DIB_ASSERT(
+    module != nullptr,
+    "Failed to fetch imported module. Referencing module is not valid");
+
+  // Retrieve specifier
+  size_t size = 0;
+  JsCopyString(specifier, nullptr, 0, &size);
+  char8* string = new char8[size + 1];
+  string[size] = 0;
+  JsCopyString(specifier, string, size, &size);
+
+  // Load module
+  alflib::File siblingFile = module->GetFile().Sibling(string);
+  Module* loadedModule = module->GetEnvironment().LoadModule(
+    siblingFile.GetPath(), referencingModule);
+  DIB_ASSERT(loadedModule != nullptr, "Failed to load dependant module");
+
+  // Set loaded module
+  *dependentModule = loadedModule->GetHandle();
+
+  // TEMP
+  return JsNoError;
+};
+
+// Callback for fetching imported from script
+static JsErrorCode
+OnEnvFetchImportedFromScript(JsSourceContext referencingSourceContext,
+                             JsValueRef specifier,
+                             JsModuleRecord* dependentModule)
+{
+  // TEMP
+  return JsNoError;
+};
+
+/** Callback for being notified about ready module **/
+static JsErrorCode
+OnEnvNotifyModuleReady(JsModuleRecord referencingModule,
+                       JsValueRef exceptionVar)
+{
+  // TEMP
+  return JsNoError;
+};
+
+}
 }
 
 // ========================================================================== //
@@ -155,6 +287,7 @@ ScriptLogErrorFunction(JsValueRef callee,
 // ========================================================================== //
 
 namespace dib {
+namespace script {
 
 ScriptEnvironment::ScriptEnvironment()
 {
@@ -169,15 +302,70 @@ ScriptEnvironment::ScriptEnvironment()
   error = JsSetCurrentContext(mContext);
   DIB_ASSERT(error == JsNoError, "Failed to set current ChakraCore Context");
 
-  // Setup classes
-  CreateGlobalFuncs();
-  CreateModClass();
+  // Setup
+  SetupLogging();
+  SetupModuleLoading();
+}
+
+// -------------------------------------------------------------------------- //
+
+ScriptEnvironment::~ScriptEnvironment() {}
+
+// -------------------------------------------------------------------------- //
+
+Module*
+ScriptEnvironment::LoadModule(const alflib::Path& path,
+                              JsModuleRecord referencingModule)
+{
+  // Check if the module is already loaded
+  if (mModules.count(path.GetPathString()) > 0) {
+    ModuleEntry& entry = mModules[path.GetPathString()];
+    entry.refCount++;
+    return entry.module;
+  }
+
+  // Check if referencing module is valid otherwise set to root
+  if (referencingModule == JS_INVALID_REFERENCE) {
+    referencingModule = mRootModule;
+  }
+
+  // Otherwise load module
+  Module* module = new Module(*this, path);
+  Result result = module->Load(referencingModule);
+  if (result != Result::kSuccess) {
+    return nullptr;
+  }
+
+  // Add module
+  ModuleEntry entry{ module, 0 };
+  mModules[path.GetPathString()] = entry;
+
+  // Return module
+  return module;
 }
 
 // -------------------------------------------------------------------------- //
 
 void
-ScriptEnvironment::CreateGlobalFuncs()
+ScriptEnvironment::UnloadModule(Module* module)
+{
+  DIB_ASSERT(mModules.count(module->GetFile().GetPath().GetPathString()) > 0,
+             "Cannot unload a module that has not been previously loaded");
+
+  // Find entry
+  ModuleEntry& entry = mModules[module->GetFile().GetPath().GetPathString()];
+  entry.refCount--;
+  Module* toRemove = entry.module;
+  if (entry.refCount == 0) {
+    mModules.erase(module->GetFile().GetPath().GetPathString());
+    delete toRemove;
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+Result
+ScriptEnvironment::SetupLogging()
 {
   // Retrieve global object
   JsValueRef global;
@@ -227,75 +415,54 @@ ScriptEnvironment::CreateGlobalFuncs()
   DIB_ASSERT(error == JsNoError, "Failed to get 'error' property id");
   error = JsSetProperty(dlog, logErrorId, logError, true);
   DIB_ASSERT(error == JsNoError, "Failed to set 'dlog' property 'error'");
+
+  // Finalize
+  return Result::kSuccess;
 }
 
 // -------------------------------------------------------------------------- //
 
-void
-ScriptEnvironment::CreateModClass()
+Result
+ScriptEnvironment::SetupModuleLoading()
 {
-  // Retrieve global object
-  JsValueRef global;
-  JsErrorCode error = JsGetGlobalObject(&global);
-  DIB_ASSERT(error == JsNoError, "Failed to retrieve global javascript object");
+  // Initialize core fake module
+  JsValueRef moduleSpecifier;
+  const String moduleSpecifierString(":root-module:");
+  JsErrorCode error = JsCreateString(moduleSpecifierString.GetUTF8(),
+                                     moduleSpecifierString.GetSize(),
+                                     &moduleSpecifier);
+  if (error != JsNoError) {
+    return Result::kUnknownError;
+  }
+  error = JsInitializeModuleRecord(nullptr, moduleSpecifier, &mRootModule);
+  if (error != JsNoError || mRootModule == JS_INVALID_REFERENCE) {
+    return Result::kUnknownError;
+  }
 
-  // Source for 'Mod' class
-  static char8 source[] = "class Mod\n"
-                          "{\n"
-                          "  init() {}\n"
-                          "  update(delta) {}\n"
-                          "}";
+  // Set module callbacks
+  error = JsSetModuleHostInfo(mRootModule,
+                              JsModuleHostInfo_FetchImportedModuleCallback,
+                              (void*)OnEnvFetchImported);
+  if (error != JsNoError) {
+    return Result::kUnknownError;
+  }
+  error =
+    JsSetModuleHostInfo(mRootModule,
+                        JsModuleHostInfo_FetchImportedModuleFromScriptCallback,
+                        (void*)OnEnvFetchImportedFromScript);
+  if (error != JsNoError) {
+    return Result::kUnknownError;
+  }
+  error = JsSetModuleHostInfo(mRootModule,
+                              JsModuleHostInfo_NotifyModuleReadyCallback,
+                              (void*)OnEnvNotifyModuleReady);
+  if (error != JsNoError) {
+    return Result::kUnknownError;
+  }
 
-  // Execute source to load class
-  JsValueRef sourceArray, envName;
-  error = JsCreateExternalArrayBuffer(
-    source, strlen(source), nullptr, nullptr, &sourceArray);
-  JsCreateString(":env:", strlen(":env:"), &envName);
-
-  JsValueRef result;
-  JsRun(sourceArray, 0, envName, JsParseScriptAttributeNone, &result);
-  DIB_ASSERT(error == JsNoError, "Could not load 'Mod' class");
+  // Finalize
+  return Result::kSuccess;
 }
 
-// -------------------------------------------------------------------------- //
-
-void
-ScriptEnvironment::CheckAndClearException()
-{
-  Instance();
-
-  // Get and clear exception
-  JsValueRef exception;
-  JsGetAndClearException(&exception);
-
-  // Retrieve message property
-  JsValueRef message;
-  JsPropertyIdRef id;
-  JsErrorCode error = JsCreatePropertyId("message", strlen("message"), &id);
-  DIB_ASSERT(error == JsNoError,
-             "Failed to get property id: exception::message");
-  error = JsGetProperty(exception, id, &message);
-  DIB_ASSERT(error == JsNoError, "Failed to get property: exception::message");
-
-  // Retrieve message
-  size_t messageLength;
-  error = JsCopyString(message, nullptr, 0, &messageLength);
-  DIB_ASSERT(error == JsNoError, "");
-  char8* messageBuffer = new char8[messageLength];
-  error = JsCopyString(message, messageBuffer, messageLength, &messageLength);
-  DIB_ASSERT(error == JsNoError, "");
-
-  // Log message
-  DLOG_ERROR("Script exception: {}", String(messageBuffer));
 }
-
-// -------------------------------------------------------------------------- //
-
-ScriptEnvironment&
-ScriptEnvironment::Instance()
-{
-  static ScriptEnvironment instance;
-  return instance;
-}
-
 }
