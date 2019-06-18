@@ -8,8 +8,38 @@
 
 namespace dib {
 
-// forward declaration
-struct PayloadIterator;
+using ContainerValueType = u8;
+
+struct PayloadIterator
+{
+  /**
+   * Use to construct an iterator pointing to the start of the payload.
+   * @param payload Pointer to the payload
+   */
+  explicit PayloadIterator(ContainerValueType* payload);
+
+  /**
+   * To construct a end iterator, set pos to one step beyond the end of the
+   * payload.
+   * @param payload Pointer to the payload
+   * @param pos Where in the payload we are.
+   */
+  PayloadIterator(ContainerValueType* payload, const std::size_t pos);
+
+  bool operator!=(const PayloadIterator& other) const;
+
+  const ContainerValueType& operator*() const { return payload_[pos_]; }
+
+  ContainerValueType& operator*() { return payload_[pos_]; }
+
+  PayloadIterator& operator++();
+
+  PayloadIterator& operator--();
+
+private:
+  std::size_t pos_;
+  ContainerValueType* payload_;
+};
 
 /**
  * A packet consists of a header and a payload, stored in contiguous memory.
@@ -17,7 +47,7 @@ struct PayloadIterator;
 class Packet
 {
 public:
-  using ValueType = u8;
+  using ValueType = ContainerValueType;
 
   // ============================================================ //
   // Lifetime

@@ -4,52 +4,34 @@
 
 namespace dib {
 
-struct PayloadIterator
-{
-  /**
-   * Use to construct an iterator pointing to the start of the payload.
-   * @param payload Pointer to the payload
-   */
-  explicit PayloadIterator(Packet::ValueType* payload)
+PayloadIterator::PayloadIterator(ContainerValueType* payload)
     : PayloadIterator(payload, 0)
-  {}
+{}
 
-  /**
-   * To construct a end iterator, set pos to one step beyond the end of the
-   * payload.
-   * @param payload Pointer to the payload
-   * @param pos Where in the payload we are.
-   */
-  PayloadIterator(Packet::ValueType* payload, const std::size_t pos)
-    : pos_(pos)
-    , payload_(payload)
-  {}
+PayloadIterator::PayloadIterator(ContainerValueType* payload, const std::size_t pos)
+  : pos_(pos)
+  , payload_(payload)
+{}
 
-  bool operator!=(const PayloadIterator& other) const
-  {
-    return pos_ != other.pos_;
-  }
+bool
+PayloadIterator::operator!=(const PayloadIterator& other) const
+{
+  return pos_ != other.pos_;
+}
 
-  const Packet::ValueType& operator*() const { return payload_[pos_]; }
+PayloadIterator&
+PayloadIterator::operator++()
+{
+  ++pos_;
+  return *this;
+}
 
-  Packet::ValueType& operator*() { return payload_[pos_]; }
-
-  PayloadIterator& operator++()
-  {
-    ++pos_;
-    return *this;
-  }
-
-  PayloadIterator& operator--()
-  {
-    --pos_;
-    return *this;
-  }
-
-private:
-  std::size_t pos_;
-  Packet::ValueType* payload_;
-};
+PayloadIterator&
+PayloadIterator::operator--()
+{
+  --pos_;
+  return *this;
+}
 
 // ============================================================ //
 
