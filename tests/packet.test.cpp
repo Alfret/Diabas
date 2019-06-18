@@ -43,5 +43,11 @@ TEST_SUITE("packet")
     CHECK(std::memcmp(str.GetUTF8(), packet.GetPayload(), str.GetSize()) == 0);
     alflib::String packet_str = packet.ToString();
     CHECK(str == packet_str);
+
+    auto it = packet.begin();
+    for (std::size_t i=0; i<str.GetSize(); i++) {
+      CHECK(*it == str[i]);
+      ++it;
+    }
   }
 }
