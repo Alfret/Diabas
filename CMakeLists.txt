@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 project(diabas)
 set(CMAKE_CXX_STANDARD 17)
 
-
 # #include "..."
 include_directories(
   source/
@@ -34,7 +33,7 @@ set(COMMON_SOURCE
   source/app/app.cpp
   source/app/graphics/graphics.cpp
   source/script/environment.cpp
-  source/script/script.cpp
+  source/script/module.cpp
   source/mods/loader.cpp
   source/mods/loader.hpp
   source/mods/mod_info.hpp
