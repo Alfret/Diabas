@@ -58,11 +58,11 @@ Server::NetworkInfo() const
 }
 
 void
-Server::BroadcastPacket(const Packet& packet,
-                   const SendStrategy send_strategy)
+Server::BroadcastPacket(const Packet& packet, const SendStrategy send_strategy)
 {
   for (auto client : clients_) {
-    Common::SendPacket(packet, send_strategy, client.connection, socket_interface_);
+    Common::SendPacket(
+      packet, send_strategy, client.connection, socket_interface_);
   }
 }
 

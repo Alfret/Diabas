@@ -1,7 +1,7 @@
 #include "world.hpp"
 #include "core/fixed_time_update.hpp"
-#include <functional>
 #include <dlog.hpp>
+#include <functional>
 
 namespace dib {
 
@@ -61,8 +61,7 @@ template<>
 void
 World<Side::kClient>::NetworkInfo([
   [maybe_unused]] const std::string_view message) const
-{
-}
+{}
 
 template<>
 void
@@ -70,8 +69,7 @@ World<Side::kServer>::Broadcast(const std::string_view message) const
 {
   auto server = GetServer();
 
-
-  Packet packet{message.data(), message.size()};
+  Packet packet{ message.data(), message.size() };
   server->BroadcastPacket(packet, SendStrategy::kReliable);
 }
 

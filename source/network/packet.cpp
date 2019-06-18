@@ -2,8 +2,7 @@
 #include "core/assert.hpp"
 #include <dlog.hpp>
 
-namespace dib
-{
+namespace dib {
 
 struct PayloadIterator
 {
@@ -12,7 +11,8 @@ struct PayloadIterator
    * @param payload Pointer to the payload
    */
   explicit PayloadIterator(Packet::ValueType* payload)
-      : PayloadIterator(payload, 0) {}
+    : PayloadIterator(payload, 0)
+  {}
 
   /**
    * To construct a end iterator, set pos to one step beyond the end of the
@@ -21,23 +21,21 @@ struct PayloadIterator
    * @param pos Where in the payload we are.
    */
   PayloadIterator(Packet::ValueType* payload, const std::size_t pos)
-      : pos_(pos)
-      , payload_(payload)
+    : pos_(pos)
+    , payload_(payload)
   {}
 
-  bool operator!=(const PayloadIterator& other) const {
+  bool operator!=(const PayloadIterator& other) const
+  {
     return pos_ != other.pos_;
   }
 
-  const Packet::ValueType& operator*() const {
-    return payload_[pos_];
-  }
+  const Packet::ValueType& operator*() const { return payload_[pos_]; }
 
-  Packet::ValueType& operator*() {
-    return payload_[pos_];
-  }
+  Packet::ValueType& operator*() { return payload_[pos_]; }
 
-  PayloadIterator& operator++() {
+  PayloadIterator& operator++()
+  {
     ++pos_;
     return *this;
   }
@@ -48,7 +46,7 @@ struct PayloadIterator
     return *this;
   }
 
- private:
+private:
   std::size_t pos_;
   Packet::ValueType* payload_;
 };
@@ -56,19 +54,19 @@ struct PayloadIterator
 // ============================================================ //
 
 Packet::Packet()
-    : Packet(kDefaultPacketSize)
-{
-}
+  : Packet(kDefaultPacketSize)
+{}
 
 Packet::Packet(const std::size_t size)
-    : size_(kHeaderSize)
+  : size_(kHeaderSize)
 {
-  DIB_ASSERT(size >= kHeaderSize, "size must be larger or equal to header size");
+  DIB_ASSERT(size >= kHeaderSize,
+             "size must be larger or equal to header size");
   SetPacketCapacity(size);
 }
 
 Packet::Packet(const u8* data, const std::size_t data_count)
-    : Packet(data_count)
+  : Packet(data_count)
 {
   SetPacket(data, data_count);
 }
@@ -81,7 +79,7 @@ Packet::Packet(const char8* data, const std::size_t data_count)
 }
 
 Packet::Packet(const alflib::String& string)
-    : Packet(string.GetSize() + GetHeaderSize())
+  : Packet(string.GetSize() + GetHeaderSize())
 {
   ClearHeader();
   SetPayload(string.GetUTF8(), string.GetSize());
@@ -140,7 +138,7 @@ Packet::SetPacket(const u8* data, const std::size_t data_count)
 std::size_t
 Packet::GetHeaderSize() const
 {
-  DIB_ASSERT(container_.capacity() >= kHeaderSize , "container too small");
+  DIB_ASSERT(container_.capacity() >= kHeaderSize, "container too small");
   return kHeaderSize;
 }
 
@@ -203,26 +201,34 @@ Packet::SetPayload(const char8* str, const std::size_t str_len)
   return SetPayload(reinterpret_cast<const u8*>(str), str_len);
 }
 
-const u8* Packet::GetPayload() const
+const u8*
+Packet::GetPayload() const
 {
   DIB_ASSERT(GetPayloadSize() > 0, "container too small");
   return &container_[kHeaderSize];
 }
 
-u8* Packet::GetPayload()
+u8*
+Packet::GetPayload()
 {
   DIB_ASSERT(GetPayloadSize() > 0, "container too small");
   return &container_[kHeaderSize];
 }
 
-PayloadIterator Packet::begin() { return PayloadIterator{ GetPayload() }; }
+PayloadIterator
+Packet::begin()
+{
+  return PayloadIterator{ GetPayload() };
+}
 
-PayloadIterator Packet::end()
+PayloadIterator
+Packet::end()
 {
   return PayloadIterator{ GetPayload(), GetPayloadCapacity() };
 }
 
-alflib::String Packet::ToString()
+alflib::String
+Packet::ToString()
 {
   // TODO when alflib is updated remove the null termination.
   if (size_ == GetPayloadCapacity()) {

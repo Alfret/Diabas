@@ -59,7 +59,7 @@ private:
 
   void StartServer();
 
- public:
+public:
   void NetworkInfo(const std::string_view message) const;
 
   void Broadcast(const std::string_view message) const;

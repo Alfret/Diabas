@@ -2,9 +2,9 @@
 #define PACKET_HPP_
 
 #include "core/types.hpp"
-#include <vector>
 #include "network/packet_header.hpp"
 #include <alflib/string.hpp>
+#include <vector>
 
 namespace dib {
 
@@ -16,13 +16,13 @@ struct PayloadIterator;
  */
 class Packet
 {
-  public:
+public:
   using ValueType = u8;
 
   // ============================================================ //
   // Lifetime
   // ============================================================ //
- public:
+public:
   Packet();
 
   /**
@@ -50,8 +50,7 @@ class Packet
   // ============================================================ //
   // Packet / General
   // ============================================================ //
- public:
-
+public:
   /**
    * Clear the packet, will not write anything to the container.
    */
@@ -60,7 +59,10 @@ class Packet
   /**
    * Get how many bytes are unused in the packet.
    */
-  std::size_t GetBytesLeft() const { return GetPacketCapacity() - GetPacketSize(); }
+  std::size_t GetBytesLeft() const
+  {
+    return GetPacketCapacity() - GetPacketSize();
+  }
 
   /**
    * Set amount of bytes allocated for container. Includes both
@@ -80,10 +82,10 @@ class Packet
 
   const ValueType* GetPacket() const { return &container_[0]; }
 
- private:
+private:
   ValueType* GetPacket() { return &container_[0]; }
 
- public:
+public:
   /**
    * Simply take a data source, and write that into our container.
    * @return False if data_count is too large for our packet.
@@ -100,10 +102,10 @@ public:
 
   const PacketHeader* GetHeader() const;
 
- private:
+private:
   ValueType* GetHeaderRaw();
 
- public:
+public:
   /**
    * Write 0's to header;
    */
@@ -112,7 +114,7 @@ public:
   // ============================================================ //
   // Payload
   // ============================================================ //
- public:
+public:
   /**
    * Get used bytes by the payload.
    */
@@ -142,14 +144,14 @@ public:
   // ============================================================ //
   // Constants
   // ============================================================ //
- private:
+private:
   static constexpr std::size_t kHeaderSize = sizeof(PacketHeader);
   static constexpr std::size_t kDefaultPacketSize = 1024;
 
   // ============================================================ //
   // Member variables
   // ============================================================ //
- private:
+private:
   using PacketContainer = std::vector<ValueType>;
 
   std::size_t size_;

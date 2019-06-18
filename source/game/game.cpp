@@ -1,6 +1,6 @@
 #include "game.hpp"
-#include <dlog.hpp>
 #include "network/network.hpp"
+#include <dlog.hpp>
 
 // TEMP (for thread sleep to not overwork my linux machine)
 #include <chrono>
@@ -23,7 +23,8 @@ Game::Game(const Descriptor& descriptor)
 
 // -------------------------------------------------------------------------- //
 
-Game::~Game() {
+Game::~Game()
+{
   Network::ShutdownNetwork();
   std::exit(0);
 }
@@ -52,17 +53,18 @@ Game::Render()
 
 // -------------------------------------------------------------------------- //
 
-void Game::SetupInputCommands()
+void
+Game::SetupInputCommands()
 {
-  input_handler_.AddCommand(InputCommandCategory::kInfo,
-                           "network",
-                            std::bind(&World<kSide>::NetworkInfo, &world_,
-                                      std::placeholders::_1));
+  input_handler_.AddCommand(
+    InputCommandCategory::kInfo,
+    "network",
+    std::bind(&World<kSide>::NetworkInfo, &world_, std::placeholders::_1));
 
-  input_handler_.AddCommand(InputCommandCategory::kChat,
-                            "broadcast",
-                            std::bind(&World<kSide>::Broadcast, &world_,
-                                      std::placeholders::_1));
+  input_handler_.AddCommand(
+    InputCommandCategory::kChat,
+    "broadcast",
+    std::bind(&World<kSide>::Broadcast, &world_, std::placeholders::_1));
 }
 
 }

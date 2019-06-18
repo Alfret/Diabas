@@ -64,7 +64,7 @@ Client::PollIncomingPackets(Packet& packet_out)
   bool retval = false;
   if (msg_count > 0) {
     bool ok =
-        packet_out.SetPacket(static_cast<const u8*>(msg->m_pData), msg->m_cbSize);
+      packet_out.SetPacket(static_cast<const u8*>(msg->m_pData), msg->m_cbSize);
     if (ok) {
       retval = true;
       // TODO not this

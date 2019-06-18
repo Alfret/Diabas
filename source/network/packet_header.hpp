@@ -3,8 +3,7 @@
 
 #include "core/types.hpp"
 
-namespace dib
-{
+namespace dib {
 struct PacketHeader
 {
   s32 a;
@@ -14,4 +13,4 @@ struct PacketHeader
 };
 }
 
-#endif//PACKET_HEADER_HPP_
+#endif // PACKET_HEADER_HPP_
