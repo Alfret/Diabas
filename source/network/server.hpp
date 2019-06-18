@@ -67,7 +67,6 @@ public:
                         const HSteamNetConnection connection);
 
 private:
-
   void PollSocketStateChanges();
 
   void PollIncomingPackets();

@@ -20,7 +20,6 @@ enum class NetworkMode : bool
 class Network
 {
 public:
-
   Network();
 
   ~Network();
@@ -37,8 +36,6 @@ public:
    */
   static void ShutdownNetwork();
 };
-
-
 
 }
 
