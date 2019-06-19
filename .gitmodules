@@ -7,6 +7,9 @@
 [submodule "thirdparty/dutil"]
 	path = thirdparty/dutil
 	url = https://github.com/dumheter/dutil
+[submodule "thirdparty/gamenetworkingsockets"]
+	path = thirdparty/gamenetworkingsockets
+	url = https://github.com/valvesoftware/gamenetworkingsockets
 [submodule "thirdparty/cpptoml"]
 	path = thirdparty/cpptoml
 	url = https://github.com/skystrife/cpptoml
