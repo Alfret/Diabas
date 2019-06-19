@@ -2,7 +2,7 @@
 
 #include <dlog.hpp>
 #include "network/network.hpp"
-
+#include "script/script.hpp"
 // TEMP (for thread sleep to not overwork my linux machine)
 #include <chrono>
 #include <thread>
@@ -10,8 +10,7 @@
 // ========================================================================== //
 // Game Implementation
 // ========================================================================== //
-#include <chrono>
-#include <thread>
+
 namespace dib {
 
 Game::Game(const Descriptor& descriptor)
@@ -23,8 +22,8 @@ Game::Game(const Descriptor& descriptor)
   DLOG_INFO("running as {}", SideToString(world_.GetSide()));
   SetupInputCommands();
 
-  script::Script s(mScriptEnvironment, Path{ "mods/core/main.js" });
-  script::Result result = s.Load();
+  script::Script testScript(mScriptEnvironment, Path{ "mods/core/main.js" });
+  script::Result result = testScript.Load();
   DIB_ASSERT(result == script::Result::kSuccess, "Failed to load test script");
 }
 
