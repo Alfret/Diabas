@@ -10,15 +10,18 @@ LoadMods(const alflib::Path& mods_folder_path)
   std::vector<Mod> mods;
 
   const alflib::File mods_folder(mods_folder_path);
-  const alflib::ArrayList<alflib::File> mods_folders = mods_folder.Enumerate(false);
+  const alflib::ArrayList<alflib::File> mods_folders =
+    mods_folder.Enumerate(false);
 
   DLOG_INFO("Loading mods.");
   for (u32 i = 0; i < mods_folders.GetSize(); i++) {
     const alflib::File mod_folder = mods_folder.Open(mods_folders[i].GetPath());
-    const alflib::ArrayList<alflib::File> mod_folders = mod_folder.Enumerate(false);
-    for (u32 c=0; c<mod_folders.GetSize(); c++) {
+    const alflib::ArrayList<alflib::File> mod_folders =
+      mod_folder.Enumerate(false);
+    for (u32 c = 0; c < mod_folders.GetSize(); c++) {
       // Mod top directory must contain a .toml file that describes it.
-      if (mod_folders[c].GetPath().GetExtension() != alflib::Path::Extension::kToml) {
+      if (mod_folders[c].GetPath().GetExtension() !=
+          alflib::Path::Extension::kToml) {
         continue;
       }
 
@@ -34,7 +37,7 @@ LoadMods(const alflib::Path& mods_folder_path)
       // parse the mod.toml file
       const alflib::File file = mod_folder.Open(mod_folders[c].GetPath());
       auto [result, mod_info] =
-        Parse(file.GetPath().GetAbsolutePath().GetPath());
+        Parse(file.GetPath().GetAbsolutePath().GetPathString());
       if (result != ParseResult::kSuccess) {
         DLOG_WARNING("skipping [{}] due to parse error [{}].",
                      mod_folders[c].GetPath().GetName(),
