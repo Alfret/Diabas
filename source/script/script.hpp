@@ -23,9 +23,9 @@ private:
   Environment::Module* mModule = nullptr;
 
   /** Path to script module **/
-  alflib::Path mPath;
+  Path mPath = Path{ "" };
   /** Main class name **/
-  String mClassName;
+  String mClassName = "";
 
   /** Class instance **/
   JsValueRef mInstance = JS_INVALID_REFERENCE;
@@ -36,17 +36,23 @@ private:
 
 public:
   /** Create script. This does not yet load the script **/
-  Script(Environment& environment,
-         const alflib::Path& path,
-         const String& className = "");
+  Script(Environment& environment);
 
+  /** Destruct, destroying the instance **/
   ~Script();
 
-  Result Load();
+  /** Load the script from the specified path and with an optional class name to
+   * use when looking for the exported mod class **/
+  Result Load(const Path& path, const String& className = "");
 
+  /** Initialize script **/
   void Init();
 
+  /** Update script **/
   void Update(f32 delta);
+
+  /** Returns the instance of the mod class in the script **/
+  JsValueRef GetInstance() const { return mInstance; }
 };
 
 }
