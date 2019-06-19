@@ -5,20 +5,18 @@
 
 namespace dib {
 
-using PacketHeaderType = u16;
+using PacketHeaderType = u32;
 
 struct PacketHeader
 {
-  PacketHeaderType packet_type;
-  u16 padding1;
+  PacketHeaderType type;
 };
 
 // ============================================================ //
 // Predefined packet types
 // ============================================================ //
 
-static constexpr PacketHeaderType kPacketHeaderTypeChat = 0;
-
+constexpr PacketHeaderType kPacketHeaderTypeChat = 0;
 
 }
 

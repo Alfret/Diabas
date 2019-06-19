@@ -10,7 +10,7 @@ TEST_SUITE("packet")
     Packet packet{};
 
     PacketHeader header{};
-    header.packet_type = 13;
+    header.type = 13;
 
     packet.SetHeader(header);
 

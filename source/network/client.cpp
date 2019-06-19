@@ -15,11 +15,10 @@ Client::~Client()
 }
 
 void
-Client::Poll()
+Client::Poll(bool& got_packet, Packet& packet_out)
 {
   PollSocketStateChanges();
-  Packet packet_out{};
-  PollIncomingPackets(packet_out);
+  got_packet = PollIncomingPackets(packet_out);
 }
 
 void
@@ -61,15 +60,12 @@ Client::PollIncomingPackets(Packet& packet_out)
   const int msg_count =
     socket_interface_->ReceiveMessagesOnConnection(connection_, &msg, 1);
 
-  bool retval = false;
+  bool got_packet = false;
   if (msg_count > 0) {
     bool ok =
       packet_out.SetPacket(static_cast<const u8*>(msg->m_pData), msg->m_cbSize);
     if (ok) {
-      retval = true;
-      // TODO not this
-      alflib::String msg = packet_out.ToString();
-      DLOG_RAW("Server: {}\n", msg);
+      got_packet = true;
     } else {
       DLOG_ERROR("could not parse packet, too big [{}/{}]",
                  msg->m_cbSize,
@@ -84,7 +80,7 @@ Client::PollIncomingPackets(Packet& packet_out)
     }
   }
 
-  return retval;
+  return got_packet;
 }
 
 void

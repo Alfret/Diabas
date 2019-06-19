@@ -10,61 +10,112 @@ TEST_SUITE("packet_handler")
   {
     PacketHandler packet_handler{};
 
-    alflib::String names[3] = { "foo", "bar", "ayy" };
-    u8 correct_value = 25; // ((10 - 2) * 3) + 1
     u8 value = 10;
 
-    auto FooCb = [&value](const Packet&) { value -= 2; };
-    packet_handler.AddPacketType(names[0], FooCb);
+    bool ok = packet_handler.AddPacketType("adder", [&value](const Packet& packet) {
+      value += *packet.GetPayload();
+    });
+    CHECK(ok);
+    auto adder_type = packet_handler.GetType("adder");
+    CHECK(adder_type);
 
-    auto BarCb = [&value](const Packet&) { value *= 3; };
-    packet_handler.AddPacketType(names[1], BarCb);
+    ok = packet_handler.AddPacketType(
+      "ResetAndMultiply",
+      [&value](const Packet& packet) { value = 2 * *packet.GetPayload(); });
+    CHECK(ok);
+    auto reset_type = packet_handler.GetType("ResetAndMultiply");
+    CHECK(reset_type);
 
-    auto AyyCb = [&value](const Packet&) { value += 1; };
-    packet_handler.AddPacketType(names[2], AyyCb);
+    Packet packet{1};
+    u8 v = 4;
+    packet.SetPayload(&v, 1);
+    packet_handler[*adder_type].callback(packet);
+    CHECK(value == 10+v);
 
-    Packet packet{};
-    for (std::size_t i = 0; i < packet_handler.GetSize(); i++) {
-      packet_handler[i].callback(packet);
-    }
-    CHECK(std::memcmp(&value, &correct_value, 1) == 0);
+    packet_handler[*reset_type].callback(packet);
+    CHECK(value == 10 * 0 + 2 * v);
   }
 
-  TEST_CASE("sort")
+  TEST_CASE("type/hash collision")
   {
     PacketHandler packet_handler{};
+    u8 value = 10;
+    const PacketHeaderType same_type = 0;
 
-    alflib::String names[3] = {"foo", "bar", "ayy"};
-    u8 correct_value =  25; // ((10 - 2) * 3) + 1
+    bool ok = packet_handler.AddPacketType(same_type, "adder", [&value](const Packet& packet) {
+      value += *packet.GetPayload();
+    });
+    CHECK(ok);
+    auto adder_type = packet_handler.GetType("adder");
+    CHECK(adder_type);
+
+    ok = packet_handler.AddPacketType(
+        same_type,
+      "ResetAndMultiply",
+      [&value](const Packet& packet) { value = 2 * *packet.GetPayload(); });
+    CHECK(ok);
+    auto reset_type = packet_handler.GetType("ResetAndMultiply");
+    CHECK(reset_type);
+
+    Packet packet{ 1 };
+    u8 v = 4;
+    packet.SetPayload(&v, 1);
+    packet_handler[*adder_type].callback(packet);
+    CHECK(value == 10 + v);
+
+    packet_handler[*reset_type].callback(packet);
+    CHECK(value == 10 * 0 + 2 * v);
+  }
+
+  TEST_CASE("sync")
+  {
+    PacketHandler packet_handler{};
     u8 value = 10;
 
-    auto FooCb = [&value](const Packet&) { value *= 3; };
-    packet_handler.AddPacketType(names[0], FooCb);
+    const PacketHeaderType type_x = 0;
+    const PacketHeaderType type_y = 500;
 
-    auto BarCb = [&value](const Packet&) { value += 1; };
-    packet_handler.AddPacketType(names[1], BarCb);
+    bool ok = packet_handler.AddPacketType(
+      type_y, "x", [&value](const Packet& packet) {
+        value += *packet.GetPayload();
+      });
+    CHECK(ok);
 
-    auto AyyCb = [&value](const Packet&) { value -= 2; };
-    packet_handler.AddPacketType(names[2], AyyCb);
+    ok = packet_handler.AddPacketType(
+      type_x, "y", [&value](const Packet& packet) {
+        value = 2 * *packet.GetPayload();
+      });
+    CHECK(ok);
 
-    Packet packet{};
-    for (std::size_t i=0; i<packet_handler.GetSize(); i++) {
-      packet_handler[i].callback(packet);
-    }
-    CHECK(std::memcmp(&value, &correct_value, 1) != 0);
+    // wrong order
+    Packet packet{ 1 };
+    u8 v = 4;
+    packet.SetPayload(&v, 1);
+    packet_handler[type_x].callback(packet);
+    CHECK(value != 10 + v);
+    packet_handler[type_y].callback(packet);
+    CHECK(value != 10 * 0 + 2 * v);
 
+    // build up the correct packet handler
+    PacketHandler correct_packet_handler{};
+    ok =
+      correct_packet_handler.AddPacketType(type_x, "x", [&value](const Packet& packet) {
+        value += *packet.GetPayload();
+      });
+    CHECK(ok);
+    ok =
+      correct_packet_handler.AddPacketType(type_y, "y", [&value](const Packet& packet) {
+        value = 2 * *packet.GetPayload();
+      });
+    CHECK(ok);
+
+    packet_handler.Sync(correct_packet_handler.Serialize());
+
+    // check it is now correct
     value = 10;
-
-    std::vector<PacketMetaSerializable> packet_metas{};
-    packet_metas.push_back({ 0, PacketHandler::GetHash(names[2]), names[2] });
-    packet_metas.push_back({ 1, PacketHandler::GetHash(names[0]), names[0] });
-    packet_metas.push_back({ 2, PacketHandler::GetHash(names[1]), names[1] });
-
-    packet_handler.Sort(packet_metas);
-
-    for (std::size_t i = 0; i < packet_handler.GetSize(); i++) {
-      packet_handler[i].callback(packet);
-    }
-    CHECK(std::memcmp(&value, &correct_value, 1) == 0);
+    packet_handler[type_x].callback(packet);
+    CHECK(value == 10 + v);
+    packet_handler[type_y].callback(packet);
+    CHECK(value == 10 * 0 + 2 * v);
   }
 }

@@ -53,11 +53,12 @@ private:
   // ============================================================ //
   // Network Specific
   // ============================================================ //
-
 private:
   void ConnectToServer();
 
   void StartServer();
+
+  void SetupPacketHandler();
 
 public:
   void NetworkInfo(const std::string_view message) const;
@@ -79,11 +80,16 @@ public:
   // Member Variables
   // ============================================================ //
 
-private:
+ private:
   /**
+   * Packet producer
    * Use GetClient and GetServer to access.
    */
   ISteamNetworkingSocketsCallbacks* base_;
+
+  PacketHandler packet_handler_{};
+
+  Packet packet_{10000};
 };
 
 // ============================================================ //
