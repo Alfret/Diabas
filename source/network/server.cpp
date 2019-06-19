@@ -6,7 +6,6 @@ namespace dib {
 Server::Server()
   : socket_interface_(SteamNetworkingSockets())
 {
-  packet_.SetPacketCapacity(100000);
 }
 
 Server::~Server()
@@ -18,10 +17,10 @@ Server::~Server()
 }
 
 void
-Server::Poll()
+Server::Poll(bool& got_packet, Packet& packet_out)
 {
   PollSocketStateChanges();
-  PollIncomingPackets();
+  got_packet = PollIncomingPackets(packet_out);
 }
 
 void
@@ -81,41 +80,41 @@ Server::PollSocketStateChanges()
   socket_interface_->RunCallbacks(this);
 }
 
-void
-Server::PollIncomingPackets()
+bool
+Server::PollIncomingPackets(Packet& packet_out)
 {
   ISteamNetworkingMessage* msg = nullptr;
   const int msg_count =
     socket_interface_->ReceiveMessagesOnListenSocket(socket_, &msg, 1);
 
+  bool got_packet = false;
   if (msg_count > 0) {
     bool ok =
-      packet_.SetPacket(static_cast<const u8*>(msg->m_pData), msg->m_cbSize);
+      packet_out.SetPacket(static_cast<const u8*>(msg->m_pData), msg->m_cbSize);
     if (ok) {
       auto maybe_clientid = ClientIdFromConnection(msg->m_conn);
-      if (!maybe_clientid) {
+      if (maybe_clientid) {
+        got_packet = true;
+      } else {
         DLOG_WARNING("received packet from unknown connection, dropping it");
         DisconnectClient(msg->m_conn);
-      }
-
-      if (packet_.GetPayloadSize() < 100) {
-        alflib::String msg = packet_.ToString();
-        DLOG_INFO("TODO handle packet [{}] from [{}]", msg, maybe_clientid->id);
-      } else {
-        DLOG_INFO("TODO handle packet from [{}]", maybe_clientid->id);
       }
     } else {
       DLOG_ERROR("could not parse packet, too big [{}/{}]",
                  msg->m_cbSize,
-                 packet_.GetPacketCapacity());
+                 packet_out.GetPacketCapacity());
     }
 
     msg->Release();
 
   } else if (msg_count < 0) {
     DLOG_WARNING("failed to check for messages, closing connection");
-    DisconnectClient(msg->m_conn);
+    if (msg != nullptr) {
+      DisconnectClient(msg->m_conn);
+    }
   }
+
+  return got_packet;
 }
 
 void

@@ -50,7 +50,7 @@ public:
 
   virtual ~Server() final;
 
-  void Poll();
+  void Poll(bool& got_packet, Packet& packet_out);
 
   void StartServer(const u16 port);
 
@@ -69,7 +69,7 @@ public:
 private:
   void PollSocketStateChanges();
 
-  void PollIncomingPackets();
+  bool PollIncomingPackets(Packet& packet_out);
 
   virtual void OnSteamNetConnectionStatusChanged(
     SteamNetConnectionStatusChangedCallback_t* status) override;
@@ -83,7 +83,6 @@ private:
   HSteamListenSocket socket_;
   ISteamNetworkingSockets* socket_interface_;
   std::vector<ClientConnection> clients_{};
-  Packet packet_{};
   NetworkState network_state_ = NetworkState::kServer;
 };
 }
