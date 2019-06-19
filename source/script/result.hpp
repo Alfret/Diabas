@@ -42,7 +42,9 @@ enum class Result
   /** Compilation error **/
   kCompileError,
   /** Exception occurred **/
-  kException
+  kException,
+  /** Class was not found **/
+  kClassNotFound
 };
 
 }

@@ -5,6 +5,7 @@
 // ========================================================================== //
 
 #include "core/assert.hpp"
+#include "script/script.hpp"
 #include "script/util.hpp"
 
 // ========================================================================== //
@@ -17,9 +18,11 @@ Game::Game(const Descriptor& descriptor)
   : Application(descriptor)
   , mScriptEnvironment()
 {
-  GetGraphics().SetClearColor(100 / 255.0f, 149 / 255.0f, 237 / 255.0f, 1.0f);
+  GetGraphics().SetClearColor(graphics::Color{ 100, 149, 237 });
 
-  mScriptEnvironment.LoadModule(alflib::Path{ "mods/core/main.js" });
+  script::Script s(mScriptEnvironment, Path{ "mods/core/main.js" });
+  script::Result result = s.Load();
+  DIB_ASSERT(result == script::Result::kSuccess, "Failed to load test script");
 }
 
 // -------------------------------------------------------------------------- //

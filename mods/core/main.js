@@ -4,19 +4,15 @@ export default class CoreMod extends Mod {
 
     constructor() {
         super();
-        dlog.info("Constructing CoreMod (", my_add(2, 3), ")");
-        this.name = "Hej";
-        this.age = 33;
+        dlog.info("CoreMod::constructor()");
     }
 
-    j
-
     init() {
-        dlog.verbose("CoreMod::init");
+        dlog.verbose("CoreMod::init()");
     }
 
     update(delta) {
-        dlog.verbose("Delta: " + delta);
+        dlog.verbose("CoreMod::update(", delta, ")");
     }
 
 }

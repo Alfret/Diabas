@@ -52,6 +52,8 @@ public:
     alflib::Path path;
     /** Handle to module **/
     JsModuleRecord record;
+    /** Whether the module is compiled **/
+    bool isCompiled;
   };
 
   /** Information about a load task **/
@@ -106,9 +108,8 @@ public:
   /** Load a module **/
   Module* LoadModule(const alflib::Path& path);
 
-  /** Instantiate instance of class with specified name from the specified
-   * module **/
-  JsValueRef InstantiateObject(Module* module, const String& className);
+  /** Instantiate a class using a constructor object **/
+  JsValueRef InstantiateObject(JsValueRef constructor);
 
   /** Returns the prototype of the specified class in the specified module **/
   JsValueRef GetClassPrototype(Module* module, const String& className);

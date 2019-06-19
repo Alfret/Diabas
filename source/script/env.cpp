@@ -29,6 +29,7 @@
 #include "core/assert.hpp"
 #include "script/expose/expose_base.hpp"
 #include "script/expose/expose_mod.hpp"
+#include "script/expose/expose_graphics.hpp"
 #include "script/util.hpp"
 #include <alflib/file/file_io.hpp>
 #include <dlog.hpp>
@@ -71,6 +72,7 @@ Environment::Environment()
   mRootModule = new Module;
   mRootModule->environment = this;
   mRootModule->path = alflib::Path{ ":env-root:" };
+  mRootModule->isCompiled = false;
   error = JsInitializeModuleRecord(nullptr, nullptr, &mRootModule->record);
   DIB_ASSERT(error == JsNoError, "Failed to create root module");
   error = JsSetModuleHostInfo(mRootModule->record,
@@ -95,6 +97,7 @@ Environment::Environment()
   // Expose functionality to scripts
   ExposeLogging();
   ExposeMod(*this);
+  ExposeGraphics(*this);
 }
 
 // -------------------------------------------------------------------------- //
@@ -191,6 +194,7 @@ Environment::LoadModule(const alflib::Path& path)
     if (error != JsNoError) {
       return nullptr;
     }
+    module->isCompiled = true;
   }
 
   // Update to run all pending tasks
@@ -203,30 +207,19 @@ Environment::LoadModule(const alflib::Path& path)
 // -------------------------------------------------------------------------- //
 
 JsValueRef
-Environment::InstantiateObject(Environment::Module* module,
-                               const String& className)
+Environment::InstantiateObject(JsValueRef constructor)
 {
-  // Retrieve module namespace
-  JsValueRef moduleNamespace;
-  JsErrorCode error = JsGetModuleNamespace(module->record, &moduleNamespace);
-  DIB_ASSERT(error == JsNoError, "Failed to retrieve module namespace");
-
-  // Retrieve class
-  JsPropertyIdRef clsId;
-  JsCreatePropertyId(className.GetUTF8(), className.GetSize(), &clsId);
-  JsValueRef cls;
-  JsGetProperty(moduleNamespace, clsId, &cls);
-
   // Store the constructor in global
   JsValueRef global;
   JsGetGlobalObject(&global);
-  JsPropertyIdRef constrId;
-  JsCreatePropertyId("__diabas_constr", strlen("__diabas_constr"), &constrId);
-  JsSetProperty(global, constrId, cls, true);
+  SetProperty(global, "__diabas_constr", constructor);
 
   // Run script
   JsValueRef output;
   Result result = RunScript("new __diabas_constr();", output);
+  if (result != Result::kSuccess) {
+    return JS_INVALID_REFERENCE;
+  }
   return output;
 }
 
@@ -294,12 +287,17 @@ Environment::Update()
       // DIB_ASSERT(false, "Failed to execute load task");
       continue;
     }
+    task.module->isCompiled = true;
   }
 
   // Run execution tasks
   while (!mRunTasks.empty()) {
     RunTask task = mRunTasks.front();
     mRunTasks.pop();
+
+    if (!task.module->isCompiled) {
+      continue;
+    }
 
     JsValueRef output;
     JsErrorCode error = JsModuleEvaluation(task.module->record, &output);
@@ -355,6 +353,7 @@ Environment::GetModule(const alflib::Path& path, Module* parent, bool& isNew)
   Module* module = new Module;
   module->environment = this;
   module->path = path;
+  module->isCompiled = false;
   JsValueRef specifier = CreateString(path.GetAbsolutePath().GetPathString());
   JsInitializeModuleRecord(
     parent ? parent->record : nullptr, specifier, &module->record);
