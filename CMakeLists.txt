@@ -17,12 +17,6 @@ include_directories(SYSTEM
   lib/chakracore/include
   )
 
-# binary output folder
-set(out_dir ${PROJECT_SOURCE_DIR}/out)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${out_dir}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${out_dir}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${out_dir}/bin)
-
 # Set extra compile flags here
 if (WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -122,6 +116,7 @@ include_directories(SYSTEM thirdparty)
 aux_source_directory(thirdparty/glad COMMON_SOURCE)
 
 # binary output folder
+set(out_dir ${PROJECT_SOURCE_DIR}/out)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
@@ -152,6 +147,7 @@ else ()
   set(DIB_LIBS pthread cpptoml dlog dutil glfw GameNetworkingSockets alflibcpp ChakraCore)
 endif ()
 
+# TODO(Filip Björklund): Remove GLFW as a dependency on the server
 target_link_libraries(${PROJECT_NAME} ${DIB_LIBS})
 target_link_libraries(server ${DIB_LIBS})
 target_link_libraries(test doctest ${DIB_LIBS})
