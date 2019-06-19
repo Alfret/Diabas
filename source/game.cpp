@@ -5,7 +5,7 @@
 // ========================================================================== //
 
 #include "core/assert.hpp"
-#include "script/module.hpp"
+#include "script/util.hpp"
 
 // ========================================================================== //
 // Game Implementation
@@ -19,11 +19,7 @@ Game::Game(const Descriptor& descriptor)
 {
   GetGraphics().SetClearColor(100 / 255.0f, 149 / 255.0f, 237 / 255.0f, 1.0f);
 
-  script::Module* module =
-    mScriptEnvironment.LoadModule(alflib::Path{ "mods/core/main.js" });
-  DIB_ASSERT(module != nullptr, "Failed to load module");
-  script::Result result = module->Run();
-  int y = 0;
+  mScriptEnvironment.LoadModule(alflib::Path{ "mods/core/main.js" });
 }
 
 // -------------------------------------------------------------------------- //
@@ -35,9 +31,13 @@ Game::~Game() {}
 void
 Game::Update(f64 delta)
 {
+  // Quit game if the escape key is pressed
   if (IsKeyDown(Key::KEY_ESCAPE)) {
     Exit();
   }
+
+  // Update the script manager
+  mScriptEnvironment.Update();
 }
 
 // -------------------------------------------------------------------------- //

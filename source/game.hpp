@@ -1,21 +1,20 @@
 #pragma once
 
 #include "app/app.hpp"
-#include "script/environment.hpp"
+#include "script/env.hpp"
 
 // ========================================================================== //
 // Game Declaration
 // ========================================================================== //
 
-namespace dib
-{
+namespace dib {
 
 /** Game class**/
 class Game : public Application
 {
 private:
   /** Script environment **/
-  script::ScriptEnvironment mScriptEnvironment;
+  script::Environment mScriptEnvironment;
 
 public:
   explicit Game(const Descriptor& descriptor);
@@ -25,7 +24,6 @@ public:
   void Update(f64 delta) override;
 
   void Render() override;
-
 };
 
 }
