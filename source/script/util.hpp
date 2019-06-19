@@ -26,64 +26,63 @@
 // Headers
 // ========================================================================== //
 
-#include "core/macros.hpp"
 #include "core/types.hpp"
-#include "script/result.hpp"
 #include <ChakraCore.h>
-#include <alflib/file/file.hpp>
 
 // ========================================================================== //
-// Module Declaration
+// Functions
 // ========================================================================== //
 
 namespace dib {
 namespace script {
 
-DIB_FORWARD_DECLARE_CLASS(ScriptEnvironment);
+/** Create a JavaScript string **/
+JsValueRef
+CreateString(const String& string);
 
-/** Script module **/
-class Module
-{
-private:
-  /** Environment that modules belongs in **/
-  ScriptEnvironment& mEnvironment;
+// -------------------------------------------------------------------------- //
 
-  /** File of the module **/
-  alflib::File mFile;
-  /** Source code **/
-  String mSource;
+/** Retrieve string **/
+String
+GetString(JsValueRef string);
 
-  /** Module handle **/
-  JsModuleRecord mModule;
+// -------------------------------------------------------------------------- //
 
-public:
-  /** Create module. This does not not load the module **/
-  explicit Module(ScriptEnvironment& environment, const alflib::File& file);
+/** Converts an object to a string **/
+String
+ToString(JsValueRef object);
 
-  /** Deleted copy-constructor **/
-  Module(const Module&) = delete;
+// -------------------------------------------------------------------------- //
 
-  /** Destroy module **/
-  ~Module();
+/** Returns whether an object has the specified property **/
+bool
+HasProperty(JsValueRef object, const String& property);
 
-  /** Deleted copy-assignment **/
-  Module& operator=(const Module&) = delete;
+// -------------------------------------------------------------------------- //
 
-  /** Load the actual module **/
-  Result Load(JsModuleRecord referencingModule = JS_INVALID_REFERENCE);
+/** Returns the property of an object. If the property does not exist then
+ * JS_INVALID_REFERENCE is returned instead **/
+JsValueRef
+GetProperty(JsValueRef object, const String& property);
 
-  /** Run the module to load all symbols **/
-  Result Run();
+// -------------------------------------------------------------------------- //
 
-  /** Returns the environment that this script belongs to **/
-  ScriptEnvironment& GetEnvironment() { return mEnvironment; }
+/** Returns a property of an object as an integer **/
+s32
+GetPropertyInt(JsValueRef object, const String& property);
 
-  /** Returns the file of the script module **/
-  alflib::File GetFile() const { return mFile; }
+// -------------------------------------------------------------------------- //
 
-  /** Returns the module handle **/
-  JsModuleRecord GetHandle() const { return mModule; }
-};
+/** Returns a property of an object as a string **/
+String
+GetPropertyString(JsValueRef object, const String& property);
+
+// -------------------------------------------------------------------------- //
+
+/** Set the property of an object to the specified value. If the property could
+ * not be set then false is returned **/
+bool
+SetProperty(JsValueRef object, const String& property, JsValueRef value);
 
 }
 }

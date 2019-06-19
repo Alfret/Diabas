@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2019 Filip Björklund
+// Copyright (c) 2019 Filip BjÃ¶rklund
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -9,8 +9,8 @@
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -26,8 +26,7 @@
 // Result Enumeration
 // ========================================================================== //
 
-namespace dib {
-namespace script {
+namespace dib::script {
 
 /** Script results **/
 enum class Result
@@ -36,11 +35,14 @@ enum class Result
   kSuccess,
   /** Unknown error **/
   kUnknownError,
+  /** Could not find module **/
+  kModuleNotFound,
+  /** Could not read module file **/
+  kFailedToReadFile,
   /** Compilation error **/
   kCompileError,
-  /** Exception occured **/
-  kException,
+  /** Exception occurred **/
+  kException
 };
 
-}
 }
