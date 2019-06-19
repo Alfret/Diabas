@@ -4,6 +4,7 @@
 #include "game/world.hpp"
 #include "server/input.hpp"
 #include "network/network.hpp"
+#include "script/env.hpp"
 
 // ========================================================================== //
 // Game Declaration
@@ -26,7 +27,7 @@ public:
   // ============================================================ //
   // Methods
   // ============================================================ //
- public:
+public:
   void Update(f64 delta) override;
 
   void Render() override;
@@ -34,23 +35,25 @@ public:
   // ============================================================ //
   // Constants
   // ============================================================ //
- public:
+public:
 #ifdef DIB_IS_SERVER
-   static constexpr Side kSide = Side::kServer;
+  static constexpr Side kSide = Side::kServer;
 #else
-   static constexpr Side kSide = Side::kClient;
+  static constexpr Side kSide = Side::kClient;
 #endif
 
   // ============================================================ //
   // Private Methods
   // ============================================================ //
- private:
-   void SetupInputCommands();
+private:
+  void SetupInputCommands();
 
   // ============================================================ //
   // Member Variables
   // ============================================================ //
- private:
+private:
+  /** Script environment **/
+  script::Environment mScriptEnvironment;
 
   // MUST be before any other network code.
   Network network_{};
@@ -58,7 +61,6 @@ public:
   World<kSide> world_{};
 
   InputHandler<kSide> input_handler_{};
-
 };
 
 }
