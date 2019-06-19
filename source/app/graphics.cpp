@@ -1,4 +1,4 @@
-#include "app/graphics/graphics.hpp"
+#include "app/graphics.hpp"
 
 // ========================================================================== //
 // Headers
@@ -56,9 +56,9 @@ Graphics::Present()
 // -------------------------------------------------------------------------- //
 
 void
-Graphics::SetClearColor(f32 r, f32 g, f32 b, f32 a)
+Graphics::SetClearColor(const graphics::Color& color)
 {
-  glClearColor(r, g, b, a);
+  glClearColor(color.Red(), color.Green(), color.Blue(), color.Alpha());
 }
 
 }

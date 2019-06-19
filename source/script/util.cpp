@@ -36,6 +36,26 @@ namespace dib {
 namespace script {
 
 JsValueRef
+GetGlobal()
+{
+  JsValueRef global;
+  JsGetGlobalObject(&global);
+  return global;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+CreateValue(f32 value)
+{
+  JsValueRef output;
+  JsDoubleToNumber(static_cast<f64>(value), &output);
+  return output;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
 CreateString(const String& string)
 {
   JsValueRef output;
@@ -45,6 +65,50 @@ CreateString(const String& string)
     return JS_INVALID_REFERENCE;
   }
   return output;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+CreateFunction(JsNativeFunction function, void* callbackState)
+{
+  JsValueRef output;
+  JsErrorCode error = JsCreateFunction(function, callbackState, &output);
+  DIB_ASSERT(error == JsNoError, "Could not create JavaScript function");
+  return output;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+CreateObject()
+{
+  JsValueRef object;
+  JsErrorCode error = JsCreateObject(&object);
+  DIB_ASSERT(error == JsNoError, "Could not create JavaScript object");
+  return object;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+CreateExternalObject(void* data, JsFinalizeCallback finalizeCallback)
+{
+  JsValueRef object;
+  JsErrorCode error = JsCreateExternalObject(data, finalizeCallback, &object);
+  DIB_ASSERT(error == JsNoError,
+             "Could not create JavaScript object with external data");
+  return object;
+}
+
+// -------------------------------------------------------------------------- //
+
+f32
+GetF32(JsValueRef value)
+{
+  f64 output;
+  JsNumberToDouble(value, &output);
+  return static_cast<f32>(output);
 }
 
 // -------------------------------------------------------------------------- //
@@ -111,6 +175,17 @@ GetPropertyInt(JsValueRef object, const String& property)
   int output;
   JsNumberToInt(value, &output);
   return static_cast<s32>(output);
+}
+
+// -------------------------------------------------------------------------- //
+
+f32
+GetPropertyFloat(JsValueRef object, const String& property)
+{
+  JsValueRef value = GetProperty(object, property);
+  f64 output;
+  JsNumberToDouble(value, &output);
+  return static_cast<f32>(output);
 }
 
 // -------------------------------------------------------------------------- //

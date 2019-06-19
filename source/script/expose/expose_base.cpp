@@ -57,7 +57,7 @@ ScriptLogVerboseFunction([[maybe_unused]] JsValueRef callee,
   }
 
   // Log
-  DLOG_VERBOSE(output.GetUTF8());
+  DLOG_VERBOSE("{}", output.GetUTF8());
   return JS_INVALID_REFERENCE;
 }
 
@@ -82,7 +82,7 @@ ScriptLogInfoFunction([[maybe_unused]] JsValueRef callee,
   }
 
   // Log
-  DLOG_INFO(output.GetUTF8());
+  DLOG_INFO("{}", output.GetUTF8());
   return JS_INVALID_REFERENCE;
 }
 
@@ -107,7 +107,7 @@ ScriptLogWarningFunction([[maybe_unused]] JsValueRef callee,
   }
 
   // Log
-  DLOG_WARNING(output.GetUTF8());
+  DLOG_WARNING("{}", output.GetUTF8());
   return JS_INVALID_REFERENCE;
 }
 
@@ -132,7 +132,7 @@ ScriptLogErrorFunction([[maybe_unused]] JsValueRef callee,
   }
 
   // Log
-  DLOG_ERROR(output.GetUTF8());
+  DLOG_ERROR("{}", output.GetUTF8());
   return JS_INVALID_REFERENCE;
 }
 

@@ -8,6 +8,7 @@
 #include <GLFW/glfw3.h>
 #include <alflib/string.hpp>
 #include "core/types.hpp"
+#include "graphics/color.hpp"
 
 // ========================================================================== //
 // Graphics Declaration
@@ -45,8 +46,7 @@ public:
   void Present();
 
   /** Set the clear color **/
-  void SetClearColor(f32 r, f32 g, f32 b, f32 a);
-
+  void SetClearColor(const graphics::Color& color);
 };
 
 }

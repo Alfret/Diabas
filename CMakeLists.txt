@@ -31,11 +31,12 @@ endif ()
 set(COMMON_SOURCE
         source/game.cpp
         source/app/app.cpp
-        source/app/graphics/graphics.cpp
+        source/app/graphics.cpp
         source/script/env.cpp
         source/script/util.cpp
         source/script/script.cpp
         source/script/expose/expose_base.cpp
+        source/script/expose/expose_graphics.cpp
         source/script/expose/expose_mod.cpp
         source/mods/loader.cpp
         source/mods/loader.hpp
