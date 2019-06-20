@@ -1,17 +1,16 @@
 #include "input.hpp"
+#include <dlog.hpp>
 #include <iostream>
 #include <string>
-#include <dlog.hpp>
 
-namespace dib
-{
+namespace dib {
 
 alflib::String
 GetLine()
 {
   std::string input{};
   std::getline(std::cin, input, '\n');
-  return alflib::String{input};
+  return alflib::String{ input };
 }
 
 // ============================================================ //
@@ -50,14 +49,12 @@ private:
 // ============================================================ //
 
 InputCommand::InputCommand(const InputCommandCategory category,
-               const alflib::String& command,
+                           const alflib::String& command,
                            std::function<void(const std::string_view)> callback)
-    : category_(category),
-      command_(command),
-      callback_(callback)
-{
-
-}
+  : category_(category)
+  , command_(command)
+  , callback_(callback)
+{}
 
 alflib::String
 InputCommand::CategoryToString(const InputCommandCategory category)
@@ -83,8 +80,7 @@ InputCommand::StringToCategory(const alflib::String& string)
     category = InputCommandCategory::kInfo;
   } else if (string == "chat") {
     category = InputCommandCategory::kChat;
-  }
-  else {
+  } else {
     category = InputCommandCategory::kUnknown;
   }
   return category;
@@ -92,16 +88,16 @@ InputCommand::StringToCategory(const alflib::String& string)
 
 // ============================================================ //
 
-template <>
+template<>
 InputHandler<Side::kServer>::InputHandler()
-    : commands_()
+  : commands_()
 {
   input_ = std::async(std::launch::async, GetLine);
 }
 
 template<>
 InputHandler<Side::kClient>::InputHandler()
-    : commands_()
+  : commands_()
 {}
 
 template<>
@@ -114,9 +110,10 @@ InputHandler<Side::kClient>::~InputHandler()
 
 template<>
 void
-InputHandler<Side::kServer>::AddCommand(const InputCommandCategory category,
-                         const alflib::String& command,
-                                        std::function<void(const std::string_view)> callback)
+InputHandler<Side::kServer>::AddCommand(
+  const InputCommandCategory category,
+  const alflib::String& command,
+  std::function<void(const std::string_view)> callback)
 {
   commands_.emplace_back(category, command, callback);
 }
@@ -126,7 +123,8 @@ void
 InputHandler<Side::kClient>::AddCommand(
   [[maybe_unused]] const InputCommandCategory category,
   [[maybe_unused]] const alflib::String& command,
-  [[maybe_unused]] std::function<void(const std::string_view)> callback) {}
+  [[maybe_unused]] std::function<void(const std::string_view)> callback)
+{}
 
 template<>
 void
@@ -152,7 +150,7 @@ InputHandler<Side::kServer>::RunCommand(const alflib::String& input) const
 
     if (const s64 space2 = command.Find(" "); space2 != kNotFound) {
       // category, command and command input
-      command_input = command.Substring(space2+1);
+      command_input = command.Substring(space2 + 1);
       command = command.Substring(0, space2);
     }
   }
@@ -181,7 +179,8 @@ InputHandler<Side::kServer>::RunCommand(const alflib::String& input) const
       }
     }
     DLOG_RAW("Unknown command, available commands for [{}] are:\n{}",
-             InputCommand::CategoryToString(category), str);
+             InputCommand::CategoryToString(category),
+             str);
   }
 }
 
@@ -204,6 +203,7 @@ InputHandler<Side::kServer>::Update()
 
 template<>
 void
-InputHandler<Side::kClient>::Update() {}
+InputHandler<Side::kClient>::Update()
+{}
 
 }

@@ -9,6 +9,7 @@
 #include <ChakraCore.h>
 #include <alflib/file/path.hpp>
 #include <queue>
+#include <unordered_map>
 
 // ========================================================================== //
 // Environment Declaration

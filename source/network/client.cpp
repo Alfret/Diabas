@@ -15,11 +15,10 @@ Client::~Client()
 }
 
 void
-Client::Poll()
+Client::Poll(bool& got_packet, Packet& packet_out)
 {
   PollSocketStateChanges();
-  Packet packet_out{};
-  PollIncomingPackets(packet_out);
+  got_packet = PollIncomingPackets(packet_out);
 }
 
 void
@@ -61,17 +60,18 @@ Client::PollIncomingPackets(Packet& packet_out)
   const int msg_count =
     socket_interface_->ReceiveMessagesOnConnection(connection_, &msg, 1);
 
-  bool retval = false;
+  bool got_packet = false;
   if (msg_count > 0) {
-    packet_out.resize(msg->m_cbSize);
-    memcpy(packet_out.data(), msg->m_pData, msg->m_cbSize);
-
+    bool ok =
+      packet_out.SetPacket(static_cast<const u8*>(msg->m_pData), msg->m_cbSize);
+    if (ok) {
+      got_packet = true;
+    } else {
+      DLOG_ERROR("could not parse packet, too big [{}/{}]",
+                 msg->m_cbSize,
+                 packet_out.GetPacketCapacity());
+    }
     msg->Release();
-    retval = true;
-
-    // TODO not this
-    std::string msg{ packet_out.begin(), packet_out.end() };
-    DLOG_RAW("Server: {}\n", msg);
 
   } else if (msg_count < 0) {
     if (network_state_ == NetworkState::kClientOnline) {
@@ -80,7 +80,7 @@ Client::PollIncomingPackets(Packet& packet_out)
     }
   }
 
-  return retval;
+  return got_packet;
 }
 
 void

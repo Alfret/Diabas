@@ -1,8 +1,8 @@
 #include "game.hpp"
-
 #include <dlog.hpp>
 #include "network/network.hpp"
 #include "script/script.hpp"
+
 // TEMP (for thread sleep to not overwork my linux machine)
 #include <chrono>
 #include <thread>

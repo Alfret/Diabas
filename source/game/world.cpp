@@ -1,33 +1,43 @@
 #include "world.hpp"
 #include "core/fixed_time_update.hpp"
-#include <functional>
 #include <dlog.hpp>
+#include <functional>
+#include <alflib/assert.hpp>
 
 namespace dib {
-
-/**
- * Note, ordering in this file is weird because of template specialization
- * initialization requirements.
- */
 
 template<>
 void
 World<Side::kClient>::Update()
 {
-  auto client = GetClient();
-  static const auto callback_fn = std::bind(&Client::Poll, client);
 
-  FixedTimeUpdate(kNetTicksPerSec, callback_fn);
+  // update network
+  static bool got_update;
+  auto client = GetClient();
+  static const auto PollClient =
+      std::bind(&Client::Poll, client, std::ref(got_update), std::ref(packet_));
+  got_update = false;
+  FixedTimeUpdate(kNetTicksPerSec, PollClient);
+  if (got_update) {
+    packet_handler_.HandlePacket(packet_);
+  }
 }
 
 template<>
 void
 World<Side::kServer>::Update()
 {
-  auto server = GetServer();
-  static const auto callback_fn = std::bind(&Server::Poll, server);
 
-  FixedTimeUpdate(kNetTicksPerSec, callback_fn);
+  // update network
+  static bool got_update;
+  auto server = GetServer();
+  static const auto PollServer =
+      std::bind(&Server::Poll, server, std::ref(got_update), std::ref(packet_));
+  got_update = false;
+  FixedTimeUpdate(kNetTicksPerSec, PollServer);
+  if (got_update) {
+    packet_handler_.HandlePacket(packet_);
+  }
 }
 
 template<>
@@ -50,6 +60,46 @@ World<Side::kServer>::StartServer()
 
 template<>
 void
+World<Side::kClient>::SetupPacketHandler()
+{
+  const auto SyncCb = [](const Packet&) {
+    DLOG_RAW("TODO handle sync packet\n");
+  };
+  bool ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kSync, "sync", SyncCb);
+  AlfAssert(ok, "could not add packet type sync");
+
+  const auto ChatCb = [](const Packet& packet) {
+    alflib::String msg = packet.ToString();
+    DLOG_RAW("Server: {}\n", msg);
+  };
+  ok = packet_handler_.AddStaticPacketType(PacketHeaderStaticTypes::kChat, "chat", ChatCb);
+  AlfAssert(ok, "could not add packet type chat");
+
+
+}
+
+template<>
+void
+World<Side::kServer>::SetupPacketHandler()
+{
+  const auto SyncCb = [](const Packet&) {
+    DLOG_RAW("TODO handle sync packet\n");
+  };
+  bool ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kSync, "sync", SyncCb);
+  AlfAssert(ok, "could not add packet type sync");
+
+  const auto ChatCb = [](const Packet& packet) {
+    alflib::String msg = packet.ToString();
+    DLOG_RAW("TODO handle chat packets [{}]\n", msg);
+  };
+  ok = packet_handler_.AddStaticPacketType(PacketHeaderStaticTypes::kChat, "chat", ChatCb);
+  AlfAssert(ok, "could not add packet type chat");
+}
+
+template<>
+void
 World<Side::kServer>::NetworkInfo([
   [maybe_unused]] const std::string_view message) const
 {
@@ -61,16 +111,15 @@ template<>
 void
 World<Side::kClient>::NetworkInfo([
   [maybe_unused]] const std::string_view message) const
-{
-}
+{}
 
 template<>
 void
 World<Side::kServer>::Broadcast(const std::string_view message) const
 {
   auto server = GetServer();
-
-  Packet packet{message.begin(), message.end()};
+  Packet packet{ message.data(), message.size() };
+  packet_handler_.BuildPacketHeader(packet, PacketHeaderStaticTypes::kChat);
   server->BroadcastPacket(packet, SendStrategy::kReliable);
 }
 
@@ -84,13 +133,15 @@ template<>
 World<Side::kClient>::World()
   : base_(new Client())
 {
+  SetupPacketHandler();
   ConnectToServer();
 }
 
 template<>
 World<Side::kServer>::World()
-  : base_(new Server())
+  : base_(new Server(this))
 {
+  SetupPacketHandler();
   StartServer();
 }
 

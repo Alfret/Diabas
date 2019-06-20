@@ -3,8 +3,8 @@
 #include "mods/loader.hpp"
 #include "app/app.hpp"
 #include "game/world.hpp"
-#include "server/input.hpp"
 #include "network/network.hpp"
+#include "server/input.hpp"
 #include "script/env.hpp"
 #include "graphics/renderer.hpp"
 

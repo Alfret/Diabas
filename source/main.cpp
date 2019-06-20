@@ -3,8 +3,8 @@
 // ========================================================================== //
 
 #include "app/app.hpp"
-#include <dlog.hpp>
 #include "game/game.hpp"
+#include <dlog.hpp>
 
 int
 main(int, char**)
