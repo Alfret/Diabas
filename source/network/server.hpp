@@ -7,9 +7,13 @@
 #include <optional>
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
+#include "network/side.hpp"
 #include <vector>
 
 namespace dib {
+
+template <Side side>
+class World;
 
 struct ClientId
 {
@@ -46,7 +50,7 @@ struct ClientConnection
 class Server : public ISteamNetworkingSocketsCallbacks
 {
 public:
-  Server();
+  Server(World<Side::kServer>* world);
 
   virtual ~Server() final;
 
@@ -77,13 +81,14 @@ private:
   void DisconnectClient(const HSteamNetConnection connection);
 
   std::optional<ClientId> ClientIdFromConnection(
-    const HSteamNetConnection connection);
+      const HSteamNetConnection connection);
 
 private:
   HSteamListenSocket socket_;
   ISteamNetworkingSockets* socket_interface_;
   std::vector<ClientConnection> clients_{};
   NetworkState network_state_ = NetworkState::kServer;
+  World<Side::kServer>* world_;
 };
 }
 

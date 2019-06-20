@@ -215,8 +215,11 @@ alflib::String
 Packet::ToString() const
 {
   // TODO when alflib is updated remove the std::string
-  std::string stdstr{reinterpret_cast<const char8*>(GetPayload()), GetPayloadSize()};
-  alflib::String str{stdstr.c_str()};
-  return str;
+  if (GetPayloadSize() > 0) {
+    std::string stdstr{reinterpret_cast<const char8*>(GetPayload()), GetPayloadSize()};
+    alflib::String str{ stdstr.c_str() };
+    return str;
+  }
+  return "";
 }
 }

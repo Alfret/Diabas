@@ -12,12 +12,6 @@ struct PacketHeader
   PacketHeaderType type;
 };
 
-// ============================================================ //
-// Predefined packet types
-// ============================================================ //
-
-constexpr PacketHeaderType kPacketHeaderTypeChat = 0;
-
 }
 
 #endif // PACKET_HEADER_HPP_

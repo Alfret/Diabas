@@ -2,6 +2,7 @@
 #include "core/fixed_time_update.hpp"
 #include <dlog.hpp>
 #include <functional>
+#include <alflib/assert.hpp>
 
 namespace dib {
 
@@ -61,22 +62,40 @@ template<>
 void
 World<Side::kClient>::SetupPacketHandler()
 {
+  const auto SyncCb = [](const Packet&) {
+    DLOG_RAW("TODO handle sync packet\n");
+  };
+  bool ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kSync, "sync", SyncCb);
+  AlfAssert(ok, "could not add packet type sync");
+
   const auto ChatCb = [](const Packet& packet) {
     alflib::String msg = packet.ToString();
     DLOG_RAW("Server: {}\n", msg);
   };
-  packet_handler_.AddPacketType(kPacketHeaderTypeChat, "chat", ChatCb);
+  ok = packet_handler_.AddStaticPacketType(PacketHeaderStaticTypes::kChat, "chat", ChatCb);
+  AlfAssert(ok, "could not add packet type chat");
+
+
 }
 
 template<>
 void
 World<Side::kServer>::SetupPacketHandler()
 {
+  const auto SyncCb = [](const Packet&) {
+    DLOG_RAW("TODO handle sync packet\n");
+  };
+  bool ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kSync, "sync", SyncCb);
+  AlfAssert(ok, "could not add packet type sync");
+
   const auto ChatCb = [](const Packet& packet) {
     alflib::String msg = packet.ToString();
     DLOG_RAW("TODO handle chat packets [{}]\n", msg);
   };
-  packet_handler_.AddPacketType(kPacketHeaderTypeChat, "chat", ChatCb);
+  ok = packet_handler_.AddStaticPacketType(PacketHeaderStaticTypes::kChat, "chat", ChatCb);
+  AlfAssert(ok, "could not add packet type chat");
 }
 
 template<>
@@ -100,7 +119,7 @@ World<Side::kServer>::Broadcast(const std::string_view message) const
 {
   auto server = GetServer();
   Packet packet{ message.data(), message.size() };
-  packet.SetHeader({kPacketHeaderTypeChat});
+  packet_handler_.BuildPacketHeader(packet, PacketHeaderStaticTypes::kChat);
   server->BroadcastPacket(packet, SendStrategy::kReliable);
 }
 
@@ -120,7 +139,7 @@ World<Side::kClient>::World()
 
 template<>
 World<Side::kServer>::World()
-  : base_(new Server())
+  : base_(new Server(this))
 {
   SetupPacketHandler();
   StartServer();

@@ -23,7 +23,7 @@ enum class InputCommandCategory
 
 // ============================================================ //
 
-struct InputCommand;
+class InputCommand;
 
 // ============================================================ //
 

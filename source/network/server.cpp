@@ -1,10 +1,12 @@
 #include "server.hpp"
 #include <dlog.hpp>
+#include "game/world.hpp"
 
 namespace dib {
 
-Server::Server()
-  : socket_interface_(SteamNetworkingSockets())
+Server::Server(World<Side::kServer>* world)
+    : socket_interface_(SteamNetworkingSockets()),
+      world_(world)
 {
 }
 
@@ -198,6 +200,12 @@ Server::OnSteamNetConnectionStatusChanged(
 
     case k_ESteamNetworkingConnectionState_Connected: {
       DLOG_VERBOSE("connected");
+
+      // Send a sync packet to the client
+      // TODO
+      // Packet packet{};
+      // world_->
+
       break;
     }
 
