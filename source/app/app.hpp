@@ -5,11 +5,11 @@
 #include <GLFW/glfw3.h>
 
 // Diabas headers
-#include "core/types.hpp"
-#include "core/common.hpp"
+#include "app/graphics.hpp"
 #include "app/key.hpp"
 #include "app/mouse.hpp"
-#include "graphics/graphics.hpp"
+#include "core/common.hpp"
+#include "core/types.hpp"
 
 // ========================================================================== //
 // Application Declaration
@@ -158,7 +158,6 @@ private:
 
   /** GLFW window resize callback **/
   static void ResizeCallback(GLFWwindow* window, int width, int height);
-
 };
 
 }

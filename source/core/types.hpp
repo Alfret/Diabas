@@ -1,8 +1,13 @@
 #pragma once
 
+#include <alflib/file/path.hpp>
+#include <alflib/string.hpp>
 #include <cstdint>
 #include <string>
-#include <alflib/string.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
 
 namespace dib {
 
@@ -20,6 +25,12 @@ using u64 = uint64_t;
 using f32 = float;
 using f64 = double;
 
+using Path = alflib::Path;
 using String = alflib::String;
+
+using Vector2F = glm::vec2;
+using Vector3F = glm::vec3;
+using Vector4F = glm::vec4;
+using Matrix4F = glm::mat4;
 
 }

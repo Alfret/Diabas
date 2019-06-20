@@ -22,3 +22,6 @@
 [submodule "thirdparty/alflibcpp"]
 	path = thirdparty/alflibcpp
 	url = https://github.com/Alfret/AlfLibCpp
+[submodule "thirdparty/glm"]
+	path = thirdparty/glm
+	url = https://github.com/g-truc/glm
