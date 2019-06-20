@@ -9,64 +9,31 @@ TEST_SUITE("packet_handler")
   TEST_CASE("basic")
   {
     PacketHandler packet_handler{};
-
     u8 value = 10;
 
     bool ok = packet_handler.AddDynamicPacketType("adder", [&value](const Packet& packet) {
       value += *packet.GetPayload();
     });
     CHECK(ok);
-    auto adder_type = packet_handler.FindDynamicType("adder");
-    CHECK(adder_type);
 
     ok = packet_handler.AddDynamicPacketType(
       "ResetAndMultiply",
       [&value](const Packet& packet) { value = 2 * *packet.GetPayload(); });
     CHECK(ok);
-    auto reset_type = packet_handler.FindDynamicType("ResetAndMultiply");
-    CHECK(reset_type);
 
     Packet packet{1};
     u8 v = 4;
     packet.SetPayload(&v, 1);
-    packet_handler[*adder_type].callback(packet);
+    packet_handler.BuildPacketHeader(packet, "adder");
+    bool did_handle = packet_handler.HandlePacket(packet);
+    CHECK(did_handle);
     CHECK(value == 10+v);
 
-    packet_handler[*reset_type].callback(packet);
+    packet_handler.BuildPacketHeader(packet, "ResetAndMultiply");
+    did_handle = packet_handler.HandlePacket(packet);
+    CHECK(did_handle);
     CHECK(value == 10 * 0 + 2 * v);
   }
-
-  // TODO can this be testet now?
-  // TEST_CASE("type/hash collision")
-  // {
-  //   PacketHandler packet_handler{};
-  //   u8 value = 10;
-  //   const PacketHeaderType same_type = 0;
-
-  //   bool ok = packet_handler.AddStaticPacketType(same_type, "adder", [&value](const Packet& packet) {
-  //     value += *packet.GetPayload();
-  //   });
-  //   CHECK(ok);
-  //   auto adder_type = packet_handler.FindType("adder");
-  //   CHECK(adder_type);
-
-  //   ok = packet_handler.AddStaticPacketType(
-  //       same_type,
-  //     "ResetAndMultiply",
-  //     [&value](const Packet& packet) { value = 2 * *packet.GetPayload(); });
-  //   CHECK(ok);
-  //   auto reset_type = packet_handler.FindType("ResetAndMultiply");
-  //   CHECK(reset_type);
-
-  //   Packet packet{ 1 };
-  //   u8 v = 4;
-  //   packet.SetPayload(&v, 1);
-  //   packet_handler[*adder_type].callback(packet);
-  //   CHECK(value == 10 + v);
-
-  //   packet_handler[*reset_type].callback(packet);
-  //   CHECK(value == 10 * 0 + 2 * v);
-  // }
 
   TEST_CASE("Static sync")
   {
@@ -109,9 +76,11 @@ TEST_SUITE("packet_handler")
     sync_packet.SetPayload(&v, 1);
 
     // wrong order
-    packet_handler.HandlePacket(chat_packet);
+    bool did_handle = packet_handler.HandlePacket(chat_packet);
+    CHECK(did_handle);
     CHECK(value != 10 + v);
-    packet_handler.HandlePacket(sync_packet);
+    did_handle = packet_handler.HandlePacket(sync_packet);
+    CHECK(did_handle);
     CHECK(value != 10 * 0 + 2 * v);
 
     // sync
@@ -120,65 +89,71 @@ TEST_SUITE("packet_handler")
 
     // check it is now correct
     value = 10;
-    packet_handler.HandlePacket(chat_packet);
+    did_handle = packet_handler.HandlePacket(chat_packet);
+    CHECK(did_handle);
     CHECK(value == 10 + v);
-    packet_handler.HandlePacket(sync_packet);
+    did_handle = packet_handler.HandlePacket(sync_packet);
+    CHECK(did_handle);
     CHECK(value == 10 * 0 + 2 * v);
   }
 
   TEST_CASE("Dynamic sync")
   {
-    // PacketHandler packet_handler{};
-    // u8 value = 10;
+    PacketHandler packet_handler{};
+    u8 value = 10;
 
-    // bool ok = packet_handler.AddDynamicPacketType(
-    //     "b", [&value](const Packet& packet) {
-    //     value += *packet.GetPayload();
-    //   });
-    // CHECK(ok);
+    bool ok = packet_handler.UnsafeAddDynamicPacketType(
+        "a", 11, [&value](const Packet& packet) {
+        value += *packet.GetPayload();
+      });
+    CHECK(ok);
 
-    // ok = packet_handler.AddDynamicPacketType(
-    //     "a", [&value](const Packet& packet) {
-    //     value = 2 * *packet.GetPayload();
-    //   });
-    // CHECK(ok);
+    ok = packet_handler.UnsafeAddDynamicPacketType(
+        "b", 10, [&value](const Packet& packet) {
+        value = 2 * *packet.GetPayload();
+      });
+    CHECK(ok);
 
-    // // build up the correct packet handler
-    // PacketHandler correct_packet_handler{};
-    // ok = correct_packet_handler.AddDynamicPacketType(
-    //   "a", [&value](const Packet& packet) { value += *packet.GetPayload(); });
-    // CHECK(ok);
-    // ok = correct_packet_handler.AddDynamicPacketType(
-    //   "b",
-    //   [&value](const Packet& packet) { value = 2 * *packet.GetPayload(); });
-    // CHECK(ok);
+    // build up the correct packet handler
+    PacketHandler correct_packet_handler{};
+    ok = correct_packet_handler.AddDynamicPacketType(
+      "a", [&value](const Packet& packet) { value += *packet.GetPayload(); });
+    CHECK(ok);
+    ok = correct_packet_handler.AddDynamicPacketType(
+      "b",
+      [&value](const Packet& packet) { value = 2 * *packet.GetPayload(); });
+    CHECK(ok);
 
-    // // prepare the two packets
-    // Packet a_packet{ 1 };
-    // correct_packet_handler.BuildPacketHeader(a_packet,
-    //                                            "a");
-    // u8 v = 4;
-    // a_packet.SetPayload(&v, 1);
-    // Packet b_packet{ 1 };
-    // correct_packet_handler.BuildPacketHeader(b_packet,
-    //                                            "b");
-    // b_packet.SetPayload(&v, 1);
+    // prepare the two packets
+    Packet a_packet{ 1 };
+    correct_packet_handler.BuildPacketHeader(a_packet,
+                                               "a");
+    u8 v = 4;
+    a_packet.SetPayload(&v, 1);
+    Packet b_packet{ 1 };
+    correct_packet_handler.BuildPacketHeader(b_packet,
+                                               "b");
+    b_packet.SetPayload(&v, 1);
 
-    // // wrong order
-    // packet_handler.HandlePacket(a_packet);
-    // CHECK(value != 10 + v);
-    // packet_handler.HandlePacket(b_packet);
-    // CHECK(value != 10 * 0 + 2 * v);
+    // wrong order
+    bool did_handle = packet_handler.HandlePacket(a_packet);
+    CHECK(!did_handle);
+    CHECK(value != 10 + v);
+    did_handle = packet_handler.HandlePacket(b_packet);
+    CHECK(!did_handle);
+    CHECK(value != 10 * 0 + 2 * v);
 
-    // // sync
-    // const auto res = packet_handler.Sync(correct_packet_handler.Serialize());
-    // CHECK(res == PacketHandler::SyncResult::kSuccess);
+    // sync
+    const auto res = packet_handler.Sync(correct_packet_handler.Serialize());
+    CHECK(res == PacketHandler::SyncResult::kSuccess);
 
-    // // check it is now correct
-    // value = 10;
-    // packet_handler.HandlePacket(a_packet);
-    // CHECK(value == 10 + v);
-    // packet_handler.HandlePacket(b_packet);
-    // CHECK(value == 10 * 0 + 2 * v);
+    // check it is now correct
+    value = 10;
+    did_handle = packet_handler.HandlePacket(a_packet);
+    CHECK(did_handle);
+    CHECK(value == 10 + v);
+    did_handle = packet_handler.HandlePacket(b_packet);
+    CHECK(did_handle);
+    CHECK(value == 10 * 0 + 2 * v);
   }
 }

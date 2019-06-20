@@ -96,24 +96,35 @@ class PacketHandler
                            const String& packet_type_name,
                            PacketHandlerCallback callback);
 
-  enum class SyncResult {
-    kSuccess = 0,
+    enum class SyncResult {
+      kSuccess = 0,
 
-    // we have fewer packet_meta's than other
-    kMissingPacketMeta,
+      // we have fewer packet_meta's than other
+      kMissingPacketMeta,
 
-    // we have more packet_meta's than other
-    kExtraPacketMeta,
+      // we have more packet_meta's than other
+      kExtraPacketMeta,
 
-    // some packet_meta's have same hash, but different names.
-    kNameMissmatch
-  };
+      // some packet_meta's have same hash, but different names.
+      kNameMissmatch
+    };
 
   SyncResult Sync(const std::vector<PacketMetaSerializable>& correct);
 
   // ============================================================ //
-  // Packet Producer
-  // ============================================================ //
+
+  // used in test, never use this yourself
+  bool UnsafeAddDynamicPacketType(const String& packet_type_name,
+                                  const PacketHeaderType type_hint,
+                                  PacketHandlerCallback callback);
+ private:
+   bool AddDynamicPacketTypeBase(const String& packet_type_name,
+                                 PacketHeaderType type_hint,
+                                 PacketHandlerCallback callback);
+
+   // ============================================================ //
+   // Packet Producer
+   // ============================================================ //
  public:
   /**
    * Make a header of static packet type, and fill it in for the packet.
