@@ -23,7 +23,7 @@ private:
 public:
   /** Create mod loader with a specified path where all mods are expected to be
    * located **/
-  ModLoader(const Path& modsFolder);
+  explicit ModLoader(const Path& modsFolder);
 
   /** Destruct and unload all mods **/
   ~ModLoader();
