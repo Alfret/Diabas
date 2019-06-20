@@ -9,7 +9,7 @@ export default class CoreMod extends Mod {
 
   init() {
     dlog.verbose("CoreMod::init()");
-    dlog.info("Hello from mod ", this.name, "!");
+    dlog.info("Hello from mod ", this.name, "(", this.id, ")!");
   }
 
   update(delta) {
