@@ -3,7 +3,7 @@
 #include "mods/loader.hpp"
 #include "app/app.hpp"
 #include "game/world.hpp"
-#include "network/network.hpp"
+#include "network/side.hpp"
 #include "server/input.hpp"
 #include "script/env.hpp"
 #include "graphics/renderer.hpp"
@@ -35,16 +35,6 @@ public:
   void Render() override;
 
   // ============================================================ //
-  // Constants
-  // ============================================================ //
-public:
-#ifdef DIB_IS_SERVER
-  static constexpr Side kSide = Side::kServer;
-#else
-  static constexpr Side kSide = Side::kClient;
-#endif
-
-  // ============================================================ //
   // Private Methods
   // ============================================================ //
 private:
@@ -62,10 +52,7 @@ private:
   /** Mod loader **/
   mods::ModLoader mModLoader;
 
-  // MUST be before any other network code.
-  Network network_{};
-
-  World<kSide> world_{};
+  World world_{};
 
   InputHandler<kSide> input_handler_{};
 };

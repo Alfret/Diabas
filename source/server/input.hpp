@@ -18,6 +18,7 @@ enum class InputCommandCategory
 {
   kUnknown,
   kInfo,
+  kSystem,
   kChat
 };
 
