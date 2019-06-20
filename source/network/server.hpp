@@ -56,7 +56,10 @@ public:
 
   void StartServer(const u16 port);
 
-  void CloseConnection(HSteamNetConnection connection);
+  /**
+   * Attempt to close the connection and remove it from our tracked.
+   */
+  void DisconnectClient(const HSteamNetConnection connection);
 
   NetworkState GetNetworkState() const { return network_state_; }
 
@@ -77,9 +80,9 @@ private:
     SteamNetConnectionStatusChangedCallback_t* status) override;
 
   /**
-   * Attempt to close the connection and remove it from our tracked.
+   * Let steam sockets close the connection.
    */
-  void DisconnectClient(const HSteamNetConnection connection);
+  void CloseConnection(HSteamNetConnection connection);
 
   std::optional<ClientId> ClientIdFromConnection(
       const HSteamNetConnection connection);
