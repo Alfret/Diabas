@@ -29,6 +29,8 @@ endif ()
 # Add our .cpp files, will automatically re-run cmake when new ones are added
 set(COMMON_SOURCE
   source/app/app.cpp
+  source/core/hash.cpp
+  source/core/hash.hpp
   source/app/graphics.cpp
   source/game/game.cpp
   source/game/world.cpp
@@ -54,7 +56,11 @@ set(COMMON_SOURCE
   source/network/server.hpp
   source/network/client.cpp
   source/network/client.hpp
+  source/network/packet.cpp
   source/network/packet.hpp
+  source/network/packet_handler.cpp
+  source/network/packet_handler.hpp
+  source/network/packet_header.hpp
   source/network/common.cpp
   source/network/common.hpp
   source/network/side.cpp
@@ -67,6 +73,8 @@ set(TEST_SOURCE
   tests/main.test.hpp
   tests/toml.test.cpp
   tests/mods.test.cpp
+  tests/packet.test.cpp
+  tests/packet_handler.test.cpp
   )
 
 # ChakraCore

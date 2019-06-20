@@ -6,6 +6,7 @@
 #include "network/packet.hpp"
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
+#include "network/packet_handler.hpp"
 
 namespace dib {
 
@@ -16,7 +17,10 @@ public:
 
   virtual ~Client() final;
 
-  void Poll();
+  /**
+   * Update internal state and check for packets.
+   */
+  void Poll(bool& got_packet, Packet& packet_out);
 
   /**
    * The result of the connection attempt will be reported later when polling.
@@ -43,5 +47,4 @@ private:
   NetworkState network_state_;
 };
 }
-
 #endif // CLIENT_HPP_

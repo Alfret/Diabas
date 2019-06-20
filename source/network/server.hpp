@@ -7,9 +7,13 @@
 #include <optional>
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
+#include "network/side.hpp"
 #include <vector>
 
 namespace dib {
+
+template <Side side>
+class World;
 
 struct ClientId
 {
@@ -46,11 +50,11 @@ struct ClientConnection
 class Server : public ISteamNetworkingSocketsCallbacks
 {
 public:
-  Server();
+  Server(World<Side::kServer>* world);
 
   virtual ~Server() final;
 
-  void Poll();
+  void Poll(bool& got_packet, Packet& packet_out);
 
   void StartServer(const u16 port);
 
@@ -67,10 +71,9 @@ public:
                         const HSteamNetConnection connection);
 
 private:
-
   void PollSocketStateChanges();
 
-  void PollIncomingPackets();
+  bool PollIncomingPackets(Packet& packet_out);
 
   virtual void OnSteamNetConnectionStatusChanged(
     SteamNetConnectionStatusChangedCallback_t* status) override;
@@ -78,14 +81,14 @@ private:
   void DisconnectClient(const HSteamNetConnection connection);
 
   std::optional<ClientId> ClientIdFromConnection(
-    const HSteamNetConnection connection);
+      const HSteamNetConnection connection);
 
 private:
   HSteamListenSocket socket_;
   ISteamNetworkingSockets* socket_interface_;
   std::vector<ClientConnection> clients_{};
-  Packet packet_{};
   NetworkState network_state_ = NetworkState::kServer;
+  World<Side::kServer>* world_;
 };
 }
 

@@ -7,8 +7,7 @@
 #include <game/world.hpp>
 #include <string_view>
 
-namespace dib
-{
+namespace dib {
 
 alflib::String
 GetLine();
@@ -24,14 +23,14 @@ enum class InputCommandCategory
 
 // ============================================================ //
 
-struct InputCommand;
+class InputCommand;
 
 // ============================================================ //
 
-template <Side side>
+template<Side side>
 class InputHandler
 {
- public:
+public:
   InputHandler();
 
   ~InputHandler();
@@ -50,13 +49,13 @@ class InputHandler
 
   void Update();
 
- private:
+private:
   void RunCommand(const alflib::String& input) const;
 
- private:
+private:
   std::vector<InputCommand> commands_;
   std::future<alflib::String> input_{};
 };
 }
 
-#endif//INPUT_HPP_
+#endif // INPUT_HPP_

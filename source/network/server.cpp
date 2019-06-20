@@ -1,12 +1,13 @@
 #include "server.hpp"
 #include <dlog.hpp>
+#include "game/world.hpp"
 
 namespace dib {
 
-Server::Server()
-  : socket_interface_(SteamNetworkingSockets())
+Server::Server(World<Side::kServer>* world)
+    : socket_interface_(SteamNetworkingSockets()),
+      world_(world)
 {
-  packet_.reserve(10000);
 }
 
 Server::~Server()
@@ -18,10 +19,10 @@ Server::~Server()
 }
 
 void
-Server::Poll()
+Server::Poll(bool& got_packet, Packet& packet_out)
 {
   PollSocketStateChanges();
-  PollIncomingPackets();
+  got_packet = PollIncomingPackets(packet_out);
 }
 
 void
@@ -58,11 +59,11 @@ Server::NetworkInfo() const
 }
 
 void
-Server::BroadcastPacket(const Packet& packet,
-                   const SendStrategy send_strategy)
+Server::BroadcastPacket(const Packet& packet, const SendStrategy send_strategy)
 {
   for (auto client : clients_) {
-    Common::SendPacket(packet, send_strategy, client.connection, socket_interface_);
+    Common::SendPacket(
+      packet, send_strategy, client.connection, socket_interface_);
   }
 }
 
@@ -81,36 +82,41 @@ Server::PollSocketStateChanges()
   socket_interface_->RunCallbacks(this);
 }
 
-void
-Server::PollIncomingPackets()
+bool
+Server::PollIncomingPackets(Packet& packet_out)
 {
   ISteamNetworkingMessage* msg = nullptr;
   const int msg_count =
     socket_interface_->ReceiveMessagesOnListenSocket(socket_, &msg, 1);
 
+  bool got_packet = false;
   if (msg_count > 0) {
-    packet_.resize(msg->m_cbSize);
-    memcpy(packet_.data(), msg->m_pData, msg->m_cbSize);
+    bool ok =
+      packet_out.SetPacket(static_cast<const u8*>(msg->m_pData), msg->m_cbSize);
+    if (ok) {
+      auto maybe_clientid = ClientIdFromConnection(msg->m_conn);
+      if (maybe_clientid) {
+        got_packet = true;
+      } else {
+        DLOG_WARNING("received packet from unknown connection, dropping it");
+        DisconnectClient(msg->m_conn);
+      }
+    } else {
+      DLOG_ERROR("could not parse packet, too big [{}/{}]",
+                 msg->m_cbSize,
+                 packet_out.GetPacketCapacity());
+    }
 
     msg->Release();
 
-    auto maybe_clientid = ClientIdFromConnection(msg->m_conn);
-    if (!maybe_clientid) {
-      DLOG_WARNING("received packet from unknown connection, dropping it");
-      DisconnectClient(msg->m_conn);
-    }
-
-    if (packet_.size() < 100) {
-      std::string str{ packet_.begin(), packet_.end() };
-      DLOG_INFO("TODO handle packet [{}] from [{}]", str, maybe_clientid->id);
-    } else {
-      DLOG_INFO("TODO handle packet from [{}]", maybe_clientid->id);
-    }
-
   } else if (msg_count < 0) {
     DLOG_WARNING("failed to check for messages, closing connection");
-    DisconnectClient(msg->m_conn);
+    if (msg != nullptr) {
+      DisconnectClient(msg->m_conn);
+    }
   }
+
+  return got_packet;
 }
 
 void
@@ -194,6 +200,12 @@ Server::OnSteamNetConnectionStatusChanged(
 
     case k_ESteamNetworkingConnectionState_Connected: {
       DLOG_VERBOSE("connected");
+
+      // Send a sync packet to the client
+      // TODO
+      // Packet packet{};
+      // world_->
+
       break;
     }
 

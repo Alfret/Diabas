@@ -8,6 +8,7 @@
 #include <tuple>
 #include <vector>
 #include "script/env.hpp"
+#include <unordered_map>
 
 namespace dib::mods {
 
