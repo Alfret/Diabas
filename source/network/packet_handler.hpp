@@ -109,6 +109,8 @@ class PacketHandler
       kNameMissmatch
     };
 
+  String SyncResultToString(const SyncResult result);
+
   SyncResult Sync(const std::vector<PacketMetaSerializable>& correct);
 
   // ============================================================ //
@@ -143,6 +145,14 @@ class PacketHandler
    * Prepare the packet header.
    */
   void BuildPacketHeader(Packet& packet, const PacketHeaderType type) const;
+
+ public:
+  void BuildPacketSync(Packet& packet);
+
+  /**
+   * When you get a sync packet, call this and it will sync for you.
+   */
+  void OnPacketSync(const Packet& packet);
 
   // ============================================================ //
   // Misc
