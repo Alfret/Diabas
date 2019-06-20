@@ -33,6 +33,9 @@ set(COMMON_SOURCE
   source/game/game.cpp
   source/game/world.cpp
   source/game/world.hpp
+  source/graphics/renderer.cpp
+  source/graphics/sprite.cpp
+  source/graphics/sprite_batch.cpp
   source/script/env.cpp
   source/script/util.cpp
   source/script/script.cpp
@@ -41,9 +44,10 @@ set(COMMON_SOURCE
   source/script/expose/expose_mod.cpp
   source/mods/loader.cpp
   source/mods/loader.hpp
-  source/mods/mod_info.hpp
-  source/mods/mod_info.cpp
+  source/mods/mod.cpp
   source/mods/mod.hpp
+  source/mods/result.cpp
+  source/mods/result.hpp
   source/network/network.cpp
   source/network/network.hpp
   source/network/server.cpp
@@ -103,6 +107,10 @@ else ()
   add_subdirectory(thirdparty/gamenetworkingsockets)
 endif ()
 
+# GLM
+include_directories(SYSTEM thirdparty/glm)
+add_subdirectory(thirdparty/glm)
+
 # GLFW
 include_directories(SYSTEM thirdparty/glfw/include)
 add_subdirectory(thirdparty/glfw)
@@ -142,9 +150,9 @@ target_compile_definitions(server PRIVATE DIB_IS_SERVER)
 
 # Link libraries
 if (WIN32)
-  set(DIB_LIBS ws2_32 cpptoml dlog dutil glfw gamenetworkingsockets alflibcpp ChakraCore)
+  set(DIB_LIBS ws2_32 cpptoml dlog dutil glfw glm gamenetworkingsockets alflibcpp ChakraCore)
 else ()
-  set(DIB_LIBS pthread cpptoml dlog dutil glfw GameNetworkingSockets alflibcpp ChakraCore)
+  set(DIB_LIBS pthread cpptoml dlog dutil glfw glm GameNetworkingSockets alflibcpp ChakraCore)
 endif ()
 
 # TODO(Filip Björklund): Remove GLFW as a dependency on the server
