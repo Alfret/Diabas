@@ -9,6 +9,7 @@
 #include <steam/steamnetworkingsockets.h>
 #include "network/side.hpp"
 #include <vector>
+#include "network/packet_handler.hpp"
 
 namespace dib {
 
@@ -47,7 +48,7 @@ struct ClientConnection
 class Server : public ISteamNetworkingSocketsCallbacks
 {
 public:
-  Server();
+  Server(PacketHandler* packet_handler);
 
   virtual ~Server() final;
 
@@ -75,16 +76,22 @@ private:
   virtual void OnSteamNetConnectionStatusChanged(
     SteamNetConnectionStatusChangedCallback_t* status) override;
 
+  /**
+   * Attempt to close the connection and remove it from our tracked.
+   */
   void DisconnectClient(const HSteamNetConnection connection);
 
   std::optional<ClientId> ClientIdFromConnection(
       const HSteamNetConnection connection);
+
+  auto ClientIteratorFromConnection(const HSteamNetConnection connection) const;
 
 private:
   HSteamListenSocket socket_;
   ISteamNetworkingSockets* socket_interface_;
   std::vector<ClientConnection> clients_{};
   NetworkState network_state_ = NetworkState::kServer;
+  PacketHandler* packet_handler_;
 };
 }
 
