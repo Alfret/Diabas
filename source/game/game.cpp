@@ -1,6 +1,7 @@
 #include "game.hpp"
-#include "network/network.hpp"
 #include <dlog.hpp>
+#include "network/network.hpp"
+#include "script/script.hpp"
 
 // TEMP (for thread sleep to not overwork my linux machine)
 #include <chrono>
@@ -9,16 +10,25 @@
 // ========================================================================== //
 // Game Implementation
 // ========================================================================== //
-#include <chrono>
-#include <thread>
+
 namespace dib {
 
 Game::Game(const Descriptor& descriptor)
   : Application(descriptor)
+  , mModLoader(Path{ "./mods" })
 {
-  GetGraphics().SetClearColor(100 / 255.0f, 149 / 255.0f, 237 / 255.0f, 1.0f);
+  GetGraphics().SetClearColor(graphics::Color{ 100, 149, 237 });
+
   DLOG_INFO("running as {}", SideToString(world_.GetSide()));
   SetupInputCommands();
+
+  mods::Result modResult = mModLoader.Load(mScriptEnvironment);
+  DIB_ASSERT(modResult == mods::Result::kSuccess, "Failed to load mods");
+
+  // script::Script testScript(mScriptEnvironment, Path{ "mods/core/main.js" });
+  // script::Result result = testScript.Load();
+  // DIB_ASSERT(result == script::Result::kSuccess, "Failed to load test
+  // script");
 }
 
 // -------------------------------------------------------------------------- //
@@ -39,6 +49,9 @@ Game::Update(f64 delta)
   }
 
   input_handler_.Update();
+
+  mScriptEnvironment.Update();
+  mModLoader.Update(delta);
 
   world_.Update();
 

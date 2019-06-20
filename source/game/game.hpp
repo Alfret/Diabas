@@ -1,9 +1,12 @@
 #pragma once
 
+#include "mods/loader.hpp"
 #include "app/app.hpp"
 #include "game/world.hpp"
 #include "network/network.hpp"
 #include "server/input.hpp"
+#include "script/env.hpp"
+#include "graphics/renderer.hpp"
 
 // ========================================================================== //
 // Game Declaration
@@ -51,6 +54,14 @@ private:
   // Member Variables
   // ============================================================ //
 private:
+  /** Script environment **/
+  script::Environment mScriptEnvironment;
+  /** Renderer **/
+  graphics::Renderer mRenderer;
+
+  /** Mod loader **/
+  mods::ModLoader mModLoader;
+
   // MUST be before any other network code.
   Network network_{};
 
