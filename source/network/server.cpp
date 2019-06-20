@@ -44,6 +44,10 @@ Server::StartServer(const u16 port)
   addr.Clear();
   addr.m_port = port;
   socket_ = socket_interface_->CreateListenSocketIP(addr);
+  if (socket_ == k_HSteamListenSocket_Invalid) {
+    DLOG_ERROR("failed to create a listen socket on port {}", port);
+    std::exit(3);
+  }
   DLOG_VERBOSE("listening on port {}.", port);
 }
 
