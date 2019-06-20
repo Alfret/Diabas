@@ -12,23 +12,27 @@
 
 namespace dib::script {
 
-Script::Script(Environment& environment,
-               const alflib::Path& path,
-               const String& className)
+Script::Script(Environment& environment)
   : mEnvironment(environment)
-  , mPath(path)
-  , mClassName(className)
 {}
 
 // -------------------------------------------------------------------------- //
 
-Script::~Script() {}
+Script::~Script()
+{
+  JsRelease(mUpdateFunction, nullptr);
+  JsRelease(mInitFunction, nullptr);
+  JsRelease(mInstance, nullptr);
+}
 
 // -------------------------------------------------------------------------- //
 
 Result
-Script::Load()
+Script::Load(const Path& path, const String& className)
 {
+  mPath = path;
+  mClassName = className;
+
   // Load the module
   mModule = mEnvironment.LoadModule(mPath);
   if (!mModule) {
@@ -52,10 +56,13 @@ Script::Load()
   if (mInstance == JS_INVALID_REFERENCE) {
     return Result::kClassNotFound;
   }
+  JsAddRef(mInstance, nullptr);
 
   // Retrieve functions
   mInitFunction = GetProperty(mInstance, "init");
+  JsAddRef(mInitFunction, nullptr);
   mUpdateFunction = GetProperty(mInstance, "update");
+  JsAddRef(mUpdateFunction, nullptr);
 
   // Success
   return Result::kSuccess;
