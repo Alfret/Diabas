@@ -36,6 +36,22 @@ PacketHandler::AddDynamicPacketType(const String& packet_type_name,
   PacketHeaderType type_hint =
     HashFNV1a32(packet_type_name.GetUTF8(), packet_type_name.GetSize());
 
+  return AddDynamicPacketTypeBase(packet_type_name, type_hint, callback);
+}
+
+bool
+PacketHandler::UnsafeAddDynamicPacketType(const String& packet_type_name,
+                                          const PacketHeaderType type_hint,
+                                          PacketHandlerCallback callback)
+{
+  return AddDynamicPacketTypeBase(packet_type_name, type_hint, callback);
+}
+
+bool
+PacketHandler::AddDynamicPacketTypeBase(const String& packet_type_name,
+                                        PacketHeaderType type_hint,
+                                        PacketHandlerCallback callback)
+{
   // check for name collision
   for (const auto it : packet_metas_) {
     if (it.second.name == packet_type_name) {
