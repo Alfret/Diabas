@@ -4,9 +4,8 @@
 
 namespace dib {
 
-Server::Server(World<Side::kServer>* world)
-    : socket_interface_(SteamNetworkingSockets()),
-      world_(world)
+Server::Server()
+    : socket_interface_(SteamNetworkingSockets())
 {
 }
 
