@@ -12,9 +12,6 @@
 
 namespace dib {
 
-template <Side side>
-class World;
-
 struct ClientId
 {
   u32 id;
@@ -50,7 +47,7 @@ struct ClientConnection
 class Server : public ISteamNetworkingSocketsCallbacks
 {
 public:
-  Server(World<Side::kServer>* world);
+  Server();
 
   virtual ~Server() final;
 
@@ -88,7 +85,6 @@ private:
   ISteamNetworkingSockets* socket_interface_;
   std::vector<ClientConnection> clients_{};
   NetworkState network_state_ = NetworkState::kServer;
-  World<Side::kServer>* world_;
 };
 }
 

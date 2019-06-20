@@ -63,6 +63,9 @@ InputCommand::CategoryToString(const InputCommandCategory category)
     case InputCommandCategory::kInfo:
       return "info";
 
+    case InputCommandCategory::kSystem:
+      return "system";
+
     case InputCommandCategory::kChat:
       return "chat";
 
@@ -78,7 +81,9 @@ InputCommand::StringToCategory(const alflib::String& string)
   InputCommandCategory category;
   if (string == "info") {
     category = InputCommandCategory::kInfo;
-  } else if (string == "chat") {
+  } else if (string == "system") {
+    category = InputCommandCategory::kSystem;
+  } else if (string == "system") {
     category = InputCommandCategory::kChat;
   } else {
     category = InputCommandCategory::kUnknown;
