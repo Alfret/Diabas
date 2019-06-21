@@ -3,7 +3,6 @@
 
 #include "core/types.hpp"
 #include "network/packet_header.hpp"
-#include <alflib/string.hpp>
 #include <vector>
 
 namespace dib {
