@@ -67,7 +67,7 @@ public:
   /** Initialize the script with the world as the argument. This is stored in
    * the mod class so that many of the objects accessible from the world are
    * available to scripts  **/
-  void Init(World& world);
+  Result Init(World& world);
 
   /** Update script **/
   void Update(f32 delta);

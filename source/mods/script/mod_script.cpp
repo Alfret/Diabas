@@ -14,43 +14,52 @@
 
 namespace dib::mods {
 
+/** JS: Function to register a network packet **/
 JsValueRef CHAKRA_CALLBACK
-ScriptRegisterNetworkPacket(JsValueRef callee,
+ScriptRegisterNetworkPacket([[maybe_unused]] JsValueRef callee,
                             bool isConstruct,
                             [[maybe_unused]] JsValueRef* arguments,
                             u16 argumentCount,
                             [[maybe_unused]] void* callbackState)
 {
   // Check initial conditions
-  AlfAssert(!isConstruct, "Color constructor must be a construct call");
+  AlfAssert(!isConstruct, "'Mod::registerPacket()' is not a constructor call");
   if (argumentCount != 2) {
-    DLOG_WARNING("'Mod::registerPacket()' expects one (1) argument, however {} "
-                 "argument(s) were specified",
-                 argumentCount - 1);
+    DLOG_WARNING(
+      "'Mod::registerPacket()' expects one (1) argument, however got {}",
+      argumentCount - 1);
     return script::CreateValue(false);
   }
 
   // Retrieve a pointer to the mod
-  ModScript* script = script::GetExternalData<ModScript>(
+  auto script = script::GetExternalData<ModScript>(
     script::GetProperty(arguments[0], "mod_ptr"));
 
   // Add packet
   String packetName = script::GetString(arguments[1]);
   String modId = script::GetString(script::GetProperty(arguments[0], "id"));
   JsValueRef worldObject = script::GetProperty(arguments[0], "world");
-  World* world = script::GetExternalData<World>(worldObject);
-  world->GetNetwork().GetPacketHandler().AddDynamicPacketType(
-    modId + "$" + packetName, [packetName, script](const Packet& packet) {
-      script->OnPacketReceived(packet, packetName);
-    });
+  auto world = script::GetExternalData<World>(worldObject);
+  if (!world->GetNetwork().GetPacketHandler().AddDynamicPacketType(
+        modId + "$" + packetName, [packetName, script](const Packet& packet) {
+          script->OnPacketReceived(packet, packetName);
+        })) {
+    DLOG_WARNING("'Mod::registerPacket()' failed to register packet type, "
+                 "there was already a packet registered with the same name");
+    return script::CreateValue(false);
+  }
 
+  // Success!
   return script::CreateValue(true);
 }
 
 // -------------------------------------------------------------------------- //
 
+/** JS: Function to send a packet over the network. If the sender is a client
+ * then the network get sent to the server. Otherwise the packet is broadcast to
+ * all clients **/
 JsValueRef CHAKRA_CALLBACK
-ScriptSendNetworkPacket(JsValueRef callee,
+ScriptSendNetworkPacket([[maybe_unused]] JsValueRef callee,
                         bool isConstruct,
                         [[maybe_unused]] JsValueRef* arguments,
                         u16 argumentCount,
@@ -60,42 +69,51 @@ ScriptSendNetworkPacket(JsValueRef callee,
   DIB_ASSERT(!isConstruct,
              "'ScriptSendNetworkPacket' is not a constructor call");
   if (argumentCount != 2) {
-    DLOG_WARNING("'Mod::sendPacket' expects one (1) argument, got {}",
+    DLOG_WARNING("'Mod::sendPacket()' expects one (1) argument, however got {}",
                  argumentCount - 1);
     return script::CreateValue(false);
   }
 
-  // Retrieve objects
-  JsValueRef _this = arguments[0];
-  World* world =
-    script::GetExternalData<World>(script::GetProperty(_this, "world"));
-  script::SimplePacket* _packet =
-    script::GetExternalData<script::SimplePacket>(arguments[1]);
+  // Retrieve 'world' and 'packet'
+  auto world =
+    script::GetExternalData<World>(script::GetProperty(arguments[0], "world"));
+  auto _packet = script::GetExternalData<script::SimplePacket>(arguments[1]);
   if (!_packet->isWrite) {
     DLOG_WARNING("Cannot write to a packet in 'Mod::onPacketReceived()'");
     return script::CreateValue(false);
   }
-  script::WritePacket* packet = static_cast<script::WritePacket*>(_packet);
+  auto packet = reinterpret_cast<script::WritePacket*>(_packet);
 
-  // Send the packet
-  String modId = script::GetString(script::GetProperty(_this, "id"));
+  // Setup packet name
+  String modId = script::GetString(script::GetProperty(arguments[0], "id"));
   String packetName = modId + "$" + packet->packetType;
+
+  // Build the native packet
   Packet nativePacket{};
   if (nativePacket.GetPacketCapacity() < packet->writer.GetBuffer().GetSize()) {
     nativePacket.SetPacketCapacity(packet->writer.GetBuffer().GetSize());
   }
   if (!world->GetNetwork().GetPacketHandler().BuildPacketHeader(nativePacket,
                                                                 packetName)) {
-    DLOG_WARNING("Failed to build packet header");
+    DLOG_WARNING("Failed to build native packet header");
+    return script::CreateValue(false);
   }
-  nativePacket.SetPayload(packet->writer.GetBuffer().GetData(),
-                          packet->writer.GetBuffer().GetSize());
+  if (!nativePacket.SetPayload(packet->writer.GetBuffer().GetData(),
+                               packet->writer.GetBuffer().GetSize())) {
+    DLOG_WARNING("Failed to set native packet payload");
+    return script::CreateValue(false);
+  }
+
+  // Broadcast the native packet
   world->GetNetwork().Broadcast(nativePacket);
+
+  // Success!
   return script::CreateValue(true);
 }
 
 // -------------------------------------------------------------------------- //
 
+/** JS: Function to check whether the script is run on a client **/
 JsValueRef
 ScriptIsClient([[maybe_unused]] JsValueRef callee,
                bool isConstruct,
@@ -113,6 +131,7 @@ ScriptIsClient([[maybe_unused]] JsValueRef callee,
 
 // -------------------------------------------------------------------------- //
 
+/** JS: Function to check whether the script is run on a server **/
 JsValueRef
 ScriptIsServer([[maybe_unused]] JsValueRef callee,
                bool isConstruct,
@@ -203,7 +222,7 @@ ModScript::Load(const Path& path, const String& className)
 
 // -------------------------------------------------------------------------- //
 
-void
+Result
 ModScript::Init(World& world)
 {
   DIB_ASSERT(!mInitialized, "Mod scripts can only be initialized once");
@@ -232,10 +251,11 @@ ModScript::Init(World& world)
   JsErrorCode error = JsCallFunction(initFunction, args, 1, &output);
   (void)output;
   if (script::HandleException(error)) {
-    // TODO(Filip Björklund): Exception when running function
+    return Result::kScriptError;
   }
 
   mInitialized = true;
+  return Result::kSuccess;
 }
 
 // -------------------------------------------------------------------------- //
@@ -255,8 +275,6 @@ ModScript::Update(f32 delta)
 void
 ModScript::OnPacketReceived(const Packet& packet, const String& type)
 {
-  DLOG_VERBOSE("Mod received packet of type {}", type);
-
   JsValueRef packetObject = script::CreateReadPacket(packet, type);
   JsValueRef args[] = { mInstance, packetObject };
   JsValueRef output;

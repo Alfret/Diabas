@@ -22,6 +22,8 @@ ResultToString(Result result)
       return "internal failure";
     case Result::kMissingModClass:
       return "missing mod class";
+    case Result::kScriptError:
+      return "script error";
   }
 }
 

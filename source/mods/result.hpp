@@ -22,7 +22,9 @@ enum class Result
   /** Internal failure **/
   kInternalFail,
   /** Missing the main mod class **/
-  kMissingModClass
+  kMissingModClass,
+  /** Error in a script belonging to the mod **/
+  kScriptError
 };
 
 // ========================================================================== //
