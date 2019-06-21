@@ -109,11 +109,6 @@ private:
    * referenced **/
   Module* GetModule(const alflib::Path& path, Module* parent, bool& isNew);
 
-  /** Handle an exception that occurred in a script. The function can be called
-   * with an error code, which if it's false will return the execution
-   * immediately **/
-  void HandleException(JsErrorCode errorCode = JsErrorScriptException);
-
   /** Handle a compilation error that occurred when loading a script. The
    * function can be called with an error code. If the error code is not
    * JsErrorScriptCompile then the function returns immediately **/

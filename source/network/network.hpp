@@ -48,6 +48,8 @@ public:
 
   void SetupPacketHandler();
 
+  PacketHandler& GetPacketHandler() { return packet_handler_; }
+
   // ============================================================ //
   // Private Methods
   // ============================================================ //

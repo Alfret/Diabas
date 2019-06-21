@@ -67,6 +67,7 @@ ModLoader::Init(World& world)
   for (auto& mod : mMods) {
     mod.second->Init(world);
   }
+  return Result::kSuccess;
 }
 
 // -------------------------------------------------------------------------- //

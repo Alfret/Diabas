@@ -4,6 +4,7 @@
 // Headers
 // ========================================================================== //
 
+#include <dlog.hpp>
 #include "core/assert.hpp"
 
 // ========================================================================== //
@@ -19,6 +20,16 @@ GetGlobal()
   JsValueRef global;
   JsGetGlobalObject(&global);
   return global;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+CreateValue(bool value)
+{
+  JsValueRef output;
+  JsBoolToBoolean(value, &output);
+  return output;
 }
 
 // -------------------------------------------------------------------------- //
@@ -81,6 +92,17 @@ CreateExternalObject(void* data, JsFinalizeCallback finalizeCallback)
 
 // -------------------------------------------------------------------------- //
 
+bool
+GetBool(JsValueRef value)
+{
+  bool output;
+  JsErrorCode error = JsBooleanToBool(value, &output);
+  DIB_ASSERT(error == JsNoError, "Failed to retrieve bool");
+  return output;
+}
+
+// -------------------------------------------------------------------------- //
+
 f32
 GetF32(JsValueRef value)
 {
@@ -89,6 +111,15 @@ GetF32(JsValueRef value)
   return static_cast<f32>(output);
 }
 
+// -------------------------------------------------------------------------- //
+
+f64
+GetF64(JsValueRef value)
+{
+  f64 output;
+  JsNumberToDouble(value, &output);
+  return output;
+}
 // -------------------------------------------------------------------------- //
 
 String
@@ -192,6 +223,52 @@ SetProperty(JsValueRef object, const String& property, JsValueRef value)
   if (error != JsNoError) {
     return false;
   }
+  return true;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueType
+GetValueType(JsValueRef object)
+{
+  JsValueType type;
+  JsErrorCode error = JsGetValueType(object, &type);
+  DIB_ASSERT(error == JsNoError, "Failed to get type of object");
+  return type;
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+HandleException(JsErrorCode errorCode)
+{
+  // Return if the error is not a script exception
+  if (errorCode != JsErrorScriptException) {
+    return false;
+  }
+
+  // Check if there is an exception
+  bool hasException = false;
+  JsHasException(&hasException);
+  if (!hasException) {
+    return false;
+  }
+
+  // Retrieve exception
+  JsValueRef exception;
+  JsErrorCode error = JsGetAndClearException(&exception);
+  DIB_ASSERT(error == JsNoError, "Failed to retrieve exception");
+
+  // Retrieve message
+  JsPropertyIdRef messageId;
+  JsCreatePropertyId("message", strlen("message"), &messageId);
+  DIB_ASSERT(error == JsNoError, "Failed to retrieve exception message");
+  JsValueRef message;
+  JsGetProperty(exception, messageId, &message);
+  DIB_ASSERT(error == JsNoError, "Failed to retrieve exception message");
+
+  // Log message
+  DLOG_ERROR("Exception occured when running script: {}", GetString(message));
   return true;
 }
 

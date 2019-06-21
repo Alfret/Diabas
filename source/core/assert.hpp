@@ -1,10 +1,9 @@
 #pragma once
 
-#include <cassert>
+#include "alflib/core/assert.hpp"
 
 // ========================================================================== //
 // Macros
 // ========================================================================== //
 
-#define DIB_ASSERT(condition, message) \
-  assert(!!(condition) && message)
+#define DIB_ASSERT(condition, message) AlfAssert(condition, message)
