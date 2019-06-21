@@ -1,10 +1,10 @@
-#include <script/expose/expose_network.hpp>
 #include "mods/script/mod_script.hpp"
 
 // ========================================================================== //
 // Headers
 // ========================================================================== //
 
+#include <script/expose/expose_network.hpp>
 #include "script/util.hpp"
 #include "game/world.hpp"
 
@@ -21,26 +21,30 @@ ScriptRegisterNetworkPacket(JsValueRef callee,
                             u16 argumentCount,
                             [[maybe_unused]] void* callbackState)
 {
+  // Check initial conditions
   AlfAssert(!isConstruct, "Color constructor must be a construct call");
-  AlfAssert(argumentCount == 2, "'registerPacket' expects one (1) argument");
+  if (argumentCount != 2) {
+    DLOG_WARNING("'Mod::registerPacket()' expects one (1) argument, however {} "
+                 "argument(s) were specified",
+                 argumentCount - 1);
+    return script::CreateValue(false);
+  }
 
-  JsValueRef worldObject = script::GetProperty(arguments[0], "world");
-  World* world = script::GetExternalData<World>(worldObject);
+  // Retrieve a pointer to the mod
+  ModScript* script = script::GetExternalData<ModScript>(
+    script::GetProperty(arguments[0], "mod_ptr"));
 
+  // Add packet
   String packetName = script::GetString(arguments[1]);
   String modId = script::GetString(script::GetProperty(arguments[0], "id"));
-
+  JsValueRef worldObject = script::GetProperty(arguments[0], "world");
+  World* world = script::GetExternalData<World>(worldObject);
   world->GetNetwork().GetPacketHandler().AddDynamicPacketType(
-    packetName + "$" + modId,
-    [&](const Packet& packet) { DLOG_VERBOSE("Received packet in mod"); });
+    modId + "$" + packetName, [packetName, script](const Packet& packet) {
+      script->OnPacketReceived(packet, packetName);
+    });
 
-  DLOG_VERBOSE("Mod {}: registerPacket({})", modId, packetName);
-
-  /*graphics::Color* color = GetExternalData<graphics::Color>(arguments[0]);
-  DIB_ASSERT(color != nullptr, "External object data is null");
-  return CreateValue(color->Red());*/
-
-  return JS_INVALID_REFERENCE;
+  return script::CreateValue(true);
 }
 
 // -------------------------------------------------------------------------- //
@@ -76,10 +80,52 @@ ScriptSendNetworkPacket(JsValueRef callee,
   // Send the packet
   String modId = script::GetString(script::GetProperty(_this, "id"));
   String packetName = modId + "$" + packet->packetType;
-
-  // Packet packet;
-
+  Packet nativePacket{};
+  if (nativePacket.GetPacketCapacity() < packet->writer.GetBuffer().GetSize()) {
+    nativePacket.SetPacketCapacity(packet->writer.GetBuffer().GetSize());
+  }
+  if (!world->GetNetwork().GetPacketHandler().BuildPacketHeader(nativePacket,
+                                                                packetName)) {
+    DLOG_WARNING("Failed to build packet header");
+  }
+  nativePacket.SetPayload(packet->writer.GetBuffer().GetData(),
+                          packet->writer.GetBuffer().GetSize());
+  world->GetNetwork().Broadcast(nativePacket);
   return script::CreateValue(true);
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+ScriptIsClient([[maybe_unused]] JsValueRef callee,
+               bool isConstruct,
+               [[maybe_unused]] JsValueRef* arguments,
+               u16 argumentCount,
+               [[maybe_unused]] void* callbackState)
+{
+  // Check initial conditions
+  DIB_ASSERT(!isConstruct, "'ScriptWorldGetSize' is not a constructor call");
+  if (argumentCount != 1) {
+    return script::CreateUndefined();
+  }
+  return script::CreateValue(kSide == Side::kClient);
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+ScriptIsServer([[maybe_unused]] JsValueRef callee,
+               bool isConstruct,
+               [[maybe_unused]] JsValueRef* arguments,
+               u16 argumentCount,
+               [[maybe_unused]] void* callbackState)
+{
+  // Check initial conditions
+  DIB_ASSERT(!isConstruct, "'ScriptWorldGetSize' is not a constructor call");
+  if (argumentCount != 1) {
+    return script::CreateUndefined();
+  }
+  return script::CreateValue(kSide == Side::kServer);
 }
 
 }
@@ -97,6 +143,9 @@ ModScript::ModScript(script::Environment& environment)
 
 ModScript::~ModScript()
 {
+  JsRelease(mOnKeyReleaseFunction, nullptr);
+  JsRelease(mOnKeyPressFunction, nullptr);
+  JsRelease(mOnPacketReceivedFunction, nullptr);
   JsRelease(mUpdateFunction, nullptr);
   JsRelease(mInstance, nullptr);
 }
@@ -134,9 +183,19 @@ ModScript::Load(const Path& path, const String& className)
   }
   JsAddRef(mInstance, nullptr);
 
+  // Store object with 'this' pointer in the instance
+  script::SetProperty(mInstance, "mod_ptr", script::CreateExternalObject(this));
+
   // Retrieve functions
   mUpdateFunction = script::GetProperty(mInstance, "update");
   JsAddRef(mUpdateFunction, nullptr);
+  mOnKeyPressFunction = script::GetProperty(mInstance, "onKeyPress");
+  JsAddRef(mOnKeyPressFunction, nullptr);
+  mOnPacketReceivedFunction =
+    script::GetProperty(mInstance, "onPacketReceived");
+  JsAddRef(mOnPacketReceivedFunction, nullptr);
+  mOnKeyReleaseFunction = script::GetProperty(mInstance, "onKeyRelease");
+  JsAddRef(mOnKeyReleaseFunction, nullptr);
 
   // Success
   return Result::kSuccess;
@@ -153,7 +212,13 @@ ModScript::Init(World& world)
   JsValueRef worldObject = script::CreateExternalObject(&world);
   script::SetProperty(mInstance, "world", worldObject);
 
-  // Expose register packet
+  // Common functions
+  script::SetProperty(
+    mInstance, "isClient", script::CreateFunction(ScriptIsClient));
+  script::SetProperty(
+    mInstance, "isServer", script::CreateFunction(ScriptIsServer));
+
+  // Network Functions
   script::SetProperty(mInstance,
                       "registerPacketType",
                       script::CreateFunction(ScriptRegisterNetworkPacket));
@@ -180,7 +245,49 @@ ModScript::Update(f32 delta)
 {
   JsValueRef args[] = { mInstance, script::CreateValue(delta) };
   JsValueRef output;
-  JsCallFunction(mUpdateFunction, args, 2, &output);
+  JsErrorCode error = JsCallFunction(mUpdateFunction, args, 2, &output);
+  DIB_ASSERT(error == JsNoError, "Failed to call 'Mod::update()'");
+  (void)output;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ModScript::OnPacketReceived(const Packet& packet, const String& type)
+{
+  DLOG_VERBOSE("Mod received packet of type {}", type);
+
+  JsValueRef packetObject = script::CreateReadPacket(packet, type);
+  JsValueRef args[] = { mInstance, packetObject };
+  JsValueRef output;
+  JsErrorCode error =
+    JsCallFunction(mOnPacketReceivedFunction, args, 2, &output);
+  script::HandleException(error);
+  DIB_ASSERT(error == JsNoError, "Failed to call 'Mod::onPacketReceived()'");
+  (void)output;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ModScript::OnKeyPress(Key key)
+{
+  JsValueRef args[] = { mInstance, script::CreateValue(u32(key)) };
+  JsValueRef output;
+  JsErrorCode error = JsCallFunction(mOnKeyPressFunction, args, 2, &output);
+  DIB_ASSERT(error == JsNoError, "Failed to call 'Mod::onKeyPress()'");
+  (void)output;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ModScript::OnKeyRelease(Key key)
+{
+  JsValueRef args[] = { mInstance, script::CreateValue(u32(key)) };
+  JsValueRef output;
+  JsErrorCode error = JsCallFunction(mOnKeyReleaseFunction, args, 2, &output);
+  DIB_ASSERT(error == JsNoError, "Failed to call 'Mod::onKeyRelease()'");
   (void)output;
 }
 

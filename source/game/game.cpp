@@ -1,4 +1,5 @@
 #include "game.hpp"
+
 #include <dlog.hpp>
 #include "network/side.hpp"
 
@@ -44,7 +45,7 @@ Game::~Game()
 void
 Game::Update(f64 delta)
 {
-  if (IsKeyDown(Key::KEY_ESCAPE)) {
+  if (IsKeyDown(Key::kKeyEscape)) {
     Exit();
   }
 
@@ -63,6 +64,22 @@ Game::Update(f64 delta)
 void
 Game::Render()
 {}
+
+// -------------------------------------------------------------------------- //
+
+void
+Game::OnKeyPressed(Key key)
+{
+  mModLoader.OnKeyPress(key);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Game::OnKeyReleased(Key key)
+{
+  mModLoader.OnKeyRelease(key);
+}
 
 // -------------------------------------------------------------------------- //
 

@@ -21,6 +21,11 @@ namespace script {
 /** **/
 class Environment
 {
+private:
+  /** Key for the private storage of data in the environment. Private data is
+   * stored here to not pollute global namespace **/
+  static constexpr char PRIVATE_STORAGE_KEY[] = "__diabas_private";
+
 public:
   /** Module **/
   struct Module
@@ -57,6 +62,9 @@ private:
   /** ChakraCore context **/
   JsContextRef mContext;
 
+  /** Private environment storage '__diabas_private' **/
+  JsValueRef mPrivateStorage;
+
   /** Root module **/
   Module* mRootModule;
   /** Map of loaded modules **/
@@ -87,6 +95,12 @@ public:
   /** Load a module **/
   Module* LoadModule(const alflib::Path& path);
 
+  /** Store object in environment's private storage **/
+  void StorePrivate(JsValueRef object, const String& key);
+
+  /** Load object from environment's private storage **/
+  JsValueRef LoadPrivate(const String& key);
+
   /** Instantiate a class using a constructor object **/
   JsValueRef InstantiateObject(JsValueRef constructor);
 
@@ -98,11 +112,6 @@ public:
 
   /** Update the environment. Loads and runs new modules **/
   void Update();
-
-  /** Perform a debug dump. JS_INVALID_REFERENCE lists the properties of the
-   * global object **/
-  void ListProperties(JsValueRef object = JS_INVALID_REFERENCE,
-                      const String& label = "");
 
 private:
   /** Get a module. The module is loaded if it's the first time it's

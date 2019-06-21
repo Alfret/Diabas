@@ -7,6 +7,7 @@
 #include <alflib/memory/memory_reader.hpp>
 #include <alflib/memory/memory_writer.hpp>
 #include "script/env.hpp"
+#include "network/packet.hpp"
 
 // ========================================================================== //
 // Enumerations
@@ -15,7 +16,7 @@
 namespace dib::script {
 
 /** Types of objects in a packet **/
-enum class PacketObjectType
+enum class PacketObjectType : u16
 {
   kNumber,
   kString,
@@ -40,7 +41,7 @@ struct SimplePacket
 
   SimplePacket(bool isWrite, String packetType)
     : isWrite(isWrite)
-    , packetType(packetType)
+    , packetType(std::move(packetType))
   {}
 };
 
@@ -83,5 +84,11 @@ namespace dib::script {
 /** Expose networking to scripts **/
 void
 ExposeNetwork(Environment& environment);
+
+// -------------------------------------------------------------------------- //
+
+/** Create a read packet from a native packet **/
+JsValueRef
+CreateReadPacket(const Packet& packet, const String& packetName);
 
 }

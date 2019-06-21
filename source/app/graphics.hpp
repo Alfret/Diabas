@@ -6,6 +6,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
 #include "core/types.hpp"
 #include "graphics/color.hpp"
 

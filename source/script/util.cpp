@@ -25,6 +25,16 @@ GetGlobal()
 // -------------------------------------------------------------------------- //
 
 JsValueRef
+CreateUndefined()
+{
+  JsValueRef output;
+  JsGetUndefinedValue(&output);
+  return output;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
 CreateValue(bool value)
 {
   JsValueRef output;
@@ -35,10 +45,39 @@ CreateValue(bool value)
 // -------------------------------------------------------------------------- //
 
 JsValueRef
+CreateValue(s32 value)
+{
+  JsValueRef output;
+  JsIntToNumber(value, &output);
+  return output;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+CreateValue(u32 value)
+{
+  JsValueRef output;
+  JsIntToNumber(value, &output);
+  return output;
+}
+// -------------------------------------------------------------------------- //
+
+JsValueRef
 CreateValue(f32 value)
 {
   JsValueRef output;
   JsDoubleToNumber(static_cast<f64>(value), &output);
+  return output;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+script::CreateValue(f64 value)
+{
+  JsValueRef output;
+  JsDoubleToNumber(value, &output);
   return output;
 }
 
@@ -270,6 +309,34 @@ HandleException(JsErrorCode errorCode)
   // Log message
   DLOG_ERROR("Exception occured when running script: {}", GetString(message));
   return true;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ListProperties(JsValueRef object, const String& label)
+{
+  // Retrieve global object
+  JsValueRef global;
+  JsGetGlobalObject(&global);
+  if (object == JS_INVALID_REFERENCE) {
+    object = global;
+  }
+
+  // Retrieve the property list
+  JsValueRef propertyNames;
+  JsGetOwnPropertyNames(object, &propertyNames);
+
+  // Retrieve length
+  s32 length = GetPropertyInt(propertyNames, "length");
+  DLOG_VERBOSE("Listing properties{}",
+               label.GetLength() > 0 ? String(" [") + label + "]" : "");
+  for (s32 i = 0; i < length; i++) {
+    String indexString = String::ToString(i);
+    JsValueRef element = GetProperty(propertyNames, indexString);
+    String stringValue = ToString(element);
+    DLOG_VERBOSE("  [{}]: {}", i, stringValue);
+  }
 }
 
 }

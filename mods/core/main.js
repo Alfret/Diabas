@@ -8,25 +8,24 @@ export default class CoreMod extends Mod {
   }
 
   init() {
-    dlog.verbose("CoreMod::init()");
-    //dlog.info("Hello from mod ", this.name, "(", this.id, ")!");
-
-    this.registerPacketType("spawn_particle");
-    this.registerPacketType("spawn_crocodile");
-
-    let p = new Packet("spawn_particle");
-    p.write(2);
-    p.write("Hej");
-    this.sendPacket(p);
-
+    this.registerPacketType("my_packet");
   }
 
-  update(delta) {
-    //dlog.verbose("CoreMod::update(", delta, ")");
+  onKeyPress(key) {
+    if (key === keys.S && this.isClient()) {
+      let p = new Packet("my_packet");
+      p.write("Data in my packet");
+      this.sendPacket(p);
+    }
   }
 
-  onPacketReceived(p) {
-    //let i = p.read();
+  onPacketReceived(packet) {
+    dlog.verbose("Packet received of type ", packet.getType());
+    if (packet.getType() === "my_packet") {
+      let data = packet.read();
+      dlog.verbose("Data: ", data);
+    }
   }
+
 
 }

@@ -8,6 +8,8 @@
 #include "core/macros.hpp"
 #include "script/env.hpp"
 #include "mods/result.hpp"
+#include "app/key.hpp"
+#include "network/packet.hpp"
 
 // ========================================================================== //
 // Forward Declarations
@@ -44,6 +46,12 @@ private:
   JsValueRef mInstance = JS_INVALID_REFERENCE;
   /** Update function **/
   JsValueRef mUpdateFunction = JS_INVALID_REFERENCE;
+  /** OnPacketReceived function **/
+  JsValueRef mOnPacketReceivedFunction = JS_INVALID_REFERENCE;
+  /** OnKeyPress function **/
+  JsValueRef mOnKeyPressFunction = JS_INVALID_REFERENCE;
+  /** OnKeyRelease function **/
+  JsValueRef mOnKeyReleaseFunction = JS_INVALID_REFERENCE;
 
 public:
   /** Create script. This does not yet load the script **/
@@ -63,6 +71,15 @@ public:
 
   /** Update script **/
   void Update(f32 delta);
+
+  /** Called when a packet has been received **/
+  void OnPacketReceived(const Packet& packet, const String& type);
+
+  /** Called when a key has been pressed **/
+  void OnKeyPress(Key key);
+
+  /** Called when a key has been released **/
+  void OnKeyRelease(Key key);
 
   /** Returns the instance of the mod class in the script **/
   JsValueRef GetInstance() const { return mInstance; }

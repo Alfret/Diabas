@@ -49,6 +49,22 @@ Mod::Update(f32 delta)
 
 // -------------------------------------------------------------------------- //
 
+void
+Mod::OnKeyPress(Key key)
+{
+  mMainScript.OnKeyPress(key);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Mod::OnKeyRelease(Key key)
+{
+  mMainScript.OnKeyRelease(key);
+}
+
+// -------------------------------------------------------------------------- //
+
 Result
 Mod::Parse(const alflib::File& modDirectory)
 {

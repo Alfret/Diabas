@@ -20,15 +20,39 @@ GetGlobal();
 
 // -------------------------------------------------------------------------- //
 
+/** Create undefined value **/
+JsValueRef
+CreateUndefined();
+
+// -------------------------------------------------------------------------- //
+
 /** Create a JavaScript number from a bool **/
 JsValueRef
 CreateValue(bool value);
 
 // -------------------------------------------------------------------------- //
 
+/** Create a JavaScript number from an s32 **/
+JsValueRef
+CreateValue(s32 value);
+
+// -------------------------------------------------------------------------- //
+
+/** Create a JavaScript number from an u32 **/
+JsValueRef
+CreateValue(u32 value);
+
+// -------------------------------------------------------------------------- //
+
 /** Create a JavaScript number from an f32 **/
 JsValueRef
 CreateValue(f32 value);
+
+// -------------------------------------------------------------------------- //
+
+/** Create a JavaScript number from an f64 **/
+JsValueRef
+CreateValue(f64 value);
 
 // -------------------------------------------------------------------------- //
 
@@ -148,6 +172,14 @@ GetValueType(JsValueRef object);
  * **/
 bool
 HandleException(JsErrorCode errorCode);
+
+// -------------------------------------------------------------------------- //
+
+/** Perform a debug dump. JS_INVALID_REFERENCE lists the properties of the
+ * global object **/
+void
+ListProperties(JsValueRef object = JS_INVALID_REFERENCE,
+               const String& label = "");
 
 }
 }
