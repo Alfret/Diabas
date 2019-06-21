@@ -291,28 +291,33 @@ void
 PacketHandler::BuildPacketSync(Packet& packet)
 {
   BuildPacketHeader(packet, PacketHeaderStaticTypes::kSync);
-  auto data = Serialize();
-  auto* a = reinterpret_cast<u8*>(&data[0]);
-  auto* b = reinterpret_cast<u8*>(&data[1]);
-  AlfAssert(a + sizeof(PacketMetaSerializable) == b, "memory alignment problem");
-  //TODO replace this hack with a specialization of serialize
-  packet.SetPayload(reinterpret_cast<const u8*>(data.data()), data.size() * sizeof(PacketMetaSerializable));
+  auto vec = Serialize();
+
+  alflib::MemoryWriter mr{};
+  for (const auto& data : vec) {
+    mr.Write(data);
+  }
+
+  packet.SetPayload(mr.GetBuffer().GetData(), mr.GetOffset());
 }
 
 void
 PacketHandler::OnPacketSync(const Packet& packet)
 {
-  AlfAssert(packet.GetHeader()->type == static_types_[static_cast<std::size_t>(PacketHeaderStaticTypes::kSync)], "tried to handle a non sync packet with OnPacketSync");
-
-  // TODO replace this hack with a specialization of serialize
   std::vector<PacketMetaSerializable> vec{};
-  vec.resize(packet.GetPayloadSize() / sizeof(PacketMetaSerializable));
-  AlfAssert(vec.size() * sizeof(PacketMetaSerializable) == packet.GetPayloadSize(), "memory alignment problem");
-  std::memcpy(vec.data(), packet.GetPayload(), packet.GetPayloadSize());
+  const alflib::Buffer buffer{ packet.GetPayloadSize(), packet.GetPayload() };
+  alflib::MemoryReader mr{ buffer };
+
+  for (std::size_t pos = 0; pos < packet.GetPayloadSize();
+       pos += mr.GetOffset()){
+    vec.push_back(mr.Read<PacketMetaSerializable>());
+  }
+
   const auto res = Sync(vec);
   if (res != SyncResult::kSuccess) {
     DLOG_ERROR("failed to sync due to {}", SyncResultToString(res));
   }
+  DLOG_VERBOSE("Sync ok");
 }
 
 std::vector<PacketMetaSerializable>

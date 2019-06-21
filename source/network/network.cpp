@@ -60,8 +60,8 @@ template<>
 void
 Network<Side::kClient>::SetupPacketHandler()
 {
-  const auto SyncCb = [](const Packet&) {
-    DLOG_INFO("TODO handle sync packets");
+  const auto SyncCb = [this](const Packet& packet) {
+    packet_handler_.OnPacketSync(packet);
   };
   bool ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kSync, "sync", SyncCb);
