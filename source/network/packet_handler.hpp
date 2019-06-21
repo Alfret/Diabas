@@ -6,6 +6,8 @@
 #include <string_view>
 #include <optional>
 #include <array>
+#include <alflib/memory/memory_writer.hpp>
+#include <alflib/memory/memory_reader.hpp>
 
 namespace dib
 {
@@ -54,6 +56,18 @@ struct PacketMetaSerializable
 {
   PacketHeaderType type;
   String name;
+
+  void ToBytes(alflib::MemoryWriter& mr) const {
+    mr.Write(type);
+    mr.Write(name);
+  }
+
+  static PacketMetaSerializable FromBytes(alflib::MemoryReader& mr) {
+    PacketMetaSerializable p{};
+    p.type = mr.Read<decltype(type)>();
+    p.name = mr.Read<decltype(name)>();
+    return p;
+  }
 };
 
 // ============================================================ //
@@ -96,24 +110,37 @@ class PacketHandler
                            const String& packet_type_name,
                            PacketHandlerCallback callback);
 
-  enum class SyncResult {
-    kSuccess = 0,
+    enum class SyncResult {
+      kSuccess = 0,
 
-    // we have fewer packet_meta's than other
-    kMissingPacketMeta,
+      // we have fewer packet_meta's than other
+      kMissingPacketMeta,
 
-    // we have more packet_meta's than other
-    kExtraPacketMeta,
+      // we have more packet_meta's than other
+      kExtraPacketMeta,
 
-    // some packet_meta's have same hash, but different names.
-    kNameMissmatch
-  };
+      // some packet_meta's have same hash, but different names.
+      kNameMissmatch
+    };
+
+  String SyncResultToString(const SyncResult result);
 
   SyncResult Sync(const std::vector<PacketMetaSerializable>& correct);
 
   // ============================================================ //
-  // Packet Producer
-  // ============================================================ //
+
+  // used in test, never use this yourself
+  bool UnsafeAddDynamicPacketType(const String& packet_type_name,
+                                  const PacketHeaderType type_hint,
+                                  PacketHandlerCallback callback);
+ private:
+   bool AddDynamicPacketTypeBase(const String& packet_type_name,
+                                 PacketHeaderType type_hint,
+                                 PacketHandlerCallback callback);
+
+   // ============================================================ //
+   // Packet Producer
+   // ============================================================ //
  public:
   /**
    * Make a header of static packet type, and fill it in for the packet.
@@ -132,6 +159,14 @@ class PacketHandler
    * Prepare the packet header.
    */
   void BuildPacketHeader(Packet& packet, const PacketHeaderType type) const;
+
+ public:
+  void BuildPacketSync(Packet& packet);
+
+  /**
+   * When you get a sync packet, call this and it will sync for you.
+   */
+  void OnPacketSync(const Packet& packet);
 
   // ============================================================ //
   // Misc

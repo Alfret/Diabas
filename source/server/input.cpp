@@ -83,7 +83,7 @@ InputCommand::StringToCategory(const alflib::String& string)
     category = InputCommandCategory::kInfo;
   } else if (string == "system") {
     category = InputCommandCategory::kSystem;
-  } else if (string == "system") {
+  } else if (string == "chat") {
     category = InputCommandCategory::kChat;
   } else {
     category = InputCommandCategory::kUnknown;
@@ -163,6 +163,7 @@ InputHandler<Side::kServer>::RunCommand(const alflib::String& input) const
   if (category == InputCommandCategory::kUnknown) {
     DLOG_RAW("Unknown category, available categories are:\n"
              "\tinfo - Information type commands.\n"
+             "\tsystem - System commands.\n"
              "\tchat - Send chat messages.\n");
     return;
   }
