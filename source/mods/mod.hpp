@@ -7,6 +7,7 @@
 #include "script/env.hpp"
 #include "mods/script/mod_script.hpp"
 #include "core/macros.hpp"
+#include "app/key.hpp"
 
 namespace dib {
 DIB_FORWARD_DECLARE_CLASS(World);
@@ -65,6 +66,12 @@ public:
 
   /** Update mod **/
   void Update(f32 delta);
+
+  /** Called when a key has been pressed **/
+  void OnKeyPress(Key key);
+
+  /** Called when a key has been released **/
+  void OnKeyRelease(Key key);
 
   /** Returns the name of the mod **/
   const String& GetName() const { return mName; }

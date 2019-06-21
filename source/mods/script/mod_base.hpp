@@ -10,10 +10,10 @@
 // Functions
 // ========================================================================== //
 
-namespace dib::script {
+namespace dib::mods {
 
-/** Expose mod objects to scripts **/
+/** Expose the base mod **/
 void
-ExposeMod(Environment& environment);
+ExposeModBase(script::Environment& environment);
 
 }

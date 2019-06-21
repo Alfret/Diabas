@@ -91,6 +91,72 @@ ScriptPacketWrite([[maybe_unused]] JsValueRef callee,
 // -------------------------------------------------------------------------- //
 
 JsValueRef CHAKRA_CALLBACK
+ScriptPacketRead([[maybe_unused]] JsValueRef callee,
+                 bool isConstruct,
+                 JsValueRef* arguments,
+                 u16 argumentCount,
+                 [[maybe_unused]] void* callbackState)
+{
+  // Initial checks
+  DIB_ASSERT(!isConstruct, "'ScriptPacketWrite' is not a constructor call");
+  if (argumentCount != 1) {
+    DLOG_ERROR(
+      "'Packet::write()' called with too many arguments. Zero (0) expected");
+    return JS_INVALID_REFERENCE;
+  }
+
+  // Retrieve packet
+  auto _packet = GetExternalData<SimplePacket>(arguments[0]);
+  if (_packet->isWrite) {
+    DLOG_WARNING("Cannot write to a packet in 'Mod::onPacketReceived()'");
+    return JS_INVALID_REFERENCE;
+  }
+  auto packet = static_cast<ReadPacket*>(_packet);
+
+  // Read type
+  JsValueRef readObject = JS_INVALID_REFERENCE;
+  auto type = static_cast<PacketObjectType>(packet->reader.Read<u16>());
+  switch (type) {
+    case PacketObjectType::kNumber: {
+      f64 num = packet->reader.Read<f64>();
+      readObject = CreateValue(num);
+      break;
+    }
+    case PacketObjectType::kString: {
+      String str = packet->reader.Read<String>();
+      readObject = CreateString(str);
+      break;
+    }
+    case PacketObjectType::kArray: {
+      break;
+    }
+  }
+
+  // Return read object
+  return readObject;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef CHAKRA_CALLBACK
+ScriptPacketGetType([[maybe_unused]] JsValueRef callee,
+                    bool isConstruct,
+                    JsValueRef* arguments,
+                    u16 argumentCount,
+                    [[maybe_unused]] void* callbackState)
+{
+  DIB_ASSERT(!isConstruct, "'ScriptPacketGetType' is not a constructor call");
+  if (argumentCount != 1) {
+    DLOG_ERROR(
+      "'Packet::getType()' called with too many arguments. Zero (0) expected");
+    return JS_INVALID_REFERENCE;
+  }
+  return GetProperty(arguments[0], "type");
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef CHAKRA_CALLBACK
 ScriptPacketConstructor([[maybe_unused]] JsValueRef callee,
                         bool isConstruct,
                         JsValueRef* arguments,
@@ -118,6 +184,9 @@ ScriptPacketConstructor([[maybe_unused]] JsValueRef callee,
     delete _packet;
   });
 
+  // Set type property
+  SetProperty(object, "type", arguments[1]);
+
   // Set prototype
   JsSetPrototype(object, PACKET_PROTOTYPE);
   return object;
@@ -142,7 +211,26 @@ ExposeNetwork(Environment& environment)
   SetProperty(global, "Packet", packetConstr);
   PACKET_PROTOTYPE = CreateObject();
   SetProperty(PACKET_PROTOTYPE, "write", CreateFunction(ScriptPacketWrite));
+  SetProperty(PACKET_PROTOTYPE, "read", CreateFunction(ScriptPacketRead));
+  SetProperty(PACKET_PROTOTYPE, "getType", CreateFunction(ScriptPacketGetType));
   SetProperty(packetConstr, "prototype", PACKET_PROTOTYPE);
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+CreateReadPacket(const Packet& packet, const String& packetName)
+{
+  ReadPacket* readPacket = nullptr;
+  {
+    readPacket = new ReadPacket(
+      packetName,
+      alflib::Buffer{ packet.GetPacketSize(), packet.GetPayload() });
+  }
+  JsValueRef object = script::CreateExternalObject(readPacket);
+  JsSetPrototype(object, PACKET_PROTOTYPE);
+  SetProperty(object, "type", CreateString(packetName));
+  return object;
 }
 
 }

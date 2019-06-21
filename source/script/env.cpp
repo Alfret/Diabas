@@ -6,7 +6,6 @@
 
 #include "core/assert.hpp"
 #include "script/expose/expose_base.hpp"
-#include "script/expose/expose_mod.hpp"
 #include "script/expose/expose_graphics.hpp"
 #include "script/expose/expose_network.hpp"
 #include "script/util.hpp"
@@ -73,9 +72,13 @@ Environment::Environment()
     mRootModule->record, JsModuleHostInfo_HostDefined, (void*)mRootModule);
   DIB_ASSERT(error == JsNoError, "Failed to set root module data");
 
+  // Create private storage
+  mPrivateStorage = CreateObject();
+  JsAddRef(mPrivateStorage, nullptr);
+  SetProperty(GetGlobal(), PRIVATE_STORAGE_KEY, mPrivateStorage);
+
   // Expose functionality to scripts
   ExposeLogging();
-  ExposeMod(*this);
   ExposeGraphics(*this);
   ExposeNetwork(*this);
 }
@@ -90,6 +93,8 @@ Environment::~Environment()
     delete entry.second;
   }
   delete mRootModule;
+
+  JsRelease(mPrivateStorage, nullptr);
 
   // Dispose of runtime
   JsDisposeRuntime(mRuntime);
@@ -182,6 +187,22 @@ Environment::LoadModule(const alflib::Path& path)
 
   // Return the module
   return module;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Environment::StorePrivate(JsValueRef object, const String& key)
+{
+  SetProperty(mPrivateStorage, key, object);
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+Environment::LoadPrivate(const String& key)
+{
+  return GetProperty(mPrivateStorage, key);
 }
 
 // -------------------------------------------------------------------------- //
@@ -287,33 +308,6 @@ Environment::Update()
       // DIB_ASSERT(false, "Failed to execute run task");
       continue;
     }
-  }
-}
-
-// -------------------------------------------------------------------------- //
-void
-Environment::ListProperties(JsValueRef object, const String& label)
-{
-  // Retrieve global object
-  JsValueRef global;
-  JsGetGlobalObject(&global);
-  if (object == JS_INVALID_REFERENCE) {
-    object = global;
-  }
-
-  // Retrieve the property list
-  JsValueRef propertyNames;
-  JsGetOwnPropertyNames(object, &propertyNames);
-
-  // Retrieve length
-  s32 length = GetPropertyInt(propertyNames, "length");
-  DLOG_VERBOSE("Listing properties{}",
-               label.GetLength() > 0 ? String(" [") + label + "]" : "");
-  for (s32 i = 0; i < length; i++) {
-    String indexString = String::ToString(i);
-    JsValueRef element = GetProperty(propertyNames, indexString);
-    String stringValue = ToString(element);
-    DLOG_VERBOSE("  [{}]: {}", i, stringValue);
   }
 }
 

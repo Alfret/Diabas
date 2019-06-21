@@ -2,9 +2,11 @@
 // Main
 // ========================================================================== //
 
+#include <dlog.hpp>
 #include "app/app.hpp"
 #include "game/game.hpp"
-#include <dlog.hpp>
+#include "network/side.hpp"
+#include "core/types.hpp"
 
 int
 main(int, char**)
@@ -15,7 +17,11 @@ main(int, char**)
 
   // Create and run game
   dib::Application::Descriptor appDescriptor{};
-  appDescriptor.title = "Diabas";
+  if (dib::kSide == dib::Side::kServer) {
+    appDescriptor.title = dib::String("Diabas - Server");
+  } else {
+    appDescriptor.title = dib::String("Diabas - Client");
+  }
   appDescriptor.width = 1280;
   appDescriptor.height = 720;
   dib::Game app(appDescriptor);
