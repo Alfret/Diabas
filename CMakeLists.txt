@@ -28,8 +28,8 @@ endif ()
 
 # Add our .cpp files, will automatically re-run cmake when new ones are added
 set(COMMON_SOURCE
-  source/audio/audio.cpp
-  source/audio/audio.hpp
+  source/audio/audio_manager.cpp
+  source/audio/audio_manager.hpp
   source/app/app.cpp
   source/core/hash.cpp
   source/core/hash.hpp
