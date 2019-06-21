@@ -34,6 +34,22 @@ PacketHandler::AddDynamicPacketType(const String& packet_type_name,
   PacketHeaderType type_hint =
     HashFNV1a32(packet_type_name.GetUTF8(), packet_type_name.GetSize());
 
+  return AddDynamicPacketTypeBase(packet_type_name, type_hint, callback);
+}
+
+bool
+PacketHandler::UnsafeAddDynamicPacketType(const String& packet_type_name,
+                                          const PacketHeaderType type_hint,
+                                          PacketHandlerCallback callback)
+{
+  return AddDynamicPacketTypeBase(packet_type_name, type_hint, callback);
+}
+
+bool
+PacketHandler::AddDynamicPacketTypeBase(const String& packet_type_name,
+                                        PacketHeaderType type_hint,
+                                        PacketHandlerCallback callback)
+{
   // check for name collision
   for (const auto it : packet_metas_) {
     if (it.second.name == packet_type_name) {
@@ -222,6 +238,23 @@ PacketHandler::Sync(const std::vector<PacketMetaSerializable>& correct)
   return SyncResult::kSuccess;
 }
 
+String
+PacketHandler::SyncResultToString(const SyncResult result)
+{
+  switch (result) {
+    case SyncResult::kSuccess:
+      return "success";
+    case SyncResult::kNameMissmatch:
+      return "name missmatch";
+    case SyncResult::kExtraPacketMeta:
+      return "extra packet type";
+    case SyncResult::kMissingPacketMeta:
+      return "missing packet type";
+    default:
+      return "internal error";
+  }
+}
+
 void
 PacketHandler::BuildPacketHeader(
   Packet& packet,
@@ -252,6 +285,39 @@ PacketHandler::BuildPacketHeader(Packet& packet,
   PacketHeader header{};
   header.type = type;
   packet.SetHeader(header);
+}
+
+void
+PacketHandler::BuildPacketSync(Packet& packet)
+{
+  BuildPacketHeader(packet, PacketHeaderStaticTypes::kSync);
+  auto vec = Serialize();
+
+  alflib::MemoryWriter mr{};
+  for (const auto& data : vec) {
+    mr.Write(data);
+  }
+
+  packet.SetPayload(mr.GetBuffer().GetData(), mr.GetOffset());
+}
+
+void
+PacketHandler::OnPacketSync(const Packet& packet)
+{
+  std::vector<PacketMetaSerializable> vec{};
+  const alflib::Buffer buffer{ packet.GetPayloadSize(), packet.GetPayload() };
+  alflib::MemoryReader mr{ buffer };
+
+  for (std::size_t pos = 0; pos < packet.GetPayloadSize();
+       pos += mr.GetOffset()){
+    vec.push_back(mr.Read<PacketMetaSerializable>());
+  }
+
+  const auto res = Sync(vec);
+  if (res != SyncResult::kSuccess) {
+    DLOG_ERROR("failed to sync due to {}", SyncResultToString(res));
+  }
+  DLOG_VERBOSE("Sync ok");
 }
 
 std::vector<PacketMetaSerializable>

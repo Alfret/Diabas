@@ -4,8 +4,21 @@
 
 namespace dib {
 
-Server::Server()
-    : socket_interface_(SteamNetworkingSockets())
+auto
+Server::ClientIteratorFromConnection(const HSteamNetConnection connection) const
+{
+  auto it = clients_.begin();
+  for (; it < clients_.end(); it++) {
+    if (it->connection == connection) {
+      break;
+    }
+  }
+  return it;
+}
+
+Server::Server(PacketHandler* packet_handler)
+    : socket_interface_(SteamNetworkingSockets()),
+      packet_handler_(packet_handler)
 {
 }
 
@@ -31,6 +44,10 @@ Server::StartServer(const u16 port)
   addr.Clear();
   addr.m_port = port;
   socket_ = socket_interface_->CreateListenSocketIP(addr);
+  if (socket_ == k_HSteamListenSocket_Invalid) {
+    DLOG_ERROR("failed to create a listen socket on port {}", port);
+    std::exit(3);
+  }
   DLOG_VERBOSE("listening on port {}.", port);
 }
 
@@ -201,9 +218,16 @@ Server::OnSteamNetConnectionStatusChanged(
       DLOG_VERBOSE("connected");
 
       // Send a sync packet to the client
-      // TODO
-      // Packet packet{};
-      // world_->
+       Packet packet{};
+       packet_handler_->BuildPacketSync(packet);
+       const auto res =
+           SendPacket(packet, SendStrategy::kReliable, status->m_hConn);
+       if (res != SendResult::kSuccess) {
+         auto it = ClientIteratorFromConnection(status->m_hConn);
+         DLOG_WARNING("failed to send sync packet to {}", it->client_id.id);
+         DisconnectClient(status->m_hConn);
+       }
+
 
       break;
     }
@@ -217,12 +241,11 @@ Server::OnSteamNetConnectionStatusChanged(
 void
 Server::DisconnectClient(const HSteamNetConnection connection)
 {
-  for (auto it = clients_.begin(); it < clients_.end(); it++) {
-    if (it->connection == connection) {
-      DLOG_INFO("Disconnected client [{}].", it->client_id.id);
-      clients_.erase(it);
-      break;
-    }
+  if (auto it = ClientIteratorFromConnection(connection);
+      it != clients_.end()) {
+    DLOG_INFO("Disconnected client [{}].", it->client_id.id);
+    CloseConnection(connection);
+    clients_.erase(it);
   }
 }
 
