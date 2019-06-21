@@ -1,11 +1,11 @@
 #ifndef INPUT_HPP_
 #define INPUT_HPP_
 
-#include <alflib/string.hpp>
 #include <functional>
 #include <future>
 #include <game/world.hpp>
 #include <string_view>
+#include "core/types.hpp"
 
 namespace dib {
 

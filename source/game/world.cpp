@@ -2,7 +2,7 @@
 #include "core/fixed_time_update.hpp"
 #include <dlog.hpp>
 #include <functional>
-#include <alflib/assert.hpp>
+#include <alflib/core/assert.hpp>
 
 namespace dib {
 
@@ -15,7 +15,7 @@ World<Side::kClient>::Update()
   static bool got_update;
   auto client = GetClient();
   static const auto PollClient =
-      std::bind(&Client::Poll, client, std::ref(got_update), std::ref(packet_));
+    std::bind(&Client::Poll, client, std::ref(got_update), std::ref(packet_));
   got_update = false;
   FixedTimeUpdate(kNetTicksPerSec, PollClient);
   if (got_update) {
@@ -32,7 +32,7 @@ World<Side::kServer>::Update()
   static bool got_update;
   auto server = GetServer();
   static const auto PollServer =
-      std::bind(&Server::Poll, server, std::ref(got_update), std::ref(packet_));
+    std::bind(&Server::Poll, server, std::ref(got_update), std::ref(packet_));
   got_update = false;
   FixedTimeUpdate(kNetTicksPerSec, PollServer);
   if (got_update) {
@@ -73,10 +73,9 @@ World<Side::kClient>::SetupPacketHandler()
     alflib::String msg = packet.ToString();
     DLOG_RAW("Server: {}\n", msg);
   };
-  ok = packet_handler_.AddStaticPacketType(PacketHeaderStaticTypes::kChat, "chat", ChatCb);
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kChat, "chat", ChatCb);
   AlfAssert(ok, "could not add packet type chat");
-
-
 }
 
 template<>
@@ -94,7 +93,8 @@ World<Side::kServer>::SetupPacketHandler()
     alflib::String msg = packet.ToString();
     DLOG_RAW("TODO handle chat packets [{}]\n", msg);
   };
-  ok = packet_handler_.AddStaticPacketType(PacketHeaderStaticTypes::kChat, "chat", ChatCb);
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kChat, "chat", ChatCb);
   AlfAssert(ok, "could not add packet type chat");
 }
 
