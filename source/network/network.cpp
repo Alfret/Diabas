@@ -38,6 +38,26 @@ Network<Side::kServer>::Update()
   }
 }
 
+template <>
+void
+Network<Side::kServer>::Broadcast(const Packet& packet) const
+{
+  auto server = GetServer();
+  server->BroadcastPacket(packet, SendStrategy::kReliable);
+}
+
+template<>
+void
+Network<Side::kClient>::Broadcast(const Packet& packet) const
+{
+  auto client = GetClient();
+  const auto res = client->SendPacket(packet, SendStrategy::kReliable);
+  if (res != SendResult::kSuccess) {
+    // TODO better error handling
+    DLOG_WARNING("failed to send packet");
+  }
+}
+
 template<>
 void
 Network<Side::kClient>::ConnectToServer()
