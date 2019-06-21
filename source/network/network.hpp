@@ -8,13 +8,12 @@
 #include "network/client.hpp"
 #include "network/common.hpp"
 #include "network/server.hpp"
-#include <alflib/assert.hpp>
+#include <alflib/core/assert.hpp>
 #include <dlog.hpp>
 
+namespace dib {
 
-namespace dib{
-
-template <Side side>
+template<Side side>
 class Network
 {
   // ============================================================ //
@@ -36,7 +35,7 @@ public:
   // ============================================================ //
   // Public Methods
   // ============================================================ //
- public:
+public:
   void Update();
 
   void NetworkInfo(const std::string_view message) const;
@@ -71,16 +70,16 @@ private:
   // ============================================================ //
   // Member Variables
   // ============================================================ //
- private:
-   /**
-    * Packet producer
-    * Use GetClient and GetServer to access.
-    */
-   ISteamNetworkingSocketsCallbacks* base_;
+private:
+  /**
+   * Packet producer
+   * Use GetClient and GetServer to access.
+   */
+  ISteamNetworkingSocketsCallbacks* base_;
 
-   PacketHandler packet_handler_{};
+  PacketHandler packet_handler_{};
 
-   Packet packet_{ 10000 };
+  Packet packet_{ 10000 };
 };
 
 // ============================================================ //
@@ -106,7 +105,8 @@ DebugOutputCallback(ESteamNetworkingSocketsDebugOutputType type,
                     const char* msg);
 
 template<Side side>
-bool Network<side>::InitNetwork()
+bool
+Network<side>::InitNetwork()
 {
   SteamDatagramErrMsg errMsg;
   if (!GameNetworkingSockets_Init(nullptr, errMsg)) {
@@ -117,7 +117,7 @@ bool Network<side>::InitNetwork()
   // auto detail_level = ESteamNetworkingSocketsDebugOutputType::
   //   k_ESteamNetworkingSocketsDebugOutputType_Everything;
   auto detail_level = ESteamNetworkingSocketsDebugOutputType::
-                      k_ESteamNetworkingSocketsDebugOutputType_Important;
+    k_ESteamNetworkingSocketsDebugOutputType_Important;
 
   SteamNetworkingUtils()->SetDebugOutputFunction(detail_level,
                                                  DebugOutputCallback);
@@ -128,7 +128,7 @@ bool Network<side>::InitNetwork()
 void
 SleepAndKill();
 
-template <Side side>
+template<Side side>
 void
 Network<side>::ShutdownNetwork()
 {
