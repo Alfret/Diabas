@@ -1,7 +1,7 @@
 #pragma once
 
 #include <alflib/file/path.hpp>
-#include <alflib/string.hpp>
+#include <alflib/core/string.hpp>
 #include <cstdint>
 #include <string>
 #include <glm/vec2.hpp>

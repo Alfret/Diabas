@@ -60,8 +60,8 @@ template<>
 void
 Network<Side::kClient>::SetupPacketHandler()
 {
-  const auto SyncCb = [](const Packet&) {
-    DLOG_RAW("TODO handle sync packet\n");
+  const auto SyncCb = [this](const Packet& packet) {
+    packet_handler_.OnPacketSync(packet);
   };
   bool ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kSync, "sync", SyncCb);
@@ -73,8 +73,6 @@ Network<Side::kClient>::SetupPacketHandler()
   };
   ok = packet_handler_.AddStaticPacketType(PacketHeaderStaticTypes::kChat, "chat", ChatCb);
   AlfAssert(ok, "could not add packet type chat");
-
-
 }
 
 template<>
@@ -134,8 +132,8 @@ Network<Side::kClient>::Network()
     DLOG_ERROR("Failed to init network.");
     std::exit(1);
   }
-  base_ = new Client();
   SetupPacketHandler();
+  base_ = new Client(&packet_handler_);
   ConnectToServer();
 }
 
@@ -146,7 +144,7 @@ Network<Side::kServer>::Network()
     DLOG_ERROR("Failed to init network.");
     std::exit(1);
   }
-  base_ = new Server();
+  base_ = new Server(&packet_handler_);
   SetupPacketHandler();
   StartServer();
 }

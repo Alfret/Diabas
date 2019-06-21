@@ -13,7 +13,7 @@ namespace dib {
 class Client : public ISteamNetworkingSocketsCallbacks
 {
 public:
-  Client();
+  Client(PacketHandler* packet_handler);
 
   virtual ~Client() final;
 
@@ -45,6 +45,7 @@ private:
   HSteamNetConnection connection_;
   ISteamNetworkingSockets* socket_interface_;
   NetworkState network_state_;
+  PacketHandler* packet_handler_;
 };
 }
 #endif // CLIENT_HPP_
