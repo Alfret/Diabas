@@ -6,6 +6,8 @@
 #include <string_view>
 #include <optional>
 #include <array>
+#include <alflib/memory/memory_writer.hpp>
+#include <alflib/memory/memory_reader.hpp>
 
 namespace dib
 {
@@ -54,6 +56,18 @@ struct PacketMetaSerializable
 {
   PacketHeaderType type;
   String name;
+
+  void ToBytes(alflib::MemoryWriter& mr) const {
+    mr.Write(type);
+    mr.Write(name);
+  }
+
+  static PacketMetaSerializable FromBytes(alflib::MemoryReader& mr) {
+    PacketMetaSerializable p{};
+    p.type = mr.Read<decltype(type)>();
+    p.name = mr.Read<decltype(name)>();
+    return p;
+  }
 };
 
 // ============================================================ //
