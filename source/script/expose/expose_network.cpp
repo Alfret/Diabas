@@ -100,8 +100,8 @@ ScriptPacketRead([[maybe_unused]] JsValueRef callee,
   // Initial checks
   DIB_ASSERT(!isConstruct, "'ScriptPacketWrite' is not a constructor call");
   if (argumentCount != 1) {
-    DLOG_ERROR(
-      "'Packet::write()' called with too many arguments. Zero (0) expected");
+    DLOG_ERROR("'Packet::read()' expected zero (0) arguments, however got {}",
+               argumentCount - 1);
     return JS_INVALID_REFERENCE;
   }
 
@@ -221,12 +221,8 @@ ExposeNetwork(Environment& environment)
 JsValueRef
 CreateReadPacket(const Packet& packet, const String& packetName)
 {
-  ReadPacket* readPacket = nullptr;
-  {
-    readPacket = new ReadPacket(
-      packetName,
-      alflib::Buffer{ packet.GetPacketSize(), packet.GetPayload() });
-  }
+  ReadPacket* readPacket = new ReadPacket(
+    packetName, alflib::Buffer{ packet.GetPayloadSize(), packet.GetPayload() });
   JsValueRef object = script::CreateExternalObject(readPacket);
   JsSetPrototype(object, PACKET_PROTOTYPE);
   SetProperty(object, "type", CreateString(packetName));
