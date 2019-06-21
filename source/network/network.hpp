@@ -38,20 +38,28 @@ public:
 public:
   void Update();
 
-  void NetworkInfo(const std::string_view message) const;
-
-  void Broadcast(const std::string_view message) const;
+  /**
+   * Broadcast a packet to all active connections.
+   */
+  void Broadcast(const Packet& packet) const;
 
   void ConnectToServer();
 
   void StartServer();
 
-  void SetupPacketHandler();
+  // ============================================================ //
+  // TMP
+  // ============================================================ //
+  void NetworkInfo(const std::string_view message) const;
+
+  void Broadcast(const std::string_view message) const;
 
   // ============================================================ //
   // Private Methods
   // ============================================================ //
 private:
+  void SetupPacketHandler();
+
   Client* GetClient() const { return static_cast<Client*>(base_); }
   Server* GetServer() const { return static_cast<Server*>(base_); }
 
