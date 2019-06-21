@@ -7,6 +7,7 @@
 #include "server/input.hpp"
 #include "script/env.hpp"
 #include "graphics/renderer.hpp"
+#include "audio/audio_manager.hpp"
 
 // ========================================================================== //
 // Game Declaration
@@ -55,6 +56,8 @@ private:
   World world_{};
 
   InputHandler<kSide> input_handler_{};
+
+  AudioManager audio_manager_{};
 };
 
 }

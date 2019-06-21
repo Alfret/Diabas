@@ -28,6 +28,8 @@ endif ()
 
 # Add our .cpp files, will automatically re-run cmake when new ones are added
 set(COMMON_SOURCE
+  source/audio/audio_manager.cpp
+  source/audio/audio_manager.hpp
   source/app/app.cpp
   source/core/hash.cpp
   source/core/hash.hpp
@@ -100,6 +102,9 @@ add_subdirectory(thirdparty/dlog)
 # dutil
 add_subdirectory(thirdparty/dutil)
 
+# miniaudio
+include_directories(SYSTEM thirdparty/miniaudio)
+
 # Steam Sockets
 if (WIN32)
   if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -160,7 +165,7 @@ target_compile_definitions(server PRIVATE DIB_IS_SERVER)
 if (WIN32)
   set(DIB_LIBS ws2_32 cpptoml dlog dutil glfw glm gamenetworkingsockets alflibcpp ChakraCore)
 else ()
-  set(DIB_LIBS pthread cpptoml dlog dutil glfw glm GameNetworkingSockets alflibcpp ChakraCore)
+  set(DIB_LIBS pthread cpptoml dlog dutil glfw glm GameNetworkingSockets alflibcpp ChakraCore dl m)
 endif ()
 
 # TODO(Filip Björklund): Remove GLFW as a dependency on the server
