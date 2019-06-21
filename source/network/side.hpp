@@ -11,6 +11,12 @@ enum class Side : bool
   kClient = true
 };
 
+#ifdef DIB_IS_SERVER
+constexpr Side kSide = Side::kServer;
+#else
+constexpr Side kSide = Side::kClient;
+#endif
+
 std::string
 SideToString(const Side side);
 }

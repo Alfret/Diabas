@@ -1,6 +1,6 @@
 #include "game.hpp"
 #include <dlog.hpp>
-#include "network/network.hpp"
+#include "network/side.hpp"
 #include "script/script.hpp"
 
 // TEMP (for thread sleep to not overwork my linux machine)
@@ -19,7 +19,7 @@ Game::Game(const Descriptor& descriptor)
 {
   GetGraphics().SetClearColor(graphics::Color{ 100, 149, 237 });
 
-  DLOG_INFO("running as {}", SideToString(world_.GetSide()));
+  DLOG_INFO("running as {}", SideToString(kSide));
   SetupInputCommands();
 
   mods::Result modResult = mModLoader.Load(mScriptEnvironment);
@@ -35,7 +35,7 @@ Game::Game(const Descriptor& descriptor)
 
 Game::~Game()
 {
-  Network::ShutdownNetwork();
+  // TODO do we need to explicitly call shutdown on Network here?
   std::exit(0);
 }
 
@@ -72,12 +72,29 @@ Game::SetupInputCommands()
   input_handler_.AddCommand(
     InputCommandCategory::kInfo,
     "network",
-    std::bind(&World<kSide>::NetworkInfo, &world_, std::placeholders::_1));
+    std::bind(&World::OnCommandNetwork, &world_, std::placeholders::_1));
 
   input_handler_.AddCommand(
     InputCommandCategory::kChat,
     "broadcast",
-    std::bind(&World<kSide>::Broadcast, &world_, std::placeholders::_1));
+    std::bind(&World::OnCommandBroadcast, &world_, std::placeholders::_1));
+
+  input_handler_.AddCommand(
+    InputCommandCategory::kSystem, "exit", [](const std::string_view) {
+      DLOG_INFO("Exiting the program");
+      // TODO do we need to close the network before calling exit?
+      std::exit(0);
+    });
+
+  input_handler_.AddCommand(
+    InputCommandCategory::kSystem, "save", [](const std::string_view) {
+      DLOG_INFO("Sorry to break it to you, but you cannot save yet..");
+    });
+
+  input_handler_.AddCommand(
+    InputCommandCategory::kSystem, "filip", [](const std::string_view input) {
+      DLOG_INFO("filip säger {}", input);
+    });
 }
 
 }
