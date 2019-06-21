@@ -3,10 +3,11 @@
 
 namespace dib {
 
-Client::Client()
+Client::Client(PacketHandler* packet_handler)
   : connection_(k_HSteamNetConnection_Invalid)
   , socket_interface_(SteamNetworkingSockets())
-  , network_state_(NetworkState::kClientOffline)
+  , network_state_(NetworkState::kClientOffline),
+    packet_handler_(packet_handler)
 {}
 
 Client::~Client()
