@@ -44,6 +44,7 @@ set(COMMON_SOURCE
   source/script/expose/expose_base.cpp
   source/script/expose/expose_graphics.cpp
   source/script/expose/expose_mod.cpp
+  source/script/expose/expose_network.cpp
   source/mods/loader.cpp
   source/mods/loader.hpp
   source/mods/mod.cpp

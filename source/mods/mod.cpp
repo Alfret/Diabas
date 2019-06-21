@@ -32,6 +32,12 @@ Mod::Load(const alflib::File& modDirectory)
 // -------------------------------------------------------------------------- //
 
 void
+Mod::Init(World& world)
+{}
+
+// -------------------------------------------------------------------------- //
+
+void
 Mod::Update(f32 delta)
 {
   mMainScript.Update(delta);
