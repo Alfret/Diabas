@@ -5,7 +5,7 @@
 #include "core/types.hpp"
 #include "mods/result.hpp"
 #include "script/env.hpp"
-#include "script/script.hpp"
+#include "mods/script/mod_script.hpp"
 #include "core/macros.hpp"
 
 namespace dib {
@@ -50,7 +50,7 @@ private:
   std::vector<ModDependency> mDependencies;
 
   /** Main script **/
-  script::Script mMainScript;
+  ModScript mMainScript;
 
 public:
   /** Construct an empty mod object. A toml file must be parsed before the mod i

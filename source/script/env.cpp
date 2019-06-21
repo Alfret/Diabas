@@ -338,6 +338,8 @@ Environment::GetModule(const alflib::Path& path, Module* parent, bool& isNew)
   JsInitializeModuleRecord(
     parent ? parent->record : nullptr, specifier, &module->record);
   JsAddRef(module->record, nullptr);
+  DIB_ASSERT(module->record != nullptr,
+             "Module record is null after initialization");
 
   // Setup module callbacks
   JsErrorCode error =
@@ -364,40 +366,6 @@ Environment::GetModule(const alflib::Path& path, Module* parent, bool& isNew)
   mModules[path.GetCanonical().GetPathString()] = module;
   isNew = true;
   return module;
-}
-
-// -------------------------------------------------------------------------- //
-
-void
-Environment::HandleException(JsErrorCode errorCode)
-{
-  // Return if the error is not a script exception
-  if (errorCode != JsErrorScriptException) {
-    return;
-  }
-
-  // Check if there is an exception
-  bool hasException = false;
-  JsHasException(&hasException);
-  if (!hasException) {
-    return;
-  }
-
-  // Retrieve exception
-  JsValueRef exception;
-  JsErrorCode error = JsGetAndClearException(&exception);
-  DIB_ASSERT(error == JsNoError, "Failed to retrieve exception");
-
-  // Retrieve message
-  JsPropertyIdRef messageId;
-  JsCreatePropertyId("message", strlen("message"), &messageId);
-  DIB_ASSERT(error == JsNoError, "Failed to retrieve exception message");
-  JsValueRef message;
-  JsGetProperty(exception, messageId, &message);
-  DIB_ASSERT(error == JsNoError, "Failed to retrieve exception message");
-
-  // Log message
-  DLOG_ERROR("Exception occured when running script: {}", GetString(message));
 }
 
 // -------------------------------------------------------------------------- //

@@ -20,6 +20,12 @@ GetGlobal();
 
 // -------------------------------------------------------------------------- //
 
+/** Create a JavaScript number from a bool **/
+JsValueRef
+CreateValue(bool value);
+
+// -------------------------------------------------------------------------- //
+
 /** Create a JavaScript number from an f32 **/
 JsValueRef
 CreateValue(f32 value);
@@ -50,9 +56,21 @@ CreateExternalObject(void* data, JsFinalizeCallback finalizeCallback = nullptr);
 
 // -------------------------------------------------------------------------- //
 
+/** Retrieve bool value **/
+bool
+GetBool(JsValueRef value);
+
+// -------------------------------------------------------------------------- //
+
 /** Retrieve f32 value **/
 f32
 GetF32(JsValueRef value);
+
+// -------------------------------------------------------------------------- //
+
+/** Retrieve f64 value **/
+f64
+GetF64(JsValueRef value);
 
 // -------------------------------------------------------------------------- //
 
@@ -114,6 +132,22 @@ GetPropertyString(JsValueRef object, const String& property);
  * not be set then false is returned **/
 bool
 SetProperty(JsValueRef object, const String& property, JsValueRef value);
+
+// -------------------------------------------------------------------------- //
+
+/** Returns the type of a JavaScript object **/
+JsValueType
+GetValueType(JsValueRef object);
+
+// -------------------------------------------------------------------------- //
+
+/** Handle an exception that occurred in a script. The function takes the error
+ * code that last happened, and if it's the code 'JsErrorScriptException' then
+ * the exception is printed and the function returns true. If the error is
+ * something or not an error at all then false is returned and nothing is done
+ * **/
+bool
+HandleException(JsErrorCode errorCode);
 
 }
 }
