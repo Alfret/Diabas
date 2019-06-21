@@ -9,6 +9,11 @@
 #include <vector>
 #include "script/env.hpp"
 #include <unordered_map>
+#include "core/macros.hpp"
+
+namespace dib {
+DIB_FORWARD_DECLARE_CLASS(World);
+}
 
 namespace dib::mods {
 
@@ -33,6 +38,9 @@ public:
    * environment as an argument. This is used to load the scripts into the
    * environment **/
   Result Load(script::Environment& environment);
+
+  /** Initialize scripts **/
+  Result Init(World& world);
 
   /** Returns whether or not the specified mod is loaded **/
   bool IsLoaded(const String& modId);

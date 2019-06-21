@@ -61,6 +61,16 @@ ModLoader::Load(script::Environment& environment)
 
 // -------------------------------------------------------------------------- //
 
+Result
+ModLoader::Init(World& world)
+{
+  for (auto& mod : mMods) {
+    mod.second->Init(world);
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
 bool
 ModLoader::IsLoaded(const String& modId)
 {

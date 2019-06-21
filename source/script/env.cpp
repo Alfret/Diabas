@@ -8,6 +8,7 @@
 #include "script/expose/expose_base.hpp"
 #include "script/expose/expose_mod.hpp"
 #include "script/expose/expose_graphics.hpp"
+#include "script/expose/expose_network.hpp"
 #include "script/util.hpp"
 #include <alflib/file/file_io.hpp>
 #include <dlog.hpp>
@@ -76,6 +77,7 @@ Environment::Environment()
   ExposeLogging();
   ExposeMod(*this);
   ExposeGraphics(*this);
+  ExposeNetwork(*this);
 }
 
 // -------------------------------------------------------------------------- //

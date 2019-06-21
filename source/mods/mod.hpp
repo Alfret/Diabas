@@ -6,6 +6,11 @@
 #include "mods/result.hpp"
 #include "script/env.hpp"
 #include "script/script.hpp"
+#include "core/macros.hpp"
+
+namespace dib {
+DIB_FORWARD_DECLARE_CLASS(World);
+}
 
 namespace dib::mods {
 
@@ -54,6 +59,9 @@ public:
 
   /** Load mod by specifying the root directory of the mod **/
   Result Load(const alflib::File& modDirectory);
+
+  /** Init script **/
+  void Init(World& world);
 
   /** Update mod **/
   void Update(f32 delta);
