@@ -5,7 +5,13 @@
 #include "core/types.hpp"
 #include "mods/result.hpp"
 #include "script/env.hpp"
-#include "script/script.hpp"
+#include "mods/script/mod_script.hpp"
+#include "core/macros.hpp"
+#include "app/key.hpp"
+
+namespace dib {
+DIB_FORWARD_DECLARE_CLASS(World);
+}
 
 namespace dib::mods {
 
@@ -45,7 +51,7 @@ private:
   std::vector<ModDependency> mDependencies;
 
   /** Main script **/
-  script::Script mMainScript;
+  ModScript mMainScript;
 
 public:
   /** Construct an empty mod object. A toml file must be parsed before the mod i
@@ -55,8 +61,17 @@ public:
   /** Load mod by specifying the root directory of the mod **/
   Result Load(const alflib::File& modDirectory);
 
+  /** Init script **/
+  void Init(World& world);
+
   /** Update mod **/
   void Update(f32 delta);
+
+  /** Called when a key has been pressed **/
+  void OnKeyPress(Key key);
+
+  /** Called when a key has been released **/
+  void OnKeyRelease(Key key);
 
   /** Returns the name of the mod **/
   const String& GetName() const { return mName; }

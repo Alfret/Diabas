@@ -309,7 +309,7 @@ PacketHandler::OnPacketSync(const Packet& packet)
   alflib::MemoryReader mr{ buffer };
 
   for (std::size_t pos = 0; pos < packet.GetPayloadSize();
-       pos += mr.GetOffset()){
+       pos += mr.GetOffset()) {
     vec.push_back(mr.Read<PacketMetaSerializable>());
   }
 
@@ -339,4 +339,15 @@ PacketHandler::FindDynamicType(const String& name) const
     return std::nullopt;
   }
 }
+
+std::optional<const String*>
+PacketHandler::GetPacketType(const Packet& packet) const
+{
+  if (const auto it = packet_metas_.find(packet.GetHeader()->type);
+      it != packet_metas_.end()) {
+    return &it->second.name;
+  }
+  return std::nullopt;
+}
+
 }

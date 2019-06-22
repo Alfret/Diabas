@@ -54,6 +54,8 @@ public:
 
   void Broadcast(const std::string_view message) const;
 
+  PacketHandler& GetPacketHandler() { return packet_handler_; }
+
   // ============================================================ //
   // Private Methods
   // ============================================================ //

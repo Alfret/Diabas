@@ -1,7 +1,7 @@
 #include "game.hpp"
+
 #include <dlog.hpp>
 #include "network/side.hpp"
-#include "script/script.hpp"
 
 // TEMP (for thread sleep to not overwork my linux machine)
 #include <chrono>
@@ -24,6 +24,7 @@ Game::Game(const Descriptor& descriptor)
 
   mods::Result modResult = mModLoader.Load(mScriptEnvironment);
   DIB_ASSERT(modResult == mods::Result::kSuccess, "Failed to load mods");
+  mModLoader.Init(world_);
 
   // script::Script testScript(mScriptEnvironment, Path{ "mods/core/main.js" });
   // script::Result result = testScript.Load();
@@ -44,7 +45,7 @@ Game::~Game()
 void
 Game::Update(f64 delta)
 {
-  if (IsKeyDown(Key::KEY_ESCAPE)) {
+  if (IsKeyDown(Key::kKeyEscape)) {
     Exit();
   }
 
@@ -63,6 +64,22 @@ Game::Update(f64 delta)
 void
 Game::Render()
 {}
+
+// -------------------------------------------------------------------------- //
+
+void
+Game::OnKeyPressed(Key key)
+{
+  mModLoader.OnKeyPress(key);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Game::OnKeyReleased(Key key)
+{
+  mModLoader.OnKeyRelease(key);
+}
 
 // -------------------------------------------------------------------------- //
 

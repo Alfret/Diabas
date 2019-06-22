@@ -11,13 +11,14 @@ namespace dib {
 class World
 {
 public:
-
 public:
   void Update();
 
   void OnCommandNetwork(const std::string_view input);
 
   void OnCommandBroadcast(const std::string_view input);
+  
+  Network<kSide>& GetNetwork() { return network_; }
 
 private:
   Network<kSide> network_{};

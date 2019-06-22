@@ -9,6 +9,12 @@
 #include <vector>
 #include "script/env.hpp"
 #include <unordered_map>
+#include "core/macros.hpp"
+#include "app/key.hpp"
+
+namespace dib {
+DIB_FORWARD_DECLARE_CLASS(World);
+}
 
 namespace dib::mods {
 
@@ -34,6 +40,9 @@ public:
    * environment **/
   Result Load(script::Environment& environment);
 
+  /** Initialize scripts **/
+  Result Init(World& world);
+
   /** Returns whether or not the specified mod is loaded **/
   bool IsLoaded(const String& modId);
 
@@ -42,6 +51,12 @@ public:
 
   /** Run the update of all mods **/
   void Update(f32 delta);
+
+  /** Notify scripts that a key has been pressed **/
+  void OnKeyPress(Key key);
+
+  /** Notify scripts that a key has been released **/
+  void OnKeyRelease(Key key);
 };
 
 }
