@@ -35,6 +35,10 @@ public:
 
   void Render() override;
 
+  void OnKeyPressed(Key key) override;
+
+  void OnKeyReleased(Key key) override;
+
   // ============================================================ //
   // Private Methods
   // ============================================================ //

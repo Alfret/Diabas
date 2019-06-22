@@ -3,6 +3,8 @@
 #include <dlog.hpp>
 #include <cpptoml.h>
 #include "script/util.hpp"
+#include "core/assert.hpp"
+#include "game/world.hpp"
 
 namespace dib::mods {
 
@@ -32,9 +34,33 @@ Mod::Load(const alflib::File& modDirectory)
 // -------------------------------------------------------------------------- //
 
 void
+Mod::Init(World& world)
+{
+  mMainScript.Init(world);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
 Mod::Update(f32 delta)
 {
   mMainScript.Update(delta);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Mod::OnKeyPress(Key key)
+{
+  mMainScript.OnKeyPress(key);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Mod::OnKeyRelease(Key key)
+{
+  mMainScript.OnKeyRelease(key);
 }
 
 // -------------------------------------------------------------------------- //
@@ -133,9 +159,9 @@ Mod::SetupScript(const alflib::File& modDirectory)
   }
 
   // Load script
-  script::Result scriptResult =
+  Result result =
     mMainScript.Load(mainSourceFile.GetPath().GetAbsolutePath(), mName);
-  if (scriptResult != script::Result::kSuccess) {
+  if (result != Result::kSuccess) {
     return Result::kInternalFail;
   }
 
@@ -144,9 +170,6 @@ Mod::SetupScript(const alflib::File& modDirectory)
     mMainScript.GetInstance(), "name", script::CreateString(mName));
   script::SetProperty(
     mMainScript.GetInstance(), "id", script::CreateString(mId));
-
-  // Call init on script
-  mMainScript.Init();
 
   return Result::kSuccess;
 }

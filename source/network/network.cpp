@@ -14,11 +14,14 @@ Network<Side::kClient>::Update()
   static bool got_update;
   auto client = GetClient();
   static const auto PollClient =
-      std::bind(&Client::Poll, client, std::ref(got_update), std::ref(packet_));
+    std::bind(&Client::Poll, client, std::ref(got_update), std::ref(packet_));
   got_update = false;
   FixedTimeUpdate(kNetTicksPerSec, PollClient);
   if (got_update) {
-    packet_handler_.HandlePacket(packet_);
+    bool success = packet_handler_.HandlePacket(packet_);
+    if (!success) {
+      DLOG_WARNING("Could not handle packet on client");
+    }
   }
 }
 
@@ -30,15 +33,18 @@ Network<Side::kServer>::Update()
   static bool got_update;
   auto server = GetServer();
   static const auto PollServer =
-      std::bind(&Server::Poll, server, std::ref(got_update), std::ref(packet_));
+    std::bind(&Server::Poll, server, std::ref(got_update), std::ref(packet_));
   got_update = false;
   FixedTimeUpdate(kNetTicksPerSec, PollServer);
   if (got_update) {
-    packet_handler_.HandlePacket(packet_);
+    bool success = packet_handler_.HandlePacket(packet_);
+    if (!success) {
+      DLOG_WARNING("Could not handle packet on server");
+    }
   }
 }
 
-template <>
+template<>
 void
 Network<Side::kServer>::Broadcast(const Packet& packet) const
 {
@@ -91,7 +97,8 @@ Network<Side::kClient>::SetupPacketHandler()
     alflib::String msg = packet.ToString();
     DLOG_RAW("Server: {}\n", msg);
   };
-  ok = packet_handler_.AddStaticPacketType(PacketHeaderStaticTypes::kChat, "chat", ChatCb);
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kChat, "chat", ChatCb);
   AlfAssert(ok, "could not add packet type chat");
 }
 
@@ -110,7 +117,8 @@ Network<Side::kServer>::SetupPacketHandler()
     alflib::String msg = packet.ToString();
     DLOG_RAW("TODO handle chat packets [{}]\n", msg);
   };
-  ok = packet_handler_.AddStaticPacketType(PacketHeaderStaticTypes::kChat, "chat", ChatCb);
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kChat, "chat", ChatCb);
   AlfAssert(ok, "could not add packet type chat");
 }
 
