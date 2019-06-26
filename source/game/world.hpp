@@ -5,13 +5,12 @@
 #include "network/network.hpp"
 #include "network/side.hpp"
 #include <string_view>
+#include "game/ecs/entity_manager.hpp"
 
 namespace dib {
 
 class World
 {
-public:
-
 public:
   void Update();
 
@@ -19,8 +18,11 @@ public:
 
   void OnCommandBroadcast(const std::string_view input);
 
+  dib::EntityManager& GetEntityManager();
+
 private:
-  Network<kSide> network_{};
+  dib::EntityManager entity_manager_{};
+  Network<kSide> network_{ this };
 };
 }
 

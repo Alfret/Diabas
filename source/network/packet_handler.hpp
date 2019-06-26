@@ -9,23 +9,29 @@
 #include <alflib/memory/memory_writer.hpp>
 #include <alflib/memory/memory_reader.hpp>
 
-namespace dib
-{
+namespace dib {
 
 // ============================================================ //
 // Predefined packet types
 // ============================================================ //
 
+/**
+ * Steps to follow when ADDING an element:
+ * 1. Add the enum here.
+ * 2. Register a packet handler callback on the packet_handler with
+ *    AddStaticPacketType.
+ */
 enum class PacketHeaderStaticTypes : std::size_t
 {
   kSync = 0,
+  kPlayerJoin,
 
-  // Must be last, used to count number of constants in the enum
+  // Must be last, used to count number of elements in the enum
   kChat
 };
 
 constexpr std::size_t kPacketHeaderStaticTypesCount =
-    static_cast<std::size_t>(PacketHeaderStaticTypes::kChat) + 1;
+  static_cast<std::size_t>(PacketHeaderStaticTypes::kChat) + 1;
 
 // ============================================================ //
 // Helper Types
@@ -57,12 +63,14 @@ struct PacketMetaSerializable
   PacketHeaderType type;
   String name;
 
-  void ToBytes(alflib::MemoryWriter& mr) const {
+  void ToBytes(alflib::MemoryWriter& mr) const
+  {
     mr.Write(type);
     mr.Write(name);
   }
 
-  static PacketMetaSerializable FromBytes(alflib::MemoryReader& mr) {
+  static PacketMetaSerializable FromBytes(alflib::MemoryReader& mr)
+  {
     PacketMetaSerializable p{};
     p.type = mr.Read<decltype(type)>();
     p.name = mr.Read<decltype(name)>();
@@ -79,15 +87,14 @@ struct PacketMetaSerializable
  */
 class PacketHandler
 {
- public:
+public:
   PacketHandler();
   ~PacketHandler();
 
   // ============================================================ //
   // Packet Consumer
   // ============================================================ //
- public:
-
+public:
   /**
    * @return If the packet type was known.
    */
@@ -110,18 +117,19 @@ class PacketHandler
                            const String& packet_type_name,
                            PacketHandlerCallback callback);
 
-    enum class SyncResult {
-      kSuccess = 0,
+  enum class SyncResult
+  {
+    kSuccess = 0,
 
-      // we have fewer packet_meta's than other
-      kMissingPacketMeta,
+    // we have fewer packet_meta's than other
+    kMissingPacketMeta,
 
-      // we have more packet_meta's than other
-      kExtraPacketMeta,
+    // we have more packet_meta's than other
+    kExtraPacketMeta,
 
-      // some packet_meta's have same hash, but different names.
-      kNameMissmatch
-    };
+    // some packet_meta's have same hash, but different names.
+    kNameMissmatch
+  };
 
   String SyncResultToString(const SyncResult result);
 
@@ -133,20 +141,21 @@ class PacketHandler
   bool UnsafeAddDynamicPacketType(const String& packet_type_name,
                                   const PacketHeaderType type_hint,
                                   PacketHandlerCallback callback);
- private:
-   bool AddDynamicPacketTypeBase(const String& packet_type_name,
-                                 PacketHeaderType type_hint,
-                                 PacketHandlerCallback callback);
 
-   // ============================================================ //
-   // Packet Producer
-   // ============================================================ //
- public:
+private:
+  bool AddDynamicPacketTypeBase(const String& packet_type_name,
+                                PacketHeaderType type_hint,
+                                PacketHandlerCallback callback);
+
+  // ============================================================ //
+  // Packet Producer
+  // ============================================================ //
+public:
   /**
    * Make a header of static packet type, and fill it in for the packet.
    */
   void BuildPacketHeader(Packet& packet,
-                       const PacketHeaderStaticTypes static_type) const;
+                         const PacketHeaderStaticTypes static_type) const;
 
   /**
    * Make a header of dynamic packet type, and fill it in for the packet.
@@ -154,13 +163,13 @@ class PacketHandler
    */
   bool BuildPacketHeader(Packet& packet, const String& name) const;
 
- private:
+private:
   /**
    * Prepare the packet header.
    */
   void BuildPacketHeader(Packet& packet, const PacketHeaderType type) const;
 
- public:
+public:
   void BuildPacketSync(Packet& packet);
 
   /**
@@ -171,7 +180,7 @@ class PacketHandler
   // ============================================================ //
   // Misc
   // ============================================================ //
- public:
+public:
   std::vector<PacketMetaSerializable> Serialize() const;
 
   /**
@@ -192,7 +201,7 @@ class PacketHandler
   // Member Variables
   // ============================================================ //
 
- private:
+private:
   std::unordered_map<PacketHeaderType, PacketMeta> packet_metas_;
 
   /**
@@ -204,4 +213,4 @@ class PacketHandler
 };
 }
 
-#endif//PACKET_HANDLER_HPP_
+#endif // PACKET_HANDLER_HPP_

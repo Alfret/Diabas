@@ -2,6 +2,7 @@
 #define FIXED_TIME_UPDATE_HPP_
 
 #include <dutil/stopwatch.hpp>
+#include <utility>
 
 namespace dib {
 
@@ -33,13 +34,13 @@ struct FixedTimeUpdateInfo
  */
 template<typename TUpdateCallback>
 bool
-FixedTimeUpdate(const s64 ticks_per_s, TUpdateCallback update_callback)
+FixedTimeUpdate(const s64 ticks_per_s, TUpdateCallback&& update_callback)
 {
   static FixedTimeUpdateInfo info{};
   const s64 tick_ms = static_cast<s64>(1000) / ticks_per_s;
   if (info.sw.fnow_ms() - info.timer_ms > tick_ms) {
     info.timer_ms += tick_ms;
-    update_callback();
+    std::forward<TUpdateCallback>(update_callback)();
     return true;
   }
   return false;

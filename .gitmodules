@@ -25,3 +25,12 @@
 [submodule "thirdparty/glm"]
 	path = thirdparty/glm
 	url = https://github.com/g-truc/glm
+[submodule "thirdparty/entt"]
+	path = thirdparty/entt
+	url = https://github.com/skypjack/entt
+[submodule "thirdparty/stduuid"]
+	path = thirdparty/stduuid
+	url = https://github.com/mariusbancila/stduuid
+[submodule "thirdparty/robin-map"]
+	path = thirdparty/robin-map
+	url = https://github.com/tessil/robin-map
