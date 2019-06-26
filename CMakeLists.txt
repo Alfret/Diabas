@@ -28,6 +28,8 @@ endif ()
 
 # Add our .cpp files, will automatically re-run cmake when new ones are added
 set(COMMON_SOURCE
+  source/audio/audio_manager.cpp
+  source/audio/audio_manager.hpp
   source/app/app.cpp
   source/core/hash.cpp
   source/core/hash.hpp
@@ -44,10 +46,11 @@ set(COMMON_SOURCE
   source/graphics/sprite_batch.cpp
   source/script/env.cpp
   source/script/util.cpp
-  source/script/script.cpp
   source/script/expose/expose_base.cpp
   source/script/expose/expose_graphics.cpp
-  source/script/expose/expose_mod.cpp
+  source/script/expose/expose_network.cpp
+  source/mods/script/mod_base.cpp
+  source/mods/script/mod_script.cpp
   source/mods/loader.cpp
   source/mods/loader.hpp
   source/mods/mod.cpp
@@ -109,6 +112,9 @@ add_subdirectory(thirdparty/dutil)
 # ENTT (ecs system)
 include_directories(SYSTEM thirdparty/entt/single_include)
 add_subdirectory(thirdparty/entt)
+
+# miniaudio
+include_directories(SYSTEM thirdparty/miniaudio)
 
 # Steam Sockets
 if (WIN32)
@@ -178,8 +184,7 @@ if (WIN32)
   set(DIB_LIBS ws2_32 cpptoml dlog dutil glfw glm gamenetworkingsockets
     alflibcpp ChakraCore EnTT uuid)
 else ()
-  set(DIB_LIBS pthread cpptoml dlog dutil glfw glm GameNetworkingSockets
-    alflibcpp ChakraCore EnTT uuid)
+  set(DIB_LIBS pthread cpptoml dlog dutil glfw glm GameNetworkingSockets alflibcpp ChakraCore dl m EnTT uuid)
 endif ()
 
 # TODO(Filip Björklund): Remove GLFW as a dependency on the server

@@ -11,22 +11,6 @@
 
 namespace dib {
 
-// template<>
-// Network<Side::kClient>::~Network()
-// {
-//   auto client = GetClient();
-//   client->~Client();
-//   Network<Side::kClient>::ShutdownNetwork();
-// }
-
-// template<>
-// Network<Side::kServer>::~Network()
-// {
-//   auto server = GetServer();
-//   server->~Server();
-//   Network<Side::kServer>::ShutdownNetwork();
-// }
-
 template<>
 void
 Network<Side::kClient>::ConnectToServer()
@@ -130,7 +114,10 @@ Network<Side::kClient>::Update()
   got_update = false;
   FixedTimeUpdate(kNetTicksPerSec, PollClient);
   if (got_update) {
-    packet_handler_.HandlePacket(packet_);
+    bool success = packet_handler_.HandlePacket(packet_);
+    if (!success) {
+      DLOG_WARNING("Could not handle packet on client");
+    }
   }
 }
 
@@ -146,7 +133,10 @@ Network<Side::kServer>::Update()
   got_update = false;
   FixedTimeUpdate(kNetTicksPerSec, PollServer);
   if (got_update) {
-    packet_handler_.HandlePacket(packet_);
+    bool success = packet_handler_.HandlePacket(packet_);
+    if (!success) {
+      DLOG_WARNING("Could not handle packet on server");
+    }
   }
 }
 

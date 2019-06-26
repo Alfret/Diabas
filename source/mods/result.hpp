@@ -21,6 +21,10 @@ enum class Result
   kParseFail,
   /** Internal failure **/
   kInternalFail,
+  /** Missing the main mod class **/
+  kMissingModClass,
+  /** Error in a script belonging to the mod **/
+  kScriptError
 };
 
 // ========================================================================== //

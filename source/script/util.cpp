@@ -4,6 +4,7 @@
 // Headers
 // ========================================================================== //
 
+#include <dlog.hpp>
 #include "core/assert.hpp"
 
 // ========================================================================== //
@@ -24,10 +25,59 @@ GetGlobal()
 // -------------------------------------------------------------------------- //
 
 JsValueRef
+CreateUndefined()
+{
+  JsValueRef output;
+  JsGetUndefinedValue(&output);
+  return output;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+CreateValue(bool value)
+{
+  JsValueRef output;
+  JsBoolToBoolean(value, &output);
+  return output;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+CreateValue(s32 value)
+{
+  JsValueRef output;
+  JsIntToNumber(value, &output);
+  return output;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+CreateValue(u32 value)
+{
+  JsValueRef output;
+  JsIntToNumber(value, &output);
+  return output;
+}
+// -------------------------------------------------------------------------- //
+
+JsValueRef
 CreateValue(f32 value)
 {
   JsValueRef output;
   JsDoubleToNumber(static_cast<f64>(value), &output);
+  return output;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+script::CreateValue(f64 value)
+{
+  JsValueRef output;
+  JsDoubleToNumber(value, &output);
   return output;
 }
 
@@ -81,6 +131,17 @@ CreateExternalObject(void* data, JsFinalizeCallback finalizeCallback)
 
 // -------------------------------------------------------------------------- //
 
+bool
+GetBool(JsValueRef value)
+{
+  bool output;
+  JsErrorCode error = JsBooleanToBool(value, &output);
+  DIB_ASSERT(error == JsNoError, "Failed to retrieve bool");
+  return output;
+}
+
+// -------------------------------------------------------------------------- //
+
 f32
 GetF32(JsValueRef value)
 {
@@ -89,6 +150,15 @@ GetF32(JsValueRef value)
   return static_cast<f32>(output);
 }
 
+// -------------------------------------------------------------------------- //
+
+f64
+GetF64(JsValueRef value)
+{
+  f64 output;
+  JsNumberToDouble(value, &output);
+  return output;
+}
 // -------------------------------------------------------------------------- //
 
 String
@@ -193,6 +263,80 @@ SetProperty(JsValueRef object, const String& property, JsValueRef value)
     return false;
   }
   return true;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueType
+GetValueType(JsValueRef object)
+{
+  JsValueType type;
+  JsErrorCode error = JsGetValueType(object, &type);
+  DIB_ASSERT(error == JsNoError, "Failed to get type of object");
+  return type;
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+HandleException(JsErrorCode errorCode)
+{
+  // Return if the error is not a script exception
+  if (errorCode != JsErrorScriptException) {
+    return false;
+  }
+
+  // Check if there is an exception
+  bool hasException = false;
+  JsHasException(&hasException);
+  if (!hasException) {
+    return false;
+  }
+
+  // Retrieve exception
+  JsValueRef exception;
+  JsErrorCode error = JsGetAndClearException(&exception);
+  DIB_ASSERT(error == JsNoError, "Failed to retrieve exception");
+
+  // Retrieve message
+  JsPropertyIdRef messageId;
+  JsCreatePropertyId("message", strlen("message"), &messageId);
+  DIB_ASSERT(error == JsNoError, "Failed to retrieve exception message");
+  JsValueRef message;
+  JsGetProperty(exception, messageId, &message);
+  DIB_ASSERT(error == JsNoError, "Failed to retrieve exception message");
+
+  // Log message
+  DLOG_ERROR("Exception occured when running script: {}", GetString(message));
+  return true;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ListProperties(JsValueRef object, const String& label)
+{
+  // Retrieve global object
+  JsValueRef global;
+  JsGetGlobalObject(&global);
+  if (object == JS_INVALID_REFERENCE) {
+    object = global;
+  }
+
+  // Retrieve the property list
+  JsValueRef propertyNames;
+  JsGetOwnPropertyNames(object, &propertyNames);
+
+  // Retrieve length
+  s32 length = GetPropertyInt(propertyNames, "length");
+  DLOG_VERBOSE("Listing properties{}",
+               label.GetLength() > 0 ? String(" [") + label + "]" : "");
+  for (s32 i = 0; i < length; i++) {
+    String indexString = String::ToString(i);
+    JsValueRef element = GetProperty(propertyNames, indexString);
+    String stringValue = ToString(element);
+    DLOG_VERBOSE("  [{}]: {}", i, stringValue);
+  }
 }
 
 }

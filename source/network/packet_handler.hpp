@@ -197,6 +197,8 @@ public:
 
   PacketMeta& operator[](const PacketHeaderType& i) { return packet_metas_[i]; }
 
+  std::optional<const String*> GetPacketType(const Packet& packet) const;
+
   // ============================================================ //
   // Member Variables
   // ============================================================ //
