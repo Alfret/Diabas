@@ -278,6 +278,28 @@ GetValueType(JsValueRef object)
 
 // -------------------------------------------------------------------------- //
 
+JsValueRef
+GetPrototype(JsValueRef object)
+{
+  JsValueRef prototype;
+  JsErrorCode error = JsGetPrototype(object, &prototype);
+  DIB_ASSERT(error == JsNoError, "Failed to get prototype of object");
+  return prototype;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsErrorCode
+CallMethod(JsValueRef method,
+           std::vector<JsValueRef> arguments,
+           JsValueRef& output)
+{
+  return JsCallFunction(
+    method, arguments.data(), static_cast<u16>(arguments.size()), &output);
+}
+
+// -------------------------------------------------------------------------- //
+
 bool
 HandleException(JsErrorCode errorCode)
 {

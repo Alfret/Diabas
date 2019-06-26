@@ -8,6 +8,7 @@
 #include "script/env.hpp"
 #include "graphics/renderer.hpp"
 #include "audio/audio_manager.hpp"
+#include "game/tile/tile_manager.hpp"
 
 // ========================================================================== //
 // Game Declaration
@@ -55,7 +56,11 @@ private:
   graphics::Renderer mRenderer;
 
   /** Mod loader **/
-  mods::ModLoader mModLoader;
+  game::ModLoader mModLoader;
+
+  /** Tile manager **/
+  game::TileManager mTileManager;
+  /** Item manager **/
 
   World world_{};
 

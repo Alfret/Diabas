@@ -22,14 +22,19 @@ Game::Game(const Descriptor& descriptor)
   DLOG_INFO("running as {}", SideToString(kSide));
   SetupInputCommands();
 
-  mods::Result modResult = mModLoader.Load(mScriptEnvironment);
-  DIB_ASSERT(modResult == mods::Result::kSuccess, "Failed to load mods");
+  // Initialize script environment and load mods
+  game::Result modResult = mModLoader.Load(mScriptEnvironment);
+  DIB_ASSERT(modResult == game::Result::kSuccess, "Failed to load mods");
   mModLoader.Init(world_);
+  mModLoader.RegisterTiles(mTileManager);
+  mTileManager.CreateAtlas();
 
-  // script::Script testScript(mScriptEnvironment, Path{ "mods/core/main.js" });
-  // script::Result result = testScript.Load();
-  // DIB_ASSERT(result == script::Result::kSuccess, "Failed to load test
-  // script");
+  for (auto& e : mTileManager.GetTiles()) {
+    DLOG_INFO(
+      "Tile {{ id: {}, res: {} }}",
+      e.first,
+      e.second->GetResourcePath(0, 0).GetAbsolutePath().GetPathString());
+  }
 }
 
 // -------------------------------------------------------------------------- //
