@@ -7,6 +7,7 @@
 #include "server/input.hpp"
 #include "script/env.hpp"
 #include "graphics/renderer.hpp"
+#include "audio/audio_manager.hpp"
 
 // ========================================================================== //
 // Game Declaration
@@ -34,6 +35,10 @@ public:
 
   void Render() override;
 
+  void OnKeyPressed(Key key) override;
+
+  void OnKeyReleased(Key key) override;
+
   // ============================================================ //
   // Private Methods
   // ============================================================ //
@@ -55,6 +60,8 @@ private:
   World world_{};
 
   InputHandler<kSide> input_handler_{};
+
+  AudioManager audio_manager_{};
 };
 
 }

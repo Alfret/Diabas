@@ -20,6 +20,10 @@ ResultToString(Result result)
       return "parse failure";
     case Result::kInternalFail:
       return "internal failure";
+    case Result::kMissingModClass:
+      return "missing mod class";
+    case Result::kScriptError:
+      return "script error";
   }
 }
 

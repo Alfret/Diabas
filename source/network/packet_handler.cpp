@@ -339,4 +339,15 @@ PacketHandler::FindDynamicType(const String& name) const
     return std::nullopt;
   }
 }
+
+std::optional<const String*>
+PacketHandler::GetPacketType(const Packet& packet) const
+{
+  if (const auto it = packet_metas_.find(packet.GetHeader()->type);
+      it != packet_metas_.end()) {
+    return &it->second.name;
+  }
+  return std::nullopt;
+}
+
 }

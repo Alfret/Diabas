@@ -1,6 +1,8 @@
 #include "loader.hpp"
+
 #include <cpptoml.h>
 #include <dlog.hpp>
+#include "mods/script/mod_base.hpp"
 
 namespace dib::mods {
 
@@ -26,6 +28,9 @@ ModLoader::~ModLoader()
 Result
 ModLoader::Load(script::Environment& environment)
 {
+  // Expose base mod functionality
+  ExposeModBase(environment);
+
   // Enumerate mod folders
   const alflib::File mods_folder(mModsFolder);
   const alflib::ArrayList<alflib::File> mods_folders =
@@ -61,6 +66,17 @@ ModLoader::Load(script::Environment& environment)
 
 // -------------------------------------------------------------------------- //
 
+Result
+ModLoader::Init(World& world)
+{
+  for (auto& mod : mMods) {
+    mod.second->Init(world);
+  }
+  return Result::kSuccess;
+}
+
+// -------------------------------------------------------------------------- //
+
 bool
 ModLoader::IsLoaded(const String& modId)
 {
@@ -86,6 +102,26 @@ ModLoader::Update(f32 delta)
 {
   for (auto& mod : mMods) {
     mod.second->Update(delta);
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ModLoader::OnKeyPress(Key key)
+{
+  for (auto& mod : mMods) {
+    mod.second->OnKeyPress(key);
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ModLoader::OnKeyRelease(Key key)
+{
+  for (auto& mod : mMods) {
+    mod.second->OnKeyRelease(key);
   }
 }
 

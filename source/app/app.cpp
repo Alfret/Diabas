@@ -30,6 +30,14 @@ Application::Application(const Descriptor& descriptor)
   mWindow =
     glfwCreateWindow(mWidth, mHeight, mTitle.GetUTF8(), nullptr, nullptr);
   DIB_ASSERT(mWindow != nullptr, "Failed to create window");
+  glfwSetWindowUserPointer(mWindow, this);
+  glfwSetErrorCallback(ErrorCallback);
+  glfwSetKeyCallback(mWindow, KeyCallback);
+  glfwSetCharCallback(mWindow, CharCallback);
+  glfwSetMouseButtonCallback(mWindow, MouseButtonCallback);
+  glfwSetCursorPosCallback(mWindow, MousePosCallback);
+  glfwSetScrollCallback(mWindow, MouseScrollCallback);
+  glfwSetFramebufferSizeCallback(mWindow, ResizeCallback);
 
   // Setup graphics
   mGraphics = new Graphics(mWindow);
@@ -128,7 +136,7 @@ Application::GetMousePosition(f64& x, f64& y) const
 void
 Application::ErrorCallback(int error, const char8* description)
 {
-  //Logger::Default().Error("GLFW error ({} - {})", error, description);
+  // Logger::Default().Error("GLFW error ({} - {})", error, description);
 }
 
 // -------------------------------------------------------------------------- //
