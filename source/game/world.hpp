@@ -12,7 +12,6 @@ namespace dib {
 class World
 {
 public:
-public:
   void Update();
 
   void OnCommandNetwork(const std::string_view input);

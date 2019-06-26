@@ -10,12 +10,12 @@
 // -------------------------------------------------------------------------- //
 
 /** Macro for forward-declaring a simple class **/
-#define DIB_FORWARD_DECLARE_CLASS(cls) class cls;
+#define DIB_FORWARD_DECLARE_CLASS(cls) class cls
 
 // -------------------------------------------------------------------------- //
 
 /** Macro for forward-declaring a simple class **/
-#define DIB_FORWARD_DECLARE_ENUM_CLASS(cls, type) enum class cls : type;
+#define DIB_FORWARD_DECLARE_ENUM_CLASS(cls, type) enum class cls : type
 
 // -------------------------------------------------------------------------- //
 
