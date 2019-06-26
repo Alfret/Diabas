@@ -2,7 +2,7 @@
 
 #include "core/types.hpp"
 
-namespace dib::mods {
+namespace dib::game {
 
 // ========================================================================== //
 // Enumerations

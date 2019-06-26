@@ -1,7 +1,8 @@
 #include "main.test.hpp"
-#include "mods/loader.hpp"
+#include "game/mods/loader.hpp"
 
-TEST_SUITE("toml") {
+TEST_SUITE("toml")
+{
   // TODO (filip)
   // TEST_CASE("basic loading") {
 

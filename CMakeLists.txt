@@ -35,8 +35,24 @@ set(COMMON_SOURCE
   source/core/hash.hpp
   source/app/graphics.cpp
   source/game/game.cpp
+  source/game/game.hpp
+  source/game/resource.cpp
+  source/game/resource.hpp
   source/game/world.cpp
   source/game/world.hpp
+  source/game/tile/tile.cpp
+  source/game/tile/tile_manager.cpp
+  source/game/tile/tile_manager.hpp
+  source/game/tile/tile.hpp
+  source/game/mods/script/mod_base.cpp
+  source/game/mods/script/mod_script.cpp
+  source/game/mods/script/script_tile.cpp
+  source/game/mods/loader.cpp
+  source/game/mods/loader.hpp
+  source/game/mods/mod.cpp
+  source/game/mods/mod.hpp
+  source/game/mods/result.cpp
+  source/game/mods/result.hpp
   source/graphics/renderer.cpp
   source/graphics/sprite.cpp
   source/graphics/sprite_batch.cpp
@@ -45,14 +61,6 @@ set(COMMON_SOURCE
   source/script/expose/expose_base.cpp
   source/script/expose/expose_graphics.cpp
   source/script/expose/expose_network.cpp
-  source/mods/script/mod_base.cpp
-  source/mods/script/mod_script.cpp
-  source/mods/loader.cpp
-  source/mods/loader.hpp
-  source/mods/mod.cpp
-  source/mods/mod.hpp
-  source/mods/result.cpp
-  source/mods/result.hpp
   source/network/network.cpp
   source/network/network.hpp
   source/network/server.cpp
@@ -122,6 +130,7 @@ else ()
 endif ()
 
 # GLM
+set(GLM_TEST_ENABLE OFF)
 include_directories(SYSTEM thirdparty/glm)
 add_subdirectory(thirdparty/glm)
 

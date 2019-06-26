@@ -7,23 +7,21 @@
 #include "core/types.hpp"
 #include "core/macros.hpp"
 #include "script/env.hpp"
-#include "mods/result.hpp"
+#include "game/mods/result.hpp"
 #include "app/key.hpp"
 #include "network/packet.hpp"
 
 // ========================================================================== //
-// Forward Declarations
+// Script Declaration
 // ========================================================================== //
 
 namespace dib {
 DIB_FORWARD_DECLARE_CLASS(World);
 }
 
-// ========================================================================== //
-// Script Declaration
-// ========================================================================== //
+namespace dib::game {
 
-namespace dib::mods {
+DIB_FORWARD_DECLARE_CLASS(TileManager);
 
 /** Mod script **/
 class ModScript
@@ -68,6 +66,9 @@ public:
    * the mod class so that many of the objects accessible from the world are
    * available to scripts  **/
   Result Init(World& world);
+
+  /** Callback for when the mods must register their blocks **/
+  Result RegisterTiles(TileManager& tileManager);
 
   /** Update script **/
   void Update(f32 delta);

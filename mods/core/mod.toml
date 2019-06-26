@@ -1,6 +1,6 @@
 [info]
 name = "CoreMod"
-id = "core_mod"
+id = "core"
 authors = ["Christoffer Gustafsson", "Filip Björklund"]
 version = [0, 1, 1] #[major, minor, patch]
 #dependencies = [ ["name", [0, 1, 0] ], ... ]
