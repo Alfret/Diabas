@@ -309,7 +309,7 @@ PacketHandler::OnPacketSync(const Packet& packet)
   alflib::MemoryReader mr{ buffer };
 
   for (std::size_t pos = 0; pos < packet.GetPayloadSize();
-       pos += mr.GetOffset()){
+       pos += mr.GetOffset()) {
     vec.push_back(mr.Read<PacketMetaSerializable>());
   }
 

@@ -8,47 +8,19 @@
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
 #include "network/side.hpp"
-#include <vector>
 #include "network/packet_handler.hpp"
+#include "network/connection_id.hpp"
+#include <tsl/robin_set.h>
+#include "network/connection_state.hpp"
 
 namespace dib {
 
-struct ClientId
-{
-  u32 id;
-};
-
-// ============================================================ //
-
-class ClientIdGenerator
-{
-public:
-  static ClientId Next()
-  {
-    static ClientIdGenerator gen{};
-    const ClientId value = gen.client_id_;
-    ++gen.client_id_.id;
-    return value;
-  }
-
-private:
-  ClientId client_id_{ 0 };
-};
-
-// ============================================================ //
-
-struct ClientConnection
-{
-  ClientId client_id;
-  HSteamNetConnection connection;
-};
-
-// ============================================================ //
+class World;
 
 class Server : public ISteamNetworkingSocketsCallbacks
 {
 public:
-  Server(PacketHandler* packet_handler);
+  Server(PacketHandler* packet_handler, World* world);
 
   virtual ~Server() final;
 
@@ -62,8 +34,6 @@ public:
   void DisconnectClient(const HSteamNetConnection connection);
 
   NetworkState GetNetworkState() const { return network_state_; }
-
-  void NetworkInfo() const;
 
   void BroadcastPacket(const Packet& packet, const SendStrategy send_strategy);
 
@@ -84,17 +54,13 @@ private:
    */
   void CloseConnection(HSteamNetConnection connection);
 
-  std::optional<ClientId> ClientIdFromConnection(
-      const HSteamNetConnection connection);
-
-  auto ClientIteratorFromConnection(const HSteamNetConnection connection) const;
-
 private:
   HSteamListenSocket socket_;
   ISteamNetworkingSockets* socket_interface_;
-  std::vector<ClientConnection> clients_{};
+  tsl::robin_set<ConnectionId> clients_{};
   NetworkState network_state_ = NetworkState::kServer;
   PacketHandler* packet_handler_;
+  World* world_;
 };
 }
 

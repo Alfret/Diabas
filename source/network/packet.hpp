@@ -3,6 +3,7 @@
 
 #include "core/types.hpp"
 #include "network/packet_header.hpp"
+#include "network/connection_id.hpp"
 #include <vector>
 
 namespace dib {
@@ -122,6 +123,16 @@ public:
    */
   bool SetPacket(const ValueType* data, const std::size_t data_count);
 
+  /**
+   * Get where the packet came from. This is set by the user.
+   */
+  ConnectionId GetFromConnection() const { return from_; }
+
+  /**
+   * Set where the packet came from.
+   */
+  void SetFromConnection(const ConnectionId from) { from_ = from; }
+
   // ============================================================ //
   // Header
   // ============================================================ //
@@ -185,6 +196,8 @@ private:
   using PacketContainer = std::vector<ValueType>;
 
   std::size_t size_;
+
+  ConnectionId from_ = kConnectionIdUnknown;
 
   PacketContainer container_{};
 };

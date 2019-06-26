@@ -5,10 +5,11 @@
 namespace dib {
 
 PayloadIterator::PayloadIterator(ContainerValueType* payload)
-    : PayloadIterator(payload, 0)
+  : PayloadIterator(payload, 0)
 {}
 
-PayloadIterator::PayloadIterator(ContainerValueType* payload, const std::size_t pos)
+PayloadIterator::PayloadIterator(ContainerValueType* payload,
+                                 const std::size_t pos)
   : pos_(pos)
   , payload_(payload)
 {}
@@ -46,7 +47,7 @@ Packet::Packet(const std::size_t size)
 }
 
 Packet::Packet(const u8* data, const std::size_t data_count)
-    : size_(data_count)
+  : size_(data_count)
 {
   DIB_ASSERT(data_count >= kHeaderSize,
              "data_count must be larger or equal to header size");
@@ -216,7 +217,8 @@ Packet::ToString() const
 {
   // TODO when alflib is updated remove the std::string
   if (GetPayloadSize() > 0) {
-    std::string stdstr{reinterpret_cast<const char8*>(GetPayload()), GetPayloadSize()};
+    std::string stdstr{ reinterpret_cast<const char8*>(GetPayload()),
+                        GetPayloadSize() };
     alflib::String str{ stdstr.c_str() };
     return str;
   }
