@@ -7,6 +7,7 @@
 #include <alflib/graphics/image_atlas.hpp>
 #include "game/tile/tile.hpp"
 #include "graphics/texture.hpp"
+#include <unordered_map>
 
 // ========================================================================== //
 // TileManager Declaration

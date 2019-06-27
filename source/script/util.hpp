@@ -6,6 +6,7 @@
 
 #include "core/types.hpp"
 #include <ChakraCore.h>
+#include <vector>
 
 // ========================================================================== //
 // Functions

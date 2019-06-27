@@ -1,5 +1,5 @@
 #include "main.test.hpp"
-#include "mods/loader.hpp"
+#include "game/mods/loader.hpp"
 
 TEST_SUITE("mods")
 {
