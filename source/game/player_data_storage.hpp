@@ -6,8 +6,8 @@
 namespace dib {
 class PlayerDataStorage
 {
-public:
-  static PlayerData Load()
+ private:
+  static PlayerData Default()
   {
     PlayerData data{};
     data.name = "Rully";
@@ -16,6 +16,13 @@ public:
     data.player_class = 2;
     data.speed = 1.37;
     data.xp = 72117;
+    return data;
+  }
+
+public:
+  static PlayerData& Load()
+  {
+    static PlayerData data = Default();
     return data;
   }
 
