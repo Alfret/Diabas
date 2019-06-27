@@ -7,6 +7,7 @@
 #include <glad/glad.h>
 #include "core/macros.hpp"
 #include "core/types.hpp"
+#include "graphics/texture.hpp"
 
 // ========================================================================== //
 // SpriteBatch Declaration
@@ -40,6 +41,9 @@ private:
 
   /** CPU data buffer (uploaded to VBO on each render) **/
 
+  /** Currently bound texture **/
+  std::shared_ptr<Texture> mCurrentTexture;
+
 public:
   /** Construct **/
   SpriteBatch();
@@ -49,6 +53,11 @@ public:
 
   /** Submit a sprite for rendering **/
   void Submit(const Sprite& sprite);
+
+  /** Submit a textured rectangle **/
+  void Submit(const std::shared_ptr<Texture>& texture,
+              Vector3F position,
+              Vector2F size);
 
 private:
   /** Setup VBO and IBO **/

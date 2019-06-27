@@ -31,6 +31,9 @@ set(COMMON_SOURCE
   source/audio/audio_manager.cpp
   source/audio/audio_manager.hpp
   source/app/app.cpp
+  source/app/imgui/imgui.cpp
+  source/app/imgui/imgui_draw.cpp
+  source/app/imgui/imgui_impl_glfw_gl3.cpp
   source/core/hash.cpp
   source/core/hash.hpp
   source/app/graphics.cpp
@@ -38,6 +41,8 @@ set(COMMON_SOURCE
   source/game/game.hpp
   source/game/resource.cpp
   source/game/resource.hpp
+  source/game/terrain.cpp
+  source/game/terrain.hpp
   source/game/world.cpp
   source/game/world.hpp
   source/game/tile/tile.cpp
@@ -53,9 +58,11 @@ set(COMMON_SOURCE
   source/game/mods/mod.hpp
   source/game/mods/result.cpp
   source/game/mods/result.hpp
+  source/graphics/camera.cpp
   source/graphics/renderer.cpp
   source/graphics/sprite.cpp
   source/graphics/sprite_batch.cpp
+  source/graphics/texture.cpp
   source/script/env.cpp
   source/script/util.cpp
   source/script/expose/expose_base.cpp

@@ -82,7 +82,9 @@ public:
   /** Destruct script environment and unload all modules **/
   ~Environment();
 
-  /** Run a simple script **/
+  /** Run a simple script. If the result signals an exception then the user is
+   * responsible for getting and clearing that exception. This can be done using
+   * 'GetAndClearException()' in the script utils header **/
   Result RunScript(const String& script,
                    JsValueRef& output,
                    void* userData = nullptr);

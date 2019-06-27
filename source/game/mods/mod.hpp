@@ -85,6 +85,9 @@ public:
   /** Returns the id of the mod **/
   const String& GetId() const { return mId; }
 
+  /** Returns the list of authors **/
+  const std::vector<String>& GetAuthors() const { return mAuthors; }
+
 private:
   /** Parse 'toml' file **/
   Result Parse(const alflib::File& modDirectory);

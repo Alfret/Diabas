@@ -9,6 +9,7 @@
 #include "graphics/renderer.hpp"
 #include "audio/audio_manager.hpp"
 #include "game/tile/tile_manager.hpp"
+#include "game/terrain.hpp"
 
 // ========================================================================== //
 // Game Declaration
@@ -54,6 +55,8 @@ private:
   script::Environment mScriptEnvironment;
   /** Renderer **/
   graphics::Renderer mRenderer;
+  /** Camera **/
+  graphics::Camera mCamera;
 
   /** Mod loader **/
   game::ModLoader mModLoader;
@@ -61,6 +64,9 @@ private:
   /** Tile manager **/
   game::TileManager mTileManager;
   /** Item manager **/
+
+  /** Terrain **/
+  game::Terrain mTerrain;
 
   World world_{};
 

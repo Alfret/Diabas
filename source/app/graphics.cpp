@@ -4,6 +4,7 @@
 // Headers
 // ========================================================================== //
 
+#include <dlog.hpp>
 #include "core/assert.hpp"
 
 // ========================================================================== //
@@ -23,6 +24,10 @@ Graphics::Graphics(GLFWwindow* window)
   // Retrieve name of device
   const GLubyte* renderer = glGetString(GL_RENDERER);
   mDeviceName = String(reinterpret_cast<const char*>(renderer));
+
+  // Setup debug
+  glEnable(GL_DEBUG_OUTPUT);
+  glDebugMessageCallback((GLDEBUGPROC)Graphics::DebugCallbackGL, this);
 }
 
 // -------------------------------------------------------------------------- //
@@ -59,6 +64,29 @@ void
 Graphics::SetClearColor(const graphics::Color& color)
 {
   glClearColor(color.Red(), color.Green(), color.Blue(), color.Alpha());
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Graphics::DebugCallbackGL(GLenum source,
+                          GLenum type,
+                          GLuint id,
+                          GLenum severity,
+                          GLsizei length,
+                          const GLchar* message,
+                          void* userParam)
+{
+  auto graphics = static_cast<Graphics*>(userParam);
+  if (type == GL_DEBUG_TYPE_ERROR) {
+    DLOG_ERROR("OpenGL: {}", message);
+  } else if (type == GL_DEBUG_TYPE_PERFORMANCE ||
+             type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR ||
+             type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR) {
+    DLOG_WARNING("OpenGL: {}", message);
+  } else {
+    // DLOG_VERBOSE("OpenGL: {}", message);
+  }
 }
 
 }
