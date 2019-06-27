@@ -2,7 +2,7 @@
 #include <dlog.hpp>
 #include "game/world.hpp"
 #include "game/ecs/components/player_connection_component.hpp"
-#include "game/ecs/systems/player_connection_system.hpp"
+#include "game/ecs/systems/player_create_system.hpp"
 
 namespace dib {
 
@@ -15,8 +15,8 @@ Server::Server(PacketHandler* packet_handler, World* world)
 Server::~Server()
 {
   socket_interface_->CloseListenSocket(socket_);
-  for (auto client : clients_) {
-    CloseConnection(client);
+  for (auto connection : connections_) {
+    CloseConnection(connection);
   }
 }
 
@@ -50,20 +50,32 @@ Server::CloseConnection(HSteamNetConnection connection)
 }
 
 void
-Server::BroadcastPacket(const Packet& packet, const SendStrategy send_strategy)
+Server::PacketBroadcast(const Packet& packet, const SendStrategy send_strategy)
 {
-  for (auto client : clients_) {
-    Common::SendPacket(packet, send_strategy, client, socket_interface_);
+  for (auto connection : connections_) {
+    Common::SendPacket(packet, send_strategy, connection, socket_interface_);
+  }
+}
+
+void
+Server::PacketBroadcastExclude(const Packet& packet,
+                               const SendStrategy send_strategy,
+                               const ConnectionId exclude_connection)
+{
+  for (auto connection : connections_) {
+    if (connection != exclude_connection) {
+      Common::SendPacket(packet, send_strategy, connection, socket_interface_);
+    }
   }
 }
 
 SendResult
-Server::SendPacket(const Packet& packet,
-                   const SendStrategy send_strategy,
-                   const HSteamNetConnection connection)
+Server::PacketUnicast(const Packet& packet,
+                      const SendStrategy send_strategy,
+                      const HSteamNetConnection target_connection)
 {
   return Common::SendPacket(
-    packet, send_strategy, connection, socket_interface_);
+    packet, send_strategy, target_connection, socket_interface_);
 }
 
 void
@@ -84,12 +96,12 @@ Server::PollIncomingPackets(Packet& packet_out)
     bool ok =
       packet_out.SetPacket(static_cast<const u8*>(msg->m_pData), msg->m_cbSize);
     if (ok) {
-      if (auto it = clients_.find(msg->m_conn); it != clients_.end()) {
+      if (auto it = connections_.find(msg->m_conn); it != connections_.end()) {
         packet_out.SetFromConnection(*it);
         got_packet = true;
       } else {
         DLOG_WARNING("received packet from unknown connection, dropping it");
-        DisconnectClient(msg->m_conn);
+        DisconnectConnection(msg->m_conn);
       }
     } else {
       DLOG_ERROR("could not parse packet, too big [{}/{}]",
@@ -102,7 +114,7 @@ Server::PollIncomingPackets(Packet& packet_out)
   } else if (msg_count < 0) {
     DLOG_WARNING("failed to check for messages, closing connection");
     if (msg != nullptr) {
-      DisconnectClient(msg->m_conn);
+      DisconnectConnection(msg->m_conn);
     }
   }
 
@@ -129,8 +141,6 @@ Server::OnSteamNetConnectionStatusChanged(
       }
 
       if (status->m_eOldState == k_ESteamNetworkingConnectionState_Connected) {
-        clients_.erase(status->m_hConn);
-
         DLOG_INFO("Connection {}, [{}], disconnected with reason [{}], [{}].",
                   status->m_hConn,
                   status->m_info.m_szConnectionDescription,
@@ -141,9 +151,9 @@ Server::OnSteamNetConnectionStatusChanged(
         DLOG_WARNING("unknown state");
       }
 
-      // TODO announce the disconnect to the rest of the clients?
+      // TODO announce the disconnect to the rest of the connections?
 
-      CloseConnection(status->m_hConn);
+      DisconnectConnection(status->m_hConn);
       break;
     }
 
@@ -151,20 +161,20 @@ Server::OnSteamNetConnectionStatusChanged(
       DLOG_VERBOSE("Connection request from [{}].",
                    status->m_info.m_szConnectionDescription);
 
-      auto [it, ok] = clients_.insert(status->m_hConn);
+      auto [it, ok] = connections_.insert(status->m_hConn);
       if (!ok) {
-        DLOG_WARNING("Attempted to add client [{}], but failed.",
+        DLOG_WARNING("Attempted to add connection [{}], but failed.",
                      status->m_hConn);
       }
 
       if (socket_interface_->AcceptConnection(status->m_hConn) != k_EResultOK) {
-        clients_.erase(it);
+        connections_.erase(it);
         CloseConnection(status->m_hConn);
-        DLOG_WARNING("Failed to accept a client");
+        DLOG_WARNING("Failed to accept a connection");
       }
 
       auto& registry = world_->GetEntityManager().GetRegistry();
-      player_connection_system::Update(
+      player_create_system::UpdateConnection(
         registry, status->m_hConn, ConnectionState::kConnected);
 
       break;
@@ -173,15 +183,15 @@ Server::OnSteamNetConnectionStatusChanged(
     case k_ESteamNetworkingConnectionState_Connected: {
       DLOG_VERBOSE("connected");
 
-      // Send a sync packet to the client
+      // Send a sync packet to the connection
       Packet packet{};
       packet_handler_->BuildPacketSync(packet);
       const auto res =
-        SendPacket(packet, SendStrategy::kReliable, status->m_hConn);
+        PacketUnicast(packet, SendStrategy::kReliable, status->m_hConn);
       if (res != SendResult::kSuccess) {
         DLOG_WARNING("failed to send sync packet to {}, disconnecting them.",
                      status->m_hConn);
-        DisconnectClient(status->m_hConn);
+        DisconnectConnection(status->m_hConn);
       }
       break;
     }
@@ -193,14 +203,14 @@ Server::OnSteamNetConnectionStatusChanged(
 }
 
 void
-Server::DisconnectClient(const HSteamNetConnection connection)
+Server::DisconnectConnection(const HSteamNetConnection connection)
 {
-  if (auto it = clients_.find(connection); it != clients_.end()) {
-    DLOG_INFO("Disconnected client [{}].", *it);
+  if (auto it = connections_.find(connection); it != connections_.end()) {
+    DLOG_INFO("Disconnected connection [{}].", *it);
     CloseConnection(connection);
-    clients_.erase(it);
+    connections_.erase(it);
     auto& registry = world_->GetEntityManager().GetRegistry();
-    player_connection_system::Update(
+    player_create_system::UpdateConnection(
       registry, connection, ConnectionState::kDisconnected);
   }
 }

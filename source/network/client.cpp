@@ -2,7 +2,7 @@
 #include <dlog.hpp>
 #include "game/world.hpp"
 #include "game/ecs/components/player_connection_component.hpp"
-#include "game/ecs/systems/player_connection_system.hpp"
+#include "game/ecs/systems/player_create_system.hpp"
 
 namespace dib {
 
@@ -46,7 +46,7 @@ Client::CloseConnection()
 }
 
 SendResult
-Client::SendPacket(const Packet& packet, const SendStrategy send_strategy)
+Client::PacketSend(const Packet& packet, const SendStrategy send_strategy)
 {
   return Common::SendPacket(
     packet, send_strategy, connection_, socket_interface_);
@@ -141,6 +141,7 @@ Client::SetConnectionState(const ConnectionState connection_state)
 {
   connection_state_ = connection_state;
   auto& registry = world_->GetEntityManager().GetRegistry();
-  player_connection_system::Update(registry, connection_, connection_state);
+  player_create_system::UpdateConnection(
+    registry, connection_, connection_state);
 }
 }
