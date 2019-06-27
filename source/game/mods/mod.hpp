@@ -19,7 +19,7 @@ DIB_FORWARD_DECLARE_CLASS(World);
 
 namespace dib::game {
 
-DIB_FORWARD_DECLARE_CLASS(TileManager)
+DIB_FORWARD_DECLARE_CLASS(TileManager);
 
 /** Mod class **/
 class Mod
