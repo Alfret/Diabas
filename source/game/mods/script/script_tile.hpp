@@ -5,15 +5,22 @@
 // ========================================================================== //
 
 #include "script/env.hpp"
+#include "game/tile/tile_manager.hpp"
 
 // ========================================================================== //
 // Functions
 // ========================================================================== //
 
-namespace dib::mods {
+namespace dib::game {
 
-/** Expose the base mod **/
+/** Expose tile related things to scripts **/
 void
-ExposeModBase(script::Environment& environment);
+ExposeScriptTile(script::Environment& environment);
+
+// -------------------------------------------------------------------------- //
+
+/** Create a JavaScript object that wraps a tile manager **/
+JsValueRef
+CreateTileManagerScriptObject(TileManager& tileManager);
 
 }

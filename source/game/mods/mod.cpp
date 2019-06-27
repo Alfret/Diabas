@@ -1,4 +1,4 @@
-#include "mods/mod.hpp"
+#include "game/mods/mod.hpp"
 
 #include <dlog.hpp>
 #include <cpptoml.h>
@@ -6,7 +6,7 @@
 #include "core/assert.hpp"
 #include "game/world.hpp"
 
-namespace dib::mods {
+namespace dib::game {
 
 // ========================================================================== //
 // Mod Implementation
@@ -37,6 +37,14 @@ void
 Mod::Init(World& world)
 {
   mMainScript.Init(world);
+}
+
+// -------------------------------------------------------------------------- //
+
+Result
+Mod::RegisterTiles(TileManager& tileManager)
+{
+  return mMainScript.RegisterTiles(tileManager);
 }
 
 // -------------------------------------------------------------------------- //

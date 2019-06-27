@@ -2,9 +2,10 @@
 
 #include <cpptoml.h>
 #include <dlog.hpp>
-#include "mods/script/mod_base.hpp"
+#include "game/mods/script/mod_base.hpp"
+#include "game/mods/script/script_tile.hpp"
 
-namespace dib::mods {
+namespace dib::game {
 
 // ========================================================================== //
 // ModLoader Implementation
@@ -28,8 +29,9 @@ ModLoader::~ModLoader()
 Result
 ModLoader::Load(script::Environment& environment)
 {
-  // Expose base mod functionality
+  // Expose game-specific things to mods
   ExposeModBase(environment);
+  ExposeScriptTile(environment);
 
   // Enumerate mod folders
   const alflib::File mods_folder(mModsFolder);
@@ -66,17 +68,6 @@ ModLoader::Load(script::Environment& environment)
 
 // -------------------------------------------------------------------------- //
 
-Result
-ModLoader::Init(World& world)
-{
-  for (auto& mod : mMods) {
-    mod.second->Init(world);
-  }
-  return Result::kSuccess;
-}
-
-// -------------------------------------------------------------------------- //
-
 bool
 ModLoader::IsLoaded(const String& modId)
 {
@@ -93,6 +84,28 @@ ModLoader::GetModById(const String& modId)
     return entry->second;
   }
   return nullptr;
+}
+
+// -------------------------------------------------------------------------- //
+
+Result
+ModLoader::Init(World& world)
+{
+  for (auto& mod : mMods) {
+    mod.second->Init(world);
+  }
+  return Result::kSuccess;
+}
+
+// -------------------------------------------------------------------------- //
+
+Result
+ModLoader::RegisterTiles(TileManager& tileManager)
+{
+  for (auto& mod : mMods) {
+    mod.second->RegisterTiles(tileManager);
+  }
+  return Result::kSuccess;
 }
 
 // -------------------------------------------------------------------------- //

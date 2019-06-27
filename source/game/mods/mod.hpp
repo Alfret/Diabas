@@ -3,22 +3,25 @@
 
 #include <alflib/file/file.hpp>
 #include "core/types.hpp"
-#include "mods/result.hpp"
+#include "game/mods/result.hpp"
 #include "script/env.hpp"
-#include "mods/script/mod_script.hpp"
+#include "game/mods/script/mod_script.hpp"
 #include "core/macros.hpp"
 #include "app/key.hpp"
-
-namespace dib {
-DIB_FORWARD_DECLARE_CLASS(World);
-}
-
-namespace dib::mods {
 
 // ========================================================================== //
 // Mod Declaration
 // ========================================================================== //
 
+namespace dib {
+DIB_FORWARD_DECLARE_CLASS(World);
+}
+
+namespace dib::game {
+
+DIB_FORWARD_DECLARE_CLASS(TileManager);
+
+/** Mod class **/
 class Mod
 {
 public:
@@ -64,6 +67,9 @@ public:
   /** Init script **/
   void Init(World& world);
 
+  /** Callback for when the mods must register their blocks **/
+  Result RegisterTiles(TileManager& tileManager);
+
   /** Update mod **/
   void Update(f32 delta);
 
@@ -78,6 +84,9 @@ public:
 
   /** Returns the id of the mod **/
   const String& GetId() const { return mId; }
+
+  /** Returns the list of authors **/
+  const std::vector<String>& GetAuthors() const { return mAuthors; }
 
 private:
   /** Parse 'toml' file **/

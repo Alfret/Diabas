@@ -1,6 +1,6 @@
-#include "mods/result.hpp"
+#include "game/mods/result.hpp"
 
-namespace dib::mods {
+namespace dib::game {
 
 // ========================================================================== //
 // Functions

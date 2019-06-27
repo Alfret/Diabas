@@ -165,6 +165,28 @@ GetValueType(JsValueRef object);
 
 // -------------------------------------------------------------------------- //
 
+/** Returns the prototype of an object **/
+JsValueRef
+GetPrototype(JsValueRef object);
+
+// -------------------------------------------------------------------------- //
+
+/** Call a function with the specified arguments. The output is stored in the
+ * 'output' parameter **/
+JsErrorCode
+CallMethod(JsValueRef method,
+           std::vector<JsValueRef> arguments,
+           JsValueRef& output);
+
+// -------------------------------------------------------------------------- //
+
+/** Gets the last exception, clears the exception state and then finally returns
+ * the exception message**/
+String
+GetAndClearException();
+
+// -------------------------------------------------------------------------- //
+
 /** Handle an exception that occurred in a script. The function takes the error
  * code that last happened, and if it's the code 'JsErrorScriptException' then
  * the exception is printed and the function returns true. If the error is
