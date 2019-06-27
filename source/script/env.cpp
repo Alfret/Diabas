@@ -433,7 +433,7 @@ Environment::OnFetchImportedModule(
   // TEMP
   *dependentModule = referencedModule->record;
   return JsNoError;
-};
+}
 
 // -------------------------------------------------------------------------- //
 
@@ -444,7 +444,7 @@ Environment::OnFetchImportedModuleFromScript(
   [[maybe_unused]] JsModuleRecord* dependentModule)
 {
   return OnFetchImportedModule(nullptr, specifier, dependentModule);
-};
+}
 
 // -------------------------------------------------------------------------- //
 

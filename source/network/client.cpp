@@ -1,13 +1,17 @@
 #include "client.hpp"
 #include <dlog.hpp>
+#include "game/world.hpp"
+#include "game/ecs/components/player_connection_component.hpp"
+#include "game/ecs/systems/player_create_system.hpp"
 
 namespace dib {
 
-Client::Client(PacketHandler* packet_handler)
+Client::Client(PacketHandler* packet_handler, World* world)
   : connection_(k_HSteamNetConnection_Invalid)
   , socket_interface_(SteamNetworkingSockets())
-  , network_state_(NetworkState::kClientOffline),
-    packet_handler_(packet_handler)
+  , connection_state_(ConnectionState::kDisconnected)
+  , packet_handler_(packet_handler)
+  , world_(world)
 {}
 
 Client::~Client()
@@ -38,11 +42,11 @@ Client::CloseConnection()
     socket_interface_->CloseConnection(connection_, 0, nullptr, false);
     connection_ = k_HSteamNetConnection_Invalid;
   }
-  network_state_ = NetworkState::kClientOffline;
+  SetConnectionState(ConnectionState::kDisconnected);
 }
 
 SendResult
-Client::SendPacket(const Packet& packet, const SendStrategy send_strategy)
+Client::PacketSend(const Packet& packet, const SendStrategy send_strategy)
 {
   return Common::SendPacket(
     packet, send_strategy, connection_, socket_interface_);
@@ -66,6 +70,7 @@ Client::PollIncomingPackets(Packet& packet_out)
     bool ok =
       packet_out.SetPacket(static_cast<const u8*>(msg->m_pData), msg->m_cbSize);
     if (ok) {
+      packet_out.SetFromConnection(msg->m_conn);
       got_packet = true;
     } else {
       DLOG_ERROR("could not parse packet, too big [{}/{}]",
@@ -75,9 +80,9 @@ Client::PollIncomingPackets(Packet& packet_out)
     msg->Release();
 
   } else if (msg_count < 0) {
-    if (network_state_ == NetworkState::kClientOnline) {
-      DLOG_ERROR("failed to check for messages");
-      // TODO close connection and retry to connect?
+    if (connection_state_ != ConnectionState::kDisconnected) {
+      DLOG_VERBOSE("failed to check for messages, disconnecting");
+      CloseConnection();
     }
   }
 
@@ -121,13 +126,22 @@ Client::OnSteamNetConnectionStatusChanged(
 
     case k_ESteamNetworkingConnectionState_Connected: {
       DLOG_INFO("connected");
-      network_state_ = NetworkState::kClientOnline;
+      SetConnectionState(ConnectionState::kConnected);
       break;
     }
 
     default: {
-      DLOG_VERBOSE("default");
+      DLOG_WARNING("default ??");
     }
   }
+}
+
+void
+Client::SetConnectionState(const ConnectionState connection_state)
+{
+  connection_state_ = connection_state;
+  auto& registry = world_->GetEntityManager().GetRegistry();
+  player_create_system::UpdateConnection(
+    registry, connection_, connection_state);
 }
 }
