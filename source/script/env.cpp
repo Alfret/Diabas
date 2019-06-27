@@ -113,13 +113,11 @@ Environment::RunScript(const String& script, JsValueRef& output, void* userData)
                             url,
                             JsParseScriptAttributeNone,
                             &output);
-
-  if (error != JsNoError) {
-    HandleException(error);
-    output = JS_INVALID_REFERENCE;
+  if (error == JsErrorScriptException) {
+    return Result::kException;
+  } else if (error != JsNoError) {
     return Result::kUnknownError;
   }
-
   return Result::kSuccess;
 }
 

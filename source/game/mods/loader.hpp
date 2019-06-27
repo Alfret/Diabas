@@ -1,7 +1,7 @@
 #ifndef LOADER_HPP_
 #define LOADER_HPP_
 
-#include "mods/mod.hpp"
+#include "game/mods/mod.hpp"
 #include <alflib/file/file.hpp>
 #include <core/types.hpp>
 #include <dlog.hpp>
@@ -12,11 +12,17 @@
 #include "core/macros.hpp"
 #include "app/key.hpp"
 
+// ========================================================================== //
+// ModLoader Declaration
+// ========================================================================== //
+
 namespace dib {
 DIB_FORWARD_DECLARE_CLASS(World);
 }
 
-namespace dib::mods {
+namespace dib::game {
+
+DIB_FORWARD_DECLARE_CLASS(TileManager);
 
 /** Class that loads all mods and makes them available for lookup **/
 class ModLoader
@@ -40,14 +46,20 @@ public:
    * environment **/
   Result Load(script::Environment& environment);
 
-  /** Initialize scripts **/
-  Result Init(World& world);
-
   /** Returns whether or not the specified mod is loaded **/
   bool IsLoaded(const String& modId);
 
   /** Returns a mod identifier by it's id. **/
   Mod* GetModById(const String& modId);
+
+  /** Returns all loaded mods **/
+  const std::unordered_map<String, Mod*>& GetMods() const { return mMods; }
+
+  /** Initialize scripts **/
+  Result Init(World& world);
+
+  /** Callback for when the mods must register their blocks **/
+  Result RegisterTiles(TileManager& tileManager);
 
   /** Run the update of all mods **/
   void Update(f32 delta);

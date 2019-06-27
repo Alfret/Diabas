@@ -1,18 +1,20 @@
-#include "mods/script/mod_script.hpp"
+#include "game/mods/script/mod_script.hpp"
 
 // ========================================================================== //
 // Headers
 // ========================================================================== //
 
-#include <script/expose/expose_network.hpp>
+#include "script/expose/expose_network.hpp"
 #include "script/util.hpp"
 #include "game/world.hpp"
+#include "game/tile/tile_manager.hpp"
+#include "game/mods/script/script_tile.hpp"
 
 // ========================================================================== //
 // Functions
 // ========================================================================== //
 
-namespace dib::mods {
+namespace dib::game {
 
 /** JS: Function to register a network packet **/
 JsValueRef CHAKRA_CALLBACK
@@ -152,7 +154,7 @@ ScriptIsServer([[maybe_unused]] JsValueRef callee,
 // Script Implementation
 // ========================================================================== //
 
-namespace dib::mods {
+namespace dib::game {
 
 ModScript::ModScript(script::Environment& environment)
   : mEnvironment(environment)
@@ -245,16 +247,33 @@ ModScript::Init(World& world)
     mInstance, "sendPacket", script::CreateFunction(ScriptSendNetworkPacket));
 
   // Call the initialize function once
-  JsValueRef initFunction = script::GetProperty(mInstance, "init");
-  JsValueRef args[] = { mInstance };
   JsValueRef output;
-  JsErrorCode error = JsCallFunction(initFunction, args, 1, &output);
-  (void)output;
+  JsValueRef method = script::GetProperty(mInstance, "init");
+  JsErrorCode error = script::CallMethod(method, { mInstance }, output);
   if (script::HandleException(error)) {
     return Result::kScriptError;
   }
 
   mInitialized = true;
+  return Result::kSuccess;
+}
+
+// -------------------------------------------------------------------------- //
+
+Result
+ModScript::RegisterTiles(TileManager& tileManager)
+{
+  // Create an object for the tile manager
+  JsValueRef tileManagerObject = CreateTileManagerScriptObject(tileManager);
+
+  // Call the 'onRegisterTiles' function once
+  JsValueRef output;
+  JsValueRef method = script::GetProperty(mInstance, "onRegisterTiles");
+  JsErrorCode error =
+    script::CallMethod(method, { mInstance, tileManagerObject }, output);
+  if (script::HandleException(error)) {
+    return Result::kScriptError;
+  }
   return Result::kSuccess;
 }
 

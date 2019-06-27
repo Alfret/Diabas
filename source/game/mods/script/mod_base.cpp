@@ -1,4 +1,4 @@
-#include "mods/script/mod_base.hpp"
+#include "game/mods/script/mod_base.hpp"
 
 // ========================================================================== //
 // Headers
@@ -13,7 +13,7 @@
 // Private Functions
 // ========================================================================== //
 
-namespace dib::mods {
+namespace dib::game {
 
 static JsValueRef MOD_PROTOTYPE = JS_INVALID_REFERENCE;
 
@@ -275,7 +275,7 @@ ExposeModKeyPresses()
 // Functions
 // ========================================================================== //
 
-namespace dib::mods {
+namespace dib::game {
 
 void
 ExposeModBase(script::Environment& environment)
