@@ -32,7 +32,7 @@ public:
 
   void CloseConnection();
 
-  SendResult SendPacket(const Packet& packet, const SendStrategy send_strategy);
+  SendResult PacketSend(const Packet& packet, const SendStrategy send_strategy);
 
   ConnectionState GetConnectionState() { return connection_state_; }
 

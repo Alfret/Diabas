@@ -43,9 +43,17 @@ public:
   void Update();
 
   /**
-   * Broadcast a packet to all active connections.
+   * Server: Broadcast the packet to all active connections.
+   * Client: Unicast the packet to the server.
    */
-  void Broadcast(const Packet& packet) const;
+  void PacketBroadcast(const Packet& packet) const;
+
+  /**
+   * Server: Broadcast to all active connections but the excluded one.
+   * Client: assert(false)
+   */
+  void PacketBroadcastExclude(const Packet& packet,
+                              const ConnectionId exclude_connection) const;
 
   void ConnectToServer();
 
@@ -78,6 +86,8 @@ private:
    * Call once before closing program.
    */
   static void ShutdownNetwork();
+
+  void SendPlayerList(const ConnectionId connection_id) const;
 
   // void OnConnectionChange(Connection)
 

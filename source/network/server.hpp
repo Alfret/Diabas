@@ -24,22 +24,41 @@ public:
 
   virtual ~Server() final;
 
+  /**
+   * Let the server update, call continuously.
+   */
   void Poll(bool& got_packet, Packet& packet_out);
 
+  /**
+   * Start a server on the given port.
+   */
   void StartServer(const u16 port);
 
   /**
-   * Attempt to close the connection and remove it from our tracked.
+   * Attempt to close the connection and remove it from our list of connections.
    */
-  void DisconnectClient(const HSteamNetConnection connection);
+  void DisconnectConnection(const HSteamNetConnection connection);
+
+  /**
+   * Broadcast a packet to all active connections.
+   */
+  void PacketBroadcast(const Packet& packet, const SendStrategy send_strategy);
+
+  /**
+   * Broadcast, but exclude the single connection given.
+   */
+  void PacketBroadcastExclude(const Packet& packet,
+                              const SendStrategy send_strategy,
+                              const ConnectionId exclude_connection);
+
+  /**
+   * Send a packet to a connection.
+   */
+  SendResult PacketUnicast(const Packet& packet,
+                           const SendStrategy send_strategy,
+                           const HSteamNetConnection target_connection);
 
   NetworkState GetNetworkState() const { return network_state_; }
-
-  void BroadcastPacket(const Packet& packet, const SendStrategy send_strategy);
-
-  SendResult SendPacket(const Packet& packet,
-                        const SendStrategy send_strategy,
-                        const HSteamNetConnection connection);
 
 private:
   void PollSocketStateChanges();
@@ -50,14 +69,15 @@ private:
     SteamNetConnectionStatusChangedCallback_t* status) override;
 
   /**
-   * Let steam sockets close the connection.
+   * Let steam sockets close the connection. Does not remove it from our
+   * list of active connections, use DisconnectConnection for that.
    */
   void CloseConnection(HSteamNetConnection connection);
 
 private:
   HSteamListenSocket socket_;
   ISteamNetworkingSockets* socket_interface_;
-  tsl::robin_set<ConnectionId> clients_{};
+  tsl::robin_set<ConnectionId> connections_{};
   NetworkState network_state_ = NetworkState::kServer;
   PacketHandler* packet_handler_;
   World* world_;
