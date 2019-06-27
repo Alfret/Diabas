@@ -15,11 +15,18 @@ namespace dib {
 // Predefined packet types
 // ============================================================ //
 
+/**
+ * Steps to follow when ADDING an element:
+ * 1. Add the enum here.
+ * 2. Register a packet handler callback on the packet_handler with
+ *    AddStaticPacketType.
+ */
 enum class PacketHeaderStaticTypes : std::size_t
 {
   kSync = 0,
+  kPlayerJoin,
 
-  // Must be last, used to count number of constants in the enum
+  // Must be last, used to count number of elements in the enum
   kChat
 };
 

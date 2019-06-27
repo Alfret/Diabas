@@ -74,7 +74,7 @@ CreateValue(f32 value)
 // -------------------------------------------------------------------------- //
 
 JsValueRef
-script::CreateValue(f64 value)
+CreateValue(f64 value)
 {
   JsValueRef output;
   JsDoubleToNumber(value, &output);
