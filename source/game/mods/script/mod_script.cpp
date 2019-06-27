@@ -107,7 +107,7 @@ ScriptSendNetworkPacket([[maybe_unused]] JsValueRef callee,
   }
 
   // Broadcast the native packet
-  world->GetNetwork().Broadcast(nativePacket);
+  world->GetNetwork().PacketBroadcast(nativePacket);
 
   // Success!
   return script::CreateValue(true);

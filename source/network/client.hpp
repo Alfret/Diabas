@@ -7,13 +7,16 @@
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
 #include "network/packet_handler.hpp"
+#include "network/connection_state.hpp"
 
 namespace dib {
+
+class World;
 
 class Client : public ISteamNetworkingSocketsCallbacks
 {
 public:
-  Client(PacketHandler* packet_handler);
+  Client(PacketHandler* packet_handler, World* world);
 
   virtual ~Client() final;
 
@@ -29,9 +32,9 @@ public:
 
   void CloseConnection();
 
-  SendResult SendPacket(const Packet& packet, const SendStrategy send_strategy);
+  SendResult PacketSend(const Packet& packet, const SendStrategy send_strategy);
 
-  NetworkState GetNetworkState() const { return network_state_; }
+  ConnectionState GetConnectionState() { return connection_state_; }
 
 private:
   void PollSocketStateChanges();
@@ -41,11 +44,14 @@ private:
   virtual void OnSteamNetConnectionStatusChanged(
     SteamNetConnectionStatusChangedCallback_t* status) override;
 
+  void SetConnectionState(const ConnectionState connection_state);
+
 private:
   HSteamNetConnection connection_;
   ISteamNetworkingSockets* socket_interface_;
-  NetworkState network_state_;
+  ConnectionState connection_state_;
   PacketHandler* packet_handler_;
+  World* world_;
 };
 }
 #endif // CLIENT_HPP_

@@ -13,8 +13,7 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
 
-namespace dib
-{
+namespace dib {
 
 static void
 data_callback(ma_device* pDevice,
@@ -38,17 +37,18 @@ data_callback(ma_device* pDevice,
 
 class AudioInstance
 {
- public:
+public:
   AudioInstance() = default;
 
-  ~AudioInstance() {
+  ~AudioInstance()
+  {
     ma_device_uninit(&device_);
     ma_decoder_uninit(&decoder_);
   }
 
-  bool Init(const String& file) {
-    ma_result result =
-      ma_decoder_init_file(file.GetUTF8(), NULL, &decoder_);
+  bool Init(const String& file)
+  {
+    ma_result result = ma_decoder_init_file(file.GetUTF8(), NULL, &decoder_);
     if (result != MA_SUCCESS) {
       DLOG_ERROR("could not load file [{}]", file);
       return false;
@@ -69,7 +69,8 @@ class AudioInstance
     return true;
   }
 
-  bool Play() {
+  bool Play()
+  {
     if (ma_device_start(&device_) != MA_SUCCESS) {
       ma_device_uninit(&device_);
       ma_decoder_uninit(&decoder_);
@@ -79,7 +80,8 @@ class AudioInstance
     return true;
   }
 
-  bool Pause() {
+  bool Pause()
+  {
     if (ma_device_stop(&device_) != MA_SUCCESS) {
       ma_device_uninit(&device_);
       ma_decoder_uninit(&decoder_);
@@ -93,25 +95,27 @@ class AudioInstance
   AudioInstance(AudioInstance&& other) noexcept = delete;
   AudioInstance& operator=(AudioInstance&& other) noexcept = delete;
 
- private:
-   ma_decoder decoder_;
-   ma_device_config device_config_;
-   ma_device device_;
+private:
+  ma_decoder decoder_;
+  ma_device_config device_config_;
+  ma_device device_;
 };
 
 class AudioManager::Impl
 {
- public:
+public:
   Impl() = default;
 
-  ~Impl() {
+  ~Impl()
+  {
     // TODO make sure they are destructed
   }
 
-  std::optional<AudioId> Add(const String& file) {
+  std::optional<AudioId> Add(const String& file)
+  {
     const AudioId current_id = counter_++;
     auto [it, ok] =
-        instances_.insert({ current_id, std::make_unique<AudioInstance>() });
+      instances_.insert({ current_id, std::make_unique<AudioInstance>() });
     if (ok) {
       const bool init_ok = it->second->Init(file);
       if (init_ok) {
@@ -123,21 +127,23 @@ class AudioManager::Impl
     return std::nullopt;
   }
 
-  std::optional<bool> Play(const AudioId id) const {
+  std::optional<bool> Play(const AudioId id) const
+  {
     if (auto it = instances_.find(id); it != instances_.end()) {
       return it->second->Play();
     }
     return std::nullopt;
   }
 
-  std::optional<bool> Pause(const AudioId id) {
+  std::optional<bool> Pause(const AudioId id)
+  {
     if (auto it = instances_.find(id); it != instances_.end()) {
       return it->second->Pause();
     }
     return std::nullopt;
   }
 
- private:
+private:
   AudioId counter_ = 0;
   std::unordered_map<AudioId, std::unique_ptr<AudioInstance>> instances_{};
 };
@@ -146,15 +152,11 @@ class AudioManager::Impl
 // Audio Definition
 // ============================================================ //
 
-
 AudioManager::AudioManager()
-    : pimpl_(std::make_unique<Impl>())
-{
-}
+  : pimpl_(std::make_unique<Impl>())
+{}
 
-AudioManager::~AudioManager()
-{
-}
+AudioManager::~AudioManager() {}
 
 std::optional<AudioId>
 AudioManager::Add(const String& file) const

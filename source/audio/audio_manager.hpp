@@ -5,14 +5,13 @@
 #include "core/types.hpp"
 #include <optional>
 
-namespace dib
-{
+namespace dib {
 
 using AudioId = u32;
 
 class AudioManager
 {
- public:
+public:
   AudioManager();
 
   ~AudioManager();
@@ -39,10 +38,10 @@ class AudioManager
    */
   std::optional<bool> Pause(const AudioId id) const;
 
- private:
+private:
   class Impl;
   std::unique_ptr<Impl> pimpl_;
 };
 }
 
-#endif//AUDIO_MANAGER_HPP_
+#endif // AUDIO_MANAGER_HPP_
