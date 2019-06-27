@@ -34,6 +34,10 @@ set(COMMON_SOURCE
   source/core/hash.cpp
   source/core/hash.hpp
   source/app/graphics.cpp
+  source/game/ecs/entity_manager.cpp
+  source/game/ecs/entity_manager.hpp
+  source/game/ecs/components/player_connection_component.cpp
+  source/game/ecs/components/player_connection_component.hpp
   source/game/game.cpp
   source/game/world.cpp
   source/game/world.hpp
@@ -68,6 +72,8 @@ set(COMMON_SOURCE
   source/network/common.hpp
   source/network/side.cpp
   source/network/side.hpp
+  source/network/connection_id.hpp
+  source/network/connection_id.cpp
   source/server/input.cpp
   source/server/input.hpp
   )
@@ -103,6 +109,10 @@ add_subdirectory(thirdparty/dlog)
 # dutil
 add_subdirectory(thirdparty/dutil)
 
+# ENTT (ecs system)
+include_directories(SYSTEM thirdparty/entt/single_include)
+add_subdirectory(thirdparty/entt)
+
 # miniaudio
 include_directories(SYSTEM thirdparty/miniaudio)
 
@@ -132,6 +142,13 @@ add_subdirectory(thirdparty/glfw)
 # Doctest
 include_directories(SYSTEM thirdparty/doctest)
 add_subdirectory(thirdparty/doctest)
+
+# uuid
+include_directories(SYSTEM thirdparty/stduuid/include)
+add_subdirectory(thirdparty/stduuid)
+
+# tessil robin hood map / set
+include_directories(SYSTEM thirdparty/robin-map/include)
 
 # Thidparty
 include_directories(SYSTEM thirdparty)
@@ -164,9 +181,10 @@ target_compile_definitions(server PRIVATE DIB_IS_SERVER)
 
 # Link libraries
 if (WIN32)
-  set(DIB_LIBS ws2_32 cpptoml dlog dutil glfw glm gamenetworkingsockets alflibcpp ChakraCore)
+  set(DIB_LIBS ws2_32 cpptoml dlog dutil glfw glm gamenetworkingsockets
+    alflibcpp ChakraCore EnTT uuid)
 else ()
-  set(DIB_LIBS pthread cpptoml dlog dutil glfw glm GameNetworkingSockets alflibcpp ChakraCore dl m)
+  set(DIB_LIBS pthread cpptoml dlog dutil glfw glm GameNetworkingSockets alflibcpp ChakraCore dl m EnTT uuid)
 endif ()
 
 # TODO(Filip Björklund): Remove GLFW as a dependency on the server

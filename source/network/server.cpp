@@ -1,32 +1,22 @@
 #include "server.hpp"
 #include <dlog.hpp>
 #include "game/world.hpp"
+#include "game/ecs/components/player_connection_component.hpp"
+#include "game/ecs/systems/player_create_system.hpp"
 
 namespace dib {
 
-auto
-Server::ClientIteratorFromConnection(const HSteamNetConnection connection) const
-{
-  auto it = clients_.begin();
-  for (; it < clients_.end(); it++) {
-    if (it->connection == connection) {
-      break;
-    }
-  }
-  return it;
-}
-
-Server::Server(PacketHandler* packet_handler)
-    : socket_interface_(SteamNetworkingSockets()),
-      packet_handler_(packet_handler)
-{
-}
+Server::Server(PacketHandler* packet_handler, World* world)
+  : socket_interface_(SteamNetworkingSockets())
+  , packet_handler_(packet_handler)
+  , world_(world)
+{}
 
 Server::~Server()
 {
   socket_interface_->CloseListenSocket(socket_);
-  for (auto client : clients_) {
-    CloseConnection(client.connection);
+  for (auto connection : connections_) {
+    CloseConnection(connection);
   }
 }
 
@@ -60,36 +50,32 @@ Server::CloseConnection(HSteamNetConnection connection)
 }
 
 void
-Server::NetworkInfo() const
+Server::PacketBroadcast(const Packet& packet, const SendStrategy send_strategy)
 {
-  DLOG_RAW("{:=^30}\n", " Network Connections ");
-  if (clients_.size() > 0) {
-    for (const auto client : clients_) {
-      DLOG_RAW("\tid: {}\n", client.client_id.id);
-    }
-  } else {
-    DLOG_RAW("\tnone\n");
+  for (auto connection : connections_) {
+    Common::SendPacket(packet, send_strategy, connection, socket_interface_);
   }
-
-  DLOG_RAW("\n");
 }
 
 void
-Server::BroadcastPacket(const Packet& packet, const SendStrategy send_strategy)
+Server::PacketBroadcastExclude(const Packet& packet,
+                               const SendStrategy send_strategy,
+                               const ConnectionId exclude_connection)
 {
-  for (auto client : clients_) {
-    Common::SendPacket(
-      packet, send_strategy, client.connection, socket_interface_);
+  for (auto connection : connections_) {
+    if (connection != exclude_connection) {
+      Common::SendPacket(packet, send_strategy, connection, socket_interface_);
+    }
   }
 }
 
 SendResult
-Server::SendPacket(const Packet& packet,
-                   const SendStrategy send_strategy,
-                   const HSteamNetConnection connection)
+Server::PacketUnicast(const Packet& packet,
+                      const SendStrategy send_strategy,
+                      const HSteamNetConnection target_connection)
 {
   return Common::SendPacket(
-    packet, send_strategy, connection, socket_interface_);
+    packet, send_strategy, target_connection, socket_interface_);
 }
 
 void
@@ -110,12 +96,12 @@ Server::PollIncomingPackets(Packet& packet_out)
     bool ok =
       packet_out.SetPacket(static_cast<const u8*>(msg->m_pData), msg->m_cbSize);
     if (ok) {
-      auto maybe_clientid = ClientIdFromConnection(msg->m_conn);
-      if (maybe_clientid) {
+      if (auto it = connections_.find(msg->m_conn); it != connections_.end()) {
+        packet_out.SetFromConnection(*it);
         got_packet = true;
       } else {
         DLOG_WARNING("received packet from unknown connection, dropping it");
-        DisconnectClient(msg->m_conn);
+        DisconnectConnection(msg->m_conn);
       }
     } else {
       DLOG_ERROR("could not parse packet, too big [{}/{}]",
@@ -128,7 +114,7 @@ Server::PollIncomingPackets(Packet& packet_out)
   } else if (msg_count < 0) {
     DLOG_WARNING("failed to check for messages, closing connection");
     if (msg != nullptr) {
-      DisconnectClient(msg->m_conn);
+      DisconnectConnection(msg->m_conn);
     }
   }
 
@@ -155,29 +141,19 @@ Server::OnSteamNetConnectionStatusChanged(
       }
 
       if (status->m_eOldState == k_ESteamNetworkingConnectionState_Connected) {
-        ClientId removed_id{};
-        for (auto it = clients_.begin(); it < clients_.end(); it++) {
-          if (it->connection == status->m_hConn) {
-            removed_id = it->client_id;
-            clients_.erase(it);
-            break;
-          }
-        }
-
-        DLOG_INFO(
-          "Connection [{}] on [{}], disconnected with reason [{}], [{}].",
-          removed_id.id,
-          status->m_info.m_szConnectionDescription,
-          status->m_info.m_eEndReason,
-          status->m_info.m_szEndDebug);
+        DLOG_INFO("Connection {}, [{}], disconnected with reason [{}], [{}].",
+                  status->m_hConn,
+                  status->m_info.m_szConnectionDescription,
+                  status->m_info.m_eEndReason,
+                  status->m_info.m_szEndDebug);
       } else if (status->m_eOldState !=
                  k_ESteamNetworkingConnectionState_Connecting) {
         DLOG_WARNING("unknown state");
       }
 
-      // TODO announce the disconnect to the rest of the clients?
+      // TODO announce the disconnect to the rest of the connections?
 
-      CloseConnection(status->m_hConn);
+      DisconnectConnection(status->m_hConn);
       break;
     }
 
@@ -185,31 +161,21 @@ Server::OnSteamNetConnectionStatusChanged(
       DLOG_VERBOSE("Connection request from [{}].",
                    status->m_info.m_szConnectionDescription);
 
-      bool already_exists = false;
-      ClientId existing_id{};
-      for (auto client : clients_) {
-        if (client.connection == status->m_hConn) {
-          already_exists = true;
-          existing_id = client.client_id;
-          break;
-        }
-      }
-      if (already_exists) {
-        DLOG_WARNING(
-          "Client [{}] attempted to connect while already being connected.",
-          existing_id.id);
-        break;
+      auto [it, ok] = connections_.insert(status->m_hConn);
+      if (!ok) {
+        DLOG_WARNING("Attempted to add connection [{}], but failed.",
+                     status->m_hConn);
       }
 
       if (socket_interface_->AcceptConnection(status->m_hConn) != k_EResultOK) {
+        connections_.erase(it);
         CloseConnection(status->m_hConn);
-        DLOG_WARNING("Failed to accept a client");
+        DLOG_WARNING("Failed to accept a connection");
       }
 
-      clients_.push_back({ ClientIdGenerator::Next(), status->m_hConn });
-
-      // TODO do a handshake with the client, and maybe send some welcome
-      // information
+      auto& registry = world_->GetEntityManager().GetRegistry();
+      player_create_system::UpdateConnection(
+        registry, status->m_hConn, ConnectionState::kConnected);
 
       break;
     }
@@ -217,47 +183,35 @@ Server::OnSteamNetConnectionStatusChanged(
     case k_ESteamNetworkingConnectionState_Connected: {
       DLOG_VERBOSE("connected");
 
-      // Send a sync packet to the client
-       Packet packet{};
-       packet_handler_->BuildPacketSync(packet);
-       const auto res =
-           SendPacket(packet, SendStrategy::kReliable, status->m_hConn);
-       if (res != SendResult::kSuccess) {
-         auto it = ClientIteratorFromConnection(status->m_hConn);
-         DLOG_WARNING("failed to send sync packet to {}", it->client_id.id);
-         DisconnectClient(status->m_hConn);
-       }
-
-
+      // Send a sync packet to the connection
+      Packet packet{};
+      packet_handler_->BuildPacketSync(packet);
+      const auto res =
+        PacketUnicast(packet, SendStrategy::kReliable, status->m_hConn);
+      if (res != SendResult::kSuccess) {
+        DLOG_WARNING("failed to send sync packet to {}, disconnecting them.",
+                     status->m_hConn);
+        DisconnectConnection(status->m_hConn);
+      }
       break;
     }
 
     default: {
-      DLOG_VERBOSE("default");
+      DLOG_WARNING("default ??");
     }
   }
 }
 
 void
-Server::DisconnectClient(const HSteamNetConnection connection)
+Server::DisconnectConnection(const HSteamNetConnection connection)
 {
-  if (auto it = ClientIteratorFromConnection(connection);
-      it != clients_.end()) {
-    DLOG_INFO("Disconnected client [{}].", it->client_id.id);
+  if (auto it = connections_.find(connection); it != connections_.end()) {
+    DLOG_INFO("Disconnected connection [{}].", *it);
     CloseConnection(connection);
-    clients_.erase(it);
+    connections_.erase(it);
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    player_create_system::UpdateConnection(
+      registry, connection, ConnectionState::kDisconnected);
   }
 }
-
-std::optional<ClientId>
-Server::ClientIdFromConnection(const HSteamNetConnection connection)
-{
-  for (auto client : clients_) {
-    if (client.connection == connection) {
-      return std::optional<ClientId>(client.client_id);
-    }
-  }
-  return std::nullopt;
-}
-
 }

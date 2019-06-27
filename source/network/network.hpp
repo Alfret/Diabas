@@ -10,8 +10,12 @@
 #include "network/server.hpp"
 #include <alflib/core/assert.hpp>
 #include <dlog.hpp>
+#include <functional>
+#include "network/connection_state.hpp"
 
 namespace dib {
+
+class World;
 
 template<Side side>
 class Network
@@ -20,7 +24,7 @@ class Network
   // Lifetime
   // ============================================================ //
 public:
-  Network();
+  Network(World* world);
 
   ~Network();
 
@@ -39,9 +43,17 @@ public:
   void Update();
 
   /**
-   * Broadcast a packet to all active connections.
+   * Server: Broadcast the packet to all active connections.
+   * Client: Unicast the packet to the server.
    */
-  void Broadcast(const Packet& packet) const;
+  void PacketBroadcast(const Packet& packet) const;
+
+  /**
+   * Server: Broadcast to all active connections but the excluded one.
+   * Client: assert(false)
+   */
+  void PacketBroadcastExclude(const Packet& packet,
+                              const ConnectionId exclude_connection) const;
 
   void ConnectToServer();
 
@@ -65,8 +77,6 @@ private:
   Client* GetClient() const { return static_cast<Client*>(base_); }
   Server* GetServer() const { return static_cast<Server*>(base_); }
 
-  NetworkState GetNetworkState() const;
-
   /**
    * Call once at startup.
    */
@@ -76,6 +86,10 @@ private:
    * Call once before closing program.
    */
   static void ShutdownNetwork();
+
+  void SendPlayerList(const ConnectionId connection_id) const;
+
+  // void OnConnectionChange(Connection)
 
   // ============================================================ //
   // Member Variables
@@ -90,11 +104,44 @@ private:
   PacketHandler packet_handler_{};
 
   Packet packet_{ 10000 };
+
+  World* world_;
 };
 
 // ============================================================ //
 // Template Definition
 // ============================================================ //
+
+template<Side side>
+Network<side>::Network(World* world)
+  : world_(world)
+{
+  if (!Network<side>::InitNetwork()) {
+    DLOG_ERROR("Failed to init network.");
+    std::exit(1);
+  }
+  SetupPacketHandler();
+  if constexpr (side == Side::kServer) {
+    base_ = new Server(&packet_handler_, world);
+    StartServer();
+  } else {
+    base_ = new Client(&packet_handler_, world);
+    ConnectToServer();
+  }
+}
+
+template<Side side>
+Network<side>::~Network()
+{
+  if constexpr (side == Side::kServer) {
+    auto server = GetServer();
+    server->~Server();
+  } else {
+    auto client = GetClient();
+    client->~Client();
+  }
+  Network<side>::ShutdownNetwork();
+}
 
 template<Side side>
 void
