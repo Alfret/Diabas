@@ -7,6 +7,7 @@
 #include "core/types.hpp"
 #include "core/macros.hpp"
 #include "game/resource.hpp"
+#include <vector>
 
 // ========================================================================== //
 // Tile Declaration
