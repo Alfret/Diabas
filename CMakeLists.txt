@@ -34,6 +34,7 @@ set(COMMON_SOURCE
   source/app/imgui/imgui.cpp
   source/app/imgui/imgui_draw.cpp
   source/app/imgui/imgui_impl_glfw_gl3.cpp
+  source/app/imgui/imgui_demo.cpp
   source/core/hash.cpp
   source/core/hash.hpp
   source/app/graphics.cpp
@@ -182,8 +183,13 @@ add_executable(server source/main.cpp ${COMMON_SOURCE})
 add_executable(test tests/main.test.cpp ${COMMON_SOURCE} ${TEST_SOURCE})
 
 # Compile definitions?
-if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
-  add_compile_definitions(${PROJECT_NAME} DIB_DEBUG)
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+  target_compile_definitions(${PROJECT_NAME} PRIVATE DIB_DEBUG)
+  target_compile_definitions(server PRIVATE DIB_DEBUG)
+else ()
+  target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_DISABLE_TEST_WINDOWS)
+  target_compile_definitions(server PRIVATE IMGUI_DISABLE_TEST_WINDOWS)
+  target_compile_definitions(test PRIVATE IMGUI_DISABLE_TEST_WINDOWS)
 endif ()
 add_compile_definitions(${PROJECT_NAME} DLOG_TIMESTAMP DLOG_DATESTAMP)
 #add_compile_definitions(${PROJECT_NAME} DLOG_LOG_TO_FILE)

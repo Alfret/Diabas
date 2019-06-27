@@ -16,7 +16,14 @@ namespace dib {
 
 template<>
 void
-Network<Side::kClient>::ConnectToServer()
+Network<Side::kServer>::ConnectToServer(u32, u16)
+{
+  AlfAssert(false, "cannot connect to server from server");
+}
+
+template<>
+void
+Network<Side::kClient>::ConnectToServer(u32 ip, u16 port)
 {
   SteamNetworkingIPAddr addr{};
   addr.SetIPv4(0x7F000001, kPort);
@@ -26,10 +33,66 @@ Network<Side::kClient>::ConnectToServer()
 
 template<>
 void
+Network<Side::kServer>::ConnectToServer(const String&)
+{
+  AlfAssert(false, "cannot connect to server from server");
+}
+
+template<>
+void
+Network<Side::kClient>::ConnectToServer(const String& addr)
+{
+  SteamNetworkingIPAddr saddr{};
+  saddr.ParseString(addr.GetUTF8());
+  auto client = GetClient();
+  client->Connect(saddr);
+}
+
+template<>
+void
+Network<Side::kServer>::ConnectToServer(const char8*)
+{
+  AlfAssert(false, "cannot connect to server from server");
+}
+
+template<>
+void
+Network<Side::kClient>::ConnectToServer(const char8* addr)
+{
+  SteamNetworkingIPAddr saddr{};
+  saddr.ParseString(addr);
+  auto client = GetClient();
+  client->Connect(saddr);
+}
+
+template <>
+void
+Network<Side::kServer>::Disconnect()
+{
+  AlfAssert(false, "cannot disconnect on the server");
+}
+
+template<>
+void
+Network<Side::kClient>::Disconnect()
+{
+  auto client = GetClient();
+  client->CloseConnection();
+}
+
+template<>
+void
 Network<Side::kServer>::StartServer()
 {
   auto server = GetServer();
   server->StartServer(kPort);
+}
+
+template<>
+void
+Network<Side::kClient>::StartServer()
+{
+  AlfAssert(false, "cannot start server on client");
 }
 
 static void
@@ -100,6 +163,10 @@ Network<Side::kClient>::SendPlayerList(const ConnectionId) const
   AlfAssert(false, "cannot send player list from client");
 }
 
+// ============================================================ //
+// SetupPacketHandler CLIENT
+// ============================================================ //
+
 template<>
 void
 Network<Side::kClient>::SetupPacketHandler()
@@ -111,7 +178,7 @@ Network<Side::kClient>::SetupPacketHandler()
     Packet player_join_packet{};
     packet_handler_.BuildPacketHeader(player_join_packet,
                                       PacketHeaderStaticTypes::kPlayerJoin);
-    auto my_player_data = PlayerDataStorage::Load();
+    auto& my_player_data = PlayerDataStorage::Load();
     Uuid uuid{ uuids::uuid_system_generator{}() };
 
     // insert into our ECS system
@@ -198,7 +265,38 @@ Network<Side::kClient>::SetupPacketHandler()
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kPlayerJoin, "player join", PlayerJoinCb);
   AlfAssert(ok, "could not add packet type player join");
+
+  // ============================================================ //
+
+  const auto PlayerLeaveCb = [this](const Packet& packet) {
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    auto view = registry.view<Uuid>();
+
+    // TODO when alflib updates, no copy
+    alflib::Buffer buf{ packet.GetPayloadSize(), packet.GetPayload() };
+    alflib::MemoryReader mr{buf};
+    const auto uuid = mr.Read<Uuid>();
+
+    for (auto entity : view) {
+      if (view.get(entity) == uuid) {
+        auto player_data = registry.get<PlayerData>(entity);
+        DLOG_INFO("{} disconnected", player_data.name);
+        registry.destroy(entity);
+        break;
+      }
+    }
+
+    std::string_view _{};
+    NetworkInfo(_);
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerLeave, "player leave", PlayerLeaveCb);
+  AlfAssert(ok, "could not add packet type player leave");
 }
+
+// ============================================================ //
+// SetupPacketHandler SERVER
+// ============================================================ //
 
 template<>
 void
@@ -252,6 +350,15 @@ Network<Side::kServer>::SetupPacketHandler()
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kPlayerJoin, "player join", PlayerJoinCb);
   AlfAssert(ok, "could not add packet type player join");
+
+  // ============================================================ //
+
+  const auto PlayerLeaveCb = [](const Packet&) {
+    DLOG_WARNING("Got player leave packet on server");
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerLeave, "player leave", PlayerLeaveCb);
+  AlfAssert(ok, "could not add packet type player leave");
 }
 
 template<>
@@ -346,6 +453,21 @@ void
 Network<Side::kClient>::Broadcast([
   [maybe_unused]] const std::string_view message) const
 {}
+
+template <>
+ConnectionState
+Network<Side::kServer>::GetConnectionState() const
+{
+  return ConnectionState::kConnected;
+}
+
+template<>
+ConnectionState
+Network<Side::kClient>::GetConnectionState() const
+{
+  auto client = GetClient();
+  return client->GetConnectionState();
+}
 
 // ============================================================ //
 

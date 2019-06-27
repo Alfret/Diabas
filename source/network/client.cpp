@@ -39,10 +39,17 @@ void
 Client::CloseConnection()
 {
   if (connection_ != k_HSteamNetConnection_Invalid) {
+    SetConnectionState(ConnectionState::kDisconnected);
     socket_interface_->CloseConnection(connection_, 0, nullptr, false);
     connection_ = k_HSteamNetConnection_Invalid;
   }
-  SetConnectionState(ConnectionState::kDisconnected);
+
+  // clear all player entities
+  auto& registry = world_->GetEntityManager().GetRegistry();
+  auto view = registry.view<PlayerConnection>();
+  for (auto entity : view) {
+    registry.destroy(entity);
+  }
 }
 
 SendResult
@@ -95,7 +102,7 @@ Client::OnSteamNetConnectionStatusChanged(
 {
   switch (status->m_info.m_eState) {
     case k_ESteamNetworkingConnectionState_None: {
-      DLOG_VERBOSE("state none");
+      //DLOG_VERBOSE("state none");
       break;
     }
 

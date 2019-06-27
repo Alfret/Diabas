@@ -4,6 +4,7 @@
 #include "network/side.hpp"
 #include "app/imgui/imgui.h"
 #include "script/util.hpp"
+#include "game/player_data_storage.hpp"
 
 // TEMP (for thread sleep to not overwork my linux machine)
 #include <chrono>
@@ -135,6 +136,71 @@ ShowTileDebug(game::TileManager& tileManager,
   }
 }
 
+// ============================================================ //
+
+static void
+ShowNetworkDebug(World& world)
+{
+
+
+  if (ImGui::TreeNode("Network")) {
+
+    ImGui::Text("Network status: %s",
+                world.GetNetwork().GetConnectionState() ==
+                ConnectionState::kConnected
+                ? "connected"
+                : "disconnected");
+
+    if (world.GetNetwork().GetConnectionState() ==
+        ConnectionState::kConnected) {
+      if (ImGui::Button("disconnect")) {
+        world.GetNetwork().Disconnect();
+      }
+    } else {
+      constexpr std::size_t addrlen = 50;
+      static char8 addr[addrlen];
+      static bool set_once = true;
+      if (set_once) {
+        set_once = false;
+        std::memcpy(addr, "127.0.0.1:24812", 16);
+      }
+      ImGui::InputText("IP Adress", addr, addrlen);
+      if (ImGui::Button("connect")) {
+        world.GetNetwork().ConnectToServer(addr);
+      }
+    }
+
+    if (ImGui::TreeNode("General")) {
+
+
+      ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNode("Chat")) {
+      constexpr std::size_t buflen = 50;
+      static char8 buf[buflen];
+      static bool set_once = true;
+      if (set_once) {
+        set_once = false;
+        std::memcpy(buf, "Rully", 6);
+      }
+      ImGui::InputText("Name", buf, buflen);
+      if (ImGui::Button("Set Name")) {
+        if (world.GetNetwork().GetConnectionState() ==
+            ConnectionState::kDisconnected) {
+          auto& player_data = PlayerDataStorage::Load();
+          player_data.name = buf;
+        }
+      }
+      ImGui::Text("Note: name can only be applied when disconnected.");
+
+      ImGui::TreePop();
+    }
+
+    ImGui::TreePop();
+  }
+}
+
 }
 
 // ========================================================================== //
@@ -187,6 +253,7 @@ Game::Update(f64 delta)
     ShowScriptDebug(mScriptEnvironment);
     ShowModsDebug(mModLoader);
     ShowTileDebug(mTileManager, mTerrain, world_);
+    ShowNetworkDebug(world_);
   }
   ImGui::End();
 
