@@ -300,19 +300,14 @@ CallMethod(JsValueRef method,
 
 // -------------------------------------------------------------------------- //
 
-bool
-HandleException(JsErrorCode errorCode)
+String
+GetAndClearException()
 {
-  // Return if the error is not a script exception
-  if (errorCode != JsErrorScriptException) {
-    return false;
-  }
-
   // Check if there is an exception
   bool hasException = false;
   JsHasException(&hasException);
   if (!hasException) {
-    return false;
+    return "";
   }
 
   // Retrieve exception
@@ -328,8 +323,29 @@ HandleException(JsErrorCode errorCode)
   JsGetProperty(exception, messageId, &message);
   DIB_ASSERT(error == JsNoError, "Failed to retrieve exception message");
 
+  return GetString(message);
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+HandleException(JsErrorCode errorCode)
+{
+  // Return if the error is not a script exception
+  if (errorCode != JsErrorScriptException) {
+    return false;
+  }
+
+  // Check if there is an exception
+  bool hasException = false;
+  JsHasException(&hasException);
+  if (!hasException) {
+    return false;
+  }
+
   // Log message
-  DLOG_ERROR("Exception occured when running script: {}", GetString(message));
+  DLOG_ERROR("Exception occured when running script: {}",
+             GetAndClearException());
   return true;
 }
 

@@ -47,6 +47,16 @@ public:
 
   /** Set the clear color **/
   void SetClearColor(const graphics::Color& color);
+
+private:
+  /** OpenGL debug callback function **/
+  static void DebugCallbackGL(GLenum source,
+                              GLenum type,
+                              GLuint id,
+                              GLenum severity,
+                              GLsizei length,
+                              const GLchar* message,
+                              void* userParam);
 };
 
 }

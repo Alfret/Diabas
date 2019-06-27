@@ -59,6 +59,9 @@ private:
   /** Height of the window **/
   u32 mHeight;
 
+  /** Whether mouse is grabbed **/
+  bool mMouseGrabbed = false;
+
 public:
   /** Construct application from a descriptor **/
   explicit Application(const Descriptor& descriptor);

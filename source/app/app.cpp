@@ -6,6 +6,85 @@
 
 #include "core/assert.hpp"
 #include "core/macros.hpp"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw_gl3.h"
+
+// ========================================================================== //
+// Functions
+// ========================================================================== //
+
+namespace dib {
+
+static void
+SetImGuiStyle(ImGuiStyle& style)
+{
+  ImVec4* colors = style.Colors;
+
+  style.WindowRounding = 2.0f; // Radius of window corners rounding. Set to
+                               // 0.0f to have rectangular windows
+  style.ScrollbarRounding =
+    3.0f;                    // Radius of grab corners rounding for scrollbar
+  style.GrabRounding = 2.0f; // Radius of grabs corners rounding. Set to 0.0f
+                             // to have rectangular slider grabs.
+  style.AntiAliasedLines = true;
+  style.AntiAliasedShapes = true;
+  style.WindowRounding = 2;
+  style.ChildWindowRounding = 2;
+  style.ScrollbarSize = 16;
+  style.ScrollbarRounding = 3;
+  style.GrabRounding = 2;
+  style.ItemSpacing.x = 10;
+  style.ItemSpacing.y = 4;
+  style.IndentSpacing = 22;
+  style.FramePadding.x = 6;
+  style.FramePadding.y = 4;
+  style.Alpha = 1.0f;
+  style.FrameRounding = 3.0f;
+
+  colors[ImGuiCol_Text] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+  colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
+  colors[ImGuiCol_WindowBg] = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
+  // colors[ImGuiCol_ChildWindowBg]         = ImVec4(0.00f, 0.00f, 0.00f,
+  // 0.00f);
+  colors[ImGuiCol_ChildWindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+  colors[ImGuiCol_PopupBg] = ImVec4(0.93f, 0.93f, 0.93f, 0.98f);
+  colors[ImGuiCol_Border] = ImVec4(0.71f, 0.71f, 0.71f, 0.08f);
+  colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.04f);
+  colors[ImGuiCol_FrameBg] = ImVec4(0.71f, 0.71f, 0.71f, 0.55f);
+  colors[ImGuiCol_FrameBgHovered] = ImVec4(0.94f, 0.94f, 0.94f, 0.55f);
+  colors[ImGuiCol_FrameBgActive] = ImVec4(0.71f, 0.78f, 0.69f, 0.98f);
+  colors[ImGuiCol_TitleBg] = ImVec4(0.85f, 0.85f, 0.85f, 1.00f);
+  colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.82f, 0.78f, 0.78f, 0.51f);
+  colors[ImGuiCol_TitleBgActive] = ImVec4(0.78f, 0.78f, 0.78f, 1.00f);
+  colors[ImGuiCol_MenuBarBg] = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
+  colors[ImGuiCol_ScrollbarBg] = ImVec4(0.20f, 0.25f, 0.30f, 0.61f);
+  colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.90f, 0.90f, 0.90f, 0.30f);
+  colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.92f, 0.92f, 0.92f, 0.78f);
+  colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+  colors[ImGuiCol_CheckMark] = ImVec4(0.184f, 0.407f, 0.193f, 1.00f);
+  colors[ImGuiCol_SliderGrab] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
+  colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+  colors[ImGuiCol_Button] = ImVec4(0.71f, 0.78f, 0.69f, 0.40f);
+  colors[ImGuiCol_ButtonHovered] = ImVec4(0.725f, 0.805f, 0.702f, 1.00f);
+  colors[ImGuiCol_ButtonActive] = ImVec4(0.793f, 0.900f, 0.836f, 1.00f);
+  colors[ImGuiCol_Header] = ImVec4(0.71f, 0.78f, 0.69f, 0.31f);
+  colors[ImGuiCol_HeaderHovered] = ImVec4(0.71f, 0.78f, 0.69f, 0.80f);
+  colors[ImGuiCol_HeaderActive] = ImVec4(0.71f, 0.78f, 0.69f, 1.00f);
+  colors[ImGuiCol_Column] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+  colors[ImGuiCol_ColumnHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
+  colors[ImGuiCol_ColumnActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+  colors[ImGuiCol_ResizeGrip] = ImVec4(1.00f, 1.00f, 1.00f, 0.00f);
+  colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.45f);
+  colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
+  colors[ImGuiCol_PlotLines] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+  colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+  colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+  colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+  colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+  colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+}
+
+}
 
 // ========================================================================== //
 // Application Implementation
@@ -23,8 +102,10 @@ Application::Application(const Descriptor& descriptor)
   DIB_ASSERT(result == GLFW_TRUE, "Failed to initialize SDL2");
 
   // Create window
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   mWindow =
@@ -43,12 +124,18 @@ Application::Application(const Descriptor& descriptor)
   mGraphics = new Graphics(mWindow);
   DIB_ASSERT(mGraphics != nullptr,
              "Failed to create application graphics interface");
+
+  // Initialize ImGui
+  ImGui_ImplGlfwGL3_Init(mWindow, false /*do not install callbacks*/);
+  SetImGuiStyle(ImGui::GetStyle());
 }
 
 // -------------------------------------------------------------------------- //
 
 Application::~Application()
 {
+  ImGui_ImplGlfwGL3_Shutdown();
+  delete mGraphics;
   glfwDestroyWindow(mWindow);
   glfwTerminate();
 }
@@ -72,6 +159,9 @@ Application::Run()
       break;
     }
 
+    // Update ImGui
+    ImGui_ImplGlfwGL3_NewFrame(mMouseGrabbed);
+
     // Update
     glfwPollEvents();
     Update(timeDelta);
@@ -79,6 +169,7 @@ Application::Run()
     // Render
     mGraphics->Clear();
     Render();
+    ImGui::Render();
     mGraphics->Present();
   }
 }
@@ -148,10 +239,14 @@ Application::KeyCallback(GLFWwindow* window,
                          int action,
                          int mods)
 {
-  DIB_UNUSED(scancode);
-  DIB_UNUSED(mods);
-  Application* app =
-    static_cast<Application*>(glfwGetWindowUserPointer(window));
+  // First let ImGui handle the key callback
+  ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
+  if (ImGui::GetIO().WantCaptureKeyboard) {
+    return;
+  }
+
+  // Then let the application get a chance to handle it
+  auto app = static_cast<Application*>(glfwGetWindowUserPointer(window));
   if (app) {
     if (action == GLFW_PRESS) {
       app->OnKeyPressed(static_cast<Key>(key));
@@ -166,8 +261,11 @@ Application::KeyCallback(GLFWwindow* window,
 void
 Application::CharCallback(GLFWwindow* window, unsigned codepoint)
 {
-  DIB_UNUSED(window);
-  DIB_UNUSED(codepoint);
+  // Forward event to GUI
+  ImGui_ImplGlfwGL3_CharCallback(window, codepoint);
+  if (ImGui::GetIO().WantTextInput) {
+    return;
+  }
 }
 
 // -------------------------------------------------------------------------- //
@@ -178,9 +276,14 @@ Application::MouseButtonCallback(GLFWwindow* window,
                                  int action,
                                  int mods)
 {
-  DIB_UNUSED(mods);
-  Application* app =
-    static_cast<Application*>(glfwGetWindowUserPointer(window));
+  // Forward event to GUI
+  ImGui_ImplGlfwGL3_MouseButtonCallback(window, button, action, mods);
+  if (ImGui::GetIO().WantCaptureMouse) {
+    return;
+  }
+
+  // Then let app handle it
+  auto app = static_cast<Application*>(glfwGetWindowUserPointer(window));
   if (app) {
     if (action == GLFW_PRESS) {
       app->OnMousePressed(static_cast<MouseButton>(button));
@@ -195,8 +298,13 @@ Application::MouseButtonCallback(GLFWwindow* window,
 void
 Application::MousePosCallback(GLFWwindow* window, f64 x, f64 y)
 {
-  Application* app =
-    static_cast<Application*>(glfwGetWindowUserPointer(window));
+  // Let ImGui handle mouse
+  if (ImGui::GetIO().WantCaptureMouse) {
+    return;
+  }
+
+  // Then let app handle it
+  auto app = static_cast<Application*>(glfwGetWindowUserPointer(window));
   if (app) {
     app->OnMouseMoved(x, y);
   }
@@ -207,8 +315,14 @@ Application::MousePosCallback(GLFWwindow* window, f64 x, f64 y)
 void
 Application::MouseScrollCallback(GLFWwindow* window, f64 x, f64 y)
 {
-  Application* app =
-    static_cast<Application*>(glfwGetWindowUserPointer(window));
+  // Let ImGui handle mouse
+  ImGui_ImplGlfwGL3_ScrollCallback(window, x, y);
+  if (ImGui::GetIO().WantCaptureMouse) {
+    return;
+  }
+
+  // Then let app handle
+  auto app = static_cast<Application*>(glfwGetWindowUserPointer(window));
   if (app) {
     app->OnMouseScroll(x, y);
   }

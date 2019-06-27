@@ -9,18 +9,25 @@ namespace dib::game {
 ResourcePath::ResourcePath(const String& modId, const Path& resourcePath)
   : mModID(modId)
   , mResourcePath(resourcePath)
-{}
+{
+  mPath = Path{ "./mods" }.Join(mModID).Join(mResourcePath);
+}
 
 // -------------------------------------------------------------------------- //
 
-Path
-ResourcePath::GetAbsolutePath()
+ResourcePath::ResourcePath(const Path& resourcePath)
+  : mModID("builtin")
+  , mResourcePath(resourcePath)
 {
-  return Path{ "./mods" }
-    .Join(mModID)
-    .Join(mResourcePath)
-    .GetAbsolutePath()
-    .GetPathString();
+  mPath = mResourcePath;
+}
+
+// -------------------------------------------------------------------------- //
+
+const Path&
+ResourcePath::GetPath() const
+{
+  return mPath;
 }
 
 }

@@ -52,6 +52,9 @@ public:
   /** Returns a mod identifier by it's id. **/
   Mod* GetModById(const String& modId);
 
+  /** Returns all loaded mods **/
+  const std::unordered_map<String, Mod*>& GetMods() const { return mMods; }
+
   /** Initialize scripts **/
   Result Init(World& world);
 
