@@ -12,6 +12,7 @@
 #include <dlog.hpp>
 #include <functional>
 #include "network/connection_state.hpp"
+#include "game/ecs/components/uuid_component.hpp"
 
 namespace dib {
 
@@ -55,9 +56,23 @@ public:
   void PacketBroadcastExclude(const Packet& packet,
                               const ConnectionId exclude_connection) const;
 
-  void ConnectToServer();
+  void ConnectToServer(u32 ip, u16 port);
+
+  void ConnectToServer(const String& addr);
+  void ConnectToServer(const char8* addr);
+
+  void Disconnect();
 
   void StartServer();
+
+  /**
+   * Server: always returns kConnected
+   */
+  ConnectionState GetConnectionState() const;
+
+  u32 GetOurEntity() const;
+
+  Uuid GetOurUuid() const;
 
   // ============================================================ //
   // TMP
@@ -126,7 +141,6 @@ Network<side>::Network(World* world)
     StartServer();
   } else {
     base_ = new Client(&packet_handler_, world);
-    ConnectToServer();
   }
 }
 
@@ -141,20 +155,6 @@ Network<side>::~Network()
     client->~Client();
   }
   Network<side>::ShutdownNetwork();
-}
-
-template<Side side>
-void
-Network<side>::ConnectToServer()
-{
-  AlfAssert(false, "attempting to run non specialized code");
-}
-
-template<Side side>
-void
-Network<side>::StartServer()
-{
-  AlfAssert(false, "attempting to run non specialized code");
 }
 
 void
