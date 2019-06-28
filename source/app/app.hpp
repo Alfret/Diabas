@@ -62,6 +62,17 @@ private:
   /** Whether mouse is grabbed **/
   bool mMouseGrabbed = false;
 
+  /** Width before fullscreen **/
+  u32 mRestoreWidth;
+  /** Height before fullscreen **/
+  u32 mRestoreHeight;
+  /** X position before fullscreen **/
+  u32 mRestoreX;
+  /** Y position before fullscreen **/
+  u32 mRestoreY;
+  /** Whether app is fullscreen **/
+  bool mIsFullscreen = false;
+
 public:
   /** Construct application from a descriptor **/
   explicit Application(const Descriptor& descriptor);
@@ -98,6 +109,9 @@ public:
 
   /** Returns the height of the application window **/
   u32 GetHeight() const { return mHeight; }
+
+  /** Toggle fullscreen **/
+  void ToggleFullscreen();
 
   /** Called to update application **/
   virtual void Update(f64 delta) = 0;
