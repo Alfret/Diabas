@@ -17,8 +17,13 @@ CMakeSettings.json
 *.dll
 *.a
 *.lib
+*.pdb
 
 # Executables
 *.exe
 *.out
 *.app
+
+# resources
+*.tga
+*.ogg
