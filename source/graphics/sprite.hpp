@@ -6,6 +6,7 @@
 
 #include "core/types.hpp"
 #include "graphics/texture.hpp"
+#include <vector>
 
 // ========================================================================== //
 // Sprite Declaration

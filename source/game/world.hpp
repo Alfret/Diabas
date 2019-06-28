@@ -11,6 +11,7 @@
 #include "network/side.hpp"
 #include "game/ecs/entity_manager.hpp"
 #include "game/terrain.hpp"
+#include "game/chat/chat.hpp"
 
 // ========================================================================== //
 // World Declaration
@@ -42,6 +43,8 @@ public:
 
   dib::EntityManager& GetEntityManager();
 
+  game::Chat& GetChat() { return chat_; }
+
 private:
   /** Tile manager **/
   TileManager mTileManager;
@@ -49,7 +52,10 @@ private:
   Terrain mTerrain;
 
   dib::EntityManager entity_manager_{};
+
   Network<kSide> network_{ this };
+
+  game::Chat chat_{ this };
 };
 }
 

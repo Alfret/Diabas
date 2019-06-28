@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 project(diabas)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -36,6 +36,10 @@ set(COMMON_SOURCE
   source/audio/audio_manager.hpp
   source/core/hash.cpp
   source/core/hash.hpp
+  source/game/chat/chat.cpp
+  source/game/chat/chat.hpp
+  source/game/chat/chat_message.cpp
+  source/game/chat/chat_message.hpp
   source/game/ecs/entity_manager.cpp
   source/game/ecs/entity_manager.hpp
   source/game/ecs/components/player_connection_component.cpp
@@ -211,15 +215,18 @@ add_executable(server source/main.cpp ${COMMON_SOURCE} ${SERVER_SOURCE})
 add_executable(test tests/main.test.cpp ${COMMON_SOURCE} ${TEST_SOURCE})
 
 # Compile definitions?
-if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
-  add_compile_definitions(${PROJECT_NAME} DIB_DEBUG)
-endif ()
-add_compile_definitions(${PROJECT_NAME} DLOG_TIMESTAMP DLOG_DATESTAMP)
-#add_compile_definitions(${PROJECT_NAME} DLOG_LOG_TO_FILE)
-if (WIN32)
-  add_compile_definitions(${PROJECT_NAME} DIB_TARGET_WINDOWS)
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+  add_compile_definitions(DIB_DEBUG)
 else ()
-  add_compile_definitions(${PROJECT_NAME} DIB_TARGET_LINUX)
+  add_compile_definitions(IMGUI_DISABLE_TEST_WINDOWS)
+endif ()
+
+add_compile_definitions(DLOG_TIMESTAMP DLOG_DATESTAMP)
+#add_compile_definitions(DLOG_LOG_TO_FILE)
+if (WIN32)
+  add_compile_definitions(DIB_TARGET_WINDOWS)
+else ()
+  add_compile_definitions(DIB_TARGET_LINUX)
 endif ()
 
 target_compile_definitions(server PRIVATE DIB_IS_SERVER)

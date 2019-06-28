@@ -56,7 +56,9 @@ UpdateConnection(entt::registry& registry,
     if (view.get(entity).connection_id == connection_id) {
       found = true;
       if (connection_state == ConnectionState::kDisconnected) {
-        DLOG_INFO("TODO save the player data before destroy");
+        if constexpr (kSide == Side::kClient) {
+          DLOG_INFO("TODO save the player data before destroy");
+        }
         registry.destroy(entity);
       } else {
         update_ok = false;
