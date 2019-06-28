@@ -14,6 +14,8 @@ namespace dib::game {
 class Chat
 {
 public:
+  Chat(World* world);
+
   /**
    * Send a chat message to server, will not add it locally until
    * we get it back from server.
@@ -21,11 +23,19 @@ public:
    */
   bool SendMessage(ChatMessage msg) const;
 
+  /**
+   * Add a chat message to our chat, will not validate
+   */
+  void ParseMessage(ChatMessage&& msg);
+
   String GetDebug() const { return debug_; };
 
-private:
-  void Add(ChatMessage msg);
+  /**
+   * Check if the message is valid. Behaves differently on server and client.
+   */
+  bool ValidateMessage(const ChatMessage& msg) const;
 
+private:
   void Debug();
 
 private:

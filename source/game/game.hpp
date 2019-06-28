@@ -10,7 +10,6 @@
 #include "audio/audio_manager.hpp"
 #include "game/tile/tile_manager.hpp"
 #include "game/terrain.hpp"
-#include "game/chat/chat.hpp"
 
 // ========================================================================== //
 // Game Declaration
@@ -83,8 +82,6 @@ private:
   InputHandler<kSide> input_handler_{};
 
   AudioManager audio_manager_{};
-
-  game::Chat chat_{};
 };
 
 }

@@ -38,6 +38,10 @@ set(COMMON_SOURCE
   source/core/hash.cpp
   source/core/hash.hpp
   source/app/graphics.cpp
+  source/game/chat/chat.cpp
+  source/game/chat/chat.hpp
+  source/game/chat/chat_message.cpp
+  source/game/chat/chat_message.hpp
   source/game/ecs/entity_manager.cpp
   source/game/ecs/entity_manager.hpp
   source/game/ecs/components/player_connection_component.cpp

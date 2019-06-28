@@ -6,6 +6,7 @@
 #include "network/side.hpp"
 #include <string_view>
 #include "game/ecs/entity_manager.hpp"
+#include "game/chat/chat.hpp"
 
 namespace dib {
 
@@ -22,9 +23,14 @@ public:
 
   dib::EntityManager& GetEntityManager();
 
+  game::Chat& GetChat() { return chat_; }
+
 private:
   dib::EntityManager entity_manager_{};
+
   Network<kSide> network_{ this };
+
+  game::Chat chat_{this};
 };
 }
 
