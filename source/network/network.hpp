@@ -12,10 +12,21 @@
 #include <dlog.hpp>
 #include <functional>
 #include "network/connection_state.hpp"
+#include "core/macros.hpp"
+
+// ========================================================================== //
+// Forward Declarations
+// ========================================================================== //
+
+namespace dib::game {
+DIB_FORWARD_DECLARE_CLASS(World);
+}
+
+// ========================================================================== //
+// Network
+// ========================================================================== //
 
 namespace dib {
-
-class World;
 
 template<Side side>
 class Network
@@ -24,7 +35,7 @@ class Network
   // Lifetime
   // ============================================================ //
 public:
-  Network(World* world);
+  Network(game::World* world);
 
   ~Network();
 
@@ -105,7 +116,7 @@ private:
 
   Packet packet_{ 10000 };
 
-  World* world_;
+  game::World* world_;
 };
 
 // ============================================================ //
@@ -113,7 +124,7 @@ private:
 // ============================================================ //
 
 template<Side side>
-Network<side>::Network(World* world)
+Network<side>::Network(game::World* world)
   : world_(world)
 {
   if (!Network<side>::InitNetwork()) {

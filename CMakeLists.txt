@@ -26,23 +26,20 @@ endif ()
 
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDIB_DEBUG")
 
+## ========================================================================== ##
+## Source Files
+## ========================================================================== ##
+
 # Add our .cpp files, will automatically re-run cmake when new ones are added
 set(COMMON_SOURCE
   source/audio/audio_manager.cpp
   source/audio/audio_manager.hpp
-  source/app/app.cpp
-  source/app/imgui/imgui.cpp
-  source/app/imgui/imgui_draw.cpp
-  source/app/imgui/imgui_impl_glfw_gl3.cpp
   source/core/hash.cpp
   source/core/hash.hpp
-  source/app/graphics.cpp
   source/game/ecs/entity_manager.cpp
   source/game/ecs/entity_manager.hpp
   source/game/ecs/components/player_connection_component.cpp
   source/game/ecs/components/player_connection_component.hpp
-  source/game/game.cpp
-  source/game/game.hpp
   source/game/resource.cpp
   source/game/resource.hpp
   source/game/terrain.cpp
@@ -62,14 +59,6 @@ set(COMMON_SOURCE
   source/game/mods/mod.hpp
   source/game/mods/result.cpp
   source/game/mods/result.hpp
-  source/graphics/camera.cpp
-  source/graphics/index_buffer.cpp
-  source/graphics/renderer.cpp
-  source/graphics/shader.cpp
-  source/graphics/sprite.cpp
-  source/graphics/sprite_batch.cpp
-  source/graphics/texture.cpp
-  source/graphics/vertex_buffer.cpp
   source/script/env.cpp
   source/script/util.cpp
   source/script/expose/expose_base.cpp
@@ -92,9 +81,9 @@ set(COMMON_SOURCE
   source/network/side.hpp
   source/network/connection_id.hpp
   source/network/connection_id.cpp
-  source/server/input.cpp
-  source/server/input.hpp
   )
+
+## -------------------------------------------------------------------------- ##
 
 set(TEST_SOURCE
   tests/main.test.hpp
@@ -103,6 +92,39 @@ set(TEST_SOURCE
   tests/packet.test.cpp
   tests/packet_handler.test.cpp
   )
+
+## -------------------------------------------------------------------------- ##
+
+set(CLIENT_SOURCE
+  source/app/client/app_client.cpp
+  source/app/client/imgui/imgui.cpp
+  source/app/client/imgui/imgui_draw.cpp
+  source/app/client/imgui/imgui_impl_glfw_gl3.cpp
+  source/game/client/game_client.cpp
+  source/game/client/debug_ui.cpp
+  source/game/client/world_renderer.cpp
+  source/game/client/tile_atlas.cpp
+  source/graphics/camera.cpp
+  source/graphics/index_buffer.cpp
+  source/graphics/renderer.cpp
+  source/graphics/shader.cpp
+  source/graphics/sprite.cpp
+  source/graphics/sprite_batch.cpp
+  source/graphics/texture.cpp
+  source/graphics/vertex_buffer.cpp
+  )
+
+## -------------------------------------------------------------------------- ##
+
+set(SERVER_SOURCE
+  source/app/server/app_server.cpp
+  source/game/server/game_server.cpp
+  source/game/server/cli_input.cpp
+  )
+
+## ========================================================================== ##
+## Libraries
+## ========================================================================== ##
 
 # ChakraCore
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -171,7 +193,7 @@ include_directories(SYSTEM thirdparty/robin-map/include)
 
 # Thidparty
 include_directories(SYSTEM thirdparty)
-aux_source_directory(thirdparty/glad COMMON_SOURCE)
+aux_source_directory(thirdparty/glad CLIENT_SOURCE)
 
 # binary output folder
 set(out_dir ${PROJECT_SOURCE_DIR}/out)
@@ -179,9 +201,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out/bin)
 
+## ========================================================================== ##
+## Executable
+## ========================================================================== ##
+
 # Our executables / builds
-add_executable(${PROJECT_NAME} source/main.cpp ${COMMON_SOURCE})
-add_executable(server source/main.cpp ${COMMON_SOURCE})
+add_executable(${PROJECT_NAME} source/main.cpp ${COMMON_SOURCE} ${CLIENT_SOURCE})
+add_executable(server source/main.cpp ${COMMON_SOURCE} ${SERVER_SOURCE})
 add_executable(test tests/main.test.cpp ${COMMON_SOURCE} ${TEST_SOURCE})
 
 # Compile definitions?
@@ -200,13 +226,13 @@ target_compile_definitions(server PRIVATE DIB_IS_SERVER)
 
 # Link libraries
 if (WIN32)
-  set(DIB_LIBS ws2_32 cpptoml dlog dutil glfw glm gamenetworkingsockets
+  set(DIB_LIBS ws2_32 cpptoml dlog dutil glm gamenetworkingsockets
     alflibcpp ChakraCore EnTT uuid)
 else ()
-  set(DIB_LIBS pthread cpptoml dlog dutil glfw glm GameNetworkingSockets alflibcpp ChakraCore dl m EnTT uuid)
+  set(DIB_LIBS pthread cpptoml dlog dutil glm GameNetworkingSockets alflibcpp ChakraCore dl m EnTT uuid)
 endif ()
 
 # TODO(Filip Björklund): Remove GLFW as a dependency on the server
-target_link_libraries(${PROJECT_NAME} ${DIB_LIBS})
+target_link_libraries(${PROJECT_NAME} ${DIB_LIBS} glfw)
 target_link_libraries(server ${DIB_LIBS})
-target_link_libraries(test doctest ${DIB_LIBS})
+target_link_libraries(test doctest ${DIB_LIBS} glfw)

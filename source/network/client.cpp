@@ -6,7 +6,7 @@
 
 namespace dib {
 
-Client::Client(PacketHandler* packet_handler, World* world)
+Client::Client(PacketHandler* packet_handler, game::World* world)
   : connection_(k_HSteamNetConnection_Invalid)
   , socket_interface_(SteamNetworkingSockets())
   , connection_state_(ConnectionState::kDisconnected)

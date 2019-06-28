@@ -34,7 +34,7 @@ Mod::Load(const alflib::File& modDirectory)
 // -------------------------------------------------------------------------- //
 
 void
-Mod::Init(World& world)
+Mod::Init(game::World& world)
 {
   mMainScript.Init(world);
 }

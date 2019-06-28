@@ -4,10 +4,9 @@
 // Headers
 // ========================================================================== //
 
-#include <alflib/graphics/image_atlas.hpp>
-#include "game/tile/tile.hpp"
-#include "graphics/texture.hpp"
 #include <unordered_map>
+
+#include "game/tile/tile.hpp"
 
 // ========================================================================== //
 // TileManager Declaration
@@ -46,11 +45,6 @@ private:
   /** Map of registered tiles from ID to index **/
   std::unordered_map<String, Tile::ID> mTileMap;
 
-  /** Atlas **/
-  alflib::ImageAtlas<> mTileAtlas;
-  /** Atlas texture **/
-  std::shared_ptr<graphics::Texture> mAtlasTexture;
-
 public:
   TileManager();
 
@@ -58,9 +52,6 @@ public:
   Result RegisterTile(const String& modId,
                       const String& tileId,
                       const std::shared_ptr<Tile>& tile);
-
-  /** Create the block atlas from all registered blocks **/
-  void CreateAtlas();
 
   /** Returns a tile or nullptr if it was not previously registered **/
   std::shared_ptr<Tile> GetTile(const String& id);
@@ -83,18 +74,8 @@ public:
     return mTileMap.at(id);
   }
 
-  /** Returns the UV coordinates for a ResourcePath on the atlas **/
-  void GetTextureCoordinates(const ResourcePath& path,
-                             Vector2F& texMin,
-                             Vector2F& texMax);
-
-  /** Returns the atlas texture **/
-  std::shared_ptr<graphics::Texture> GetTexture() const
-  {
-    return mAtlasTexture;
-  }
-
 private:
+  /** Register builtin tiles **/
   void RegisterBuiltinTiles();
 };
 

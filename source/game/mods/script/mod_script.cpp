@@ -225,7 +225,7 @@ ModScript::Load(const Path& path, const String& className)
 // -------------------------------------------------------------------------- //
 
 Result
-ModScript::Init(World& world)
+ModScript::Init(game::World& world)
 {
   DIB_ASSERT(!mInitialized, "Mod scripts can only be initialized once");
 

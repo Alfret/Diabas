@@ -16,12 +16,9 @@
 // ModLoader Declaration
 // ========================================================================== //
 
-namespace dib {
-DIB_FORWARD_DECLARE_CLASS(World);
-}
-
 namespace dib::game {
 
+DIB_FORWARD_DECLARE_CLASS(World);
 DIB_FORWARD_DECLARE_CLASS(TileManager);
 
 /** Class that loads all mods and makes them available for lookup **/
@@ -35,16 +32,11 @@ private:
 
 public:
   /** Create mod loader with a specified path where all mods are expected to be
-   * located **/
-  explicit ModLoader(const Path& modsFolder);
+   * located. Mods are then loaded  **/
+  explicit ModLoader(script::Environment& environment, const Path& modsFolder);
 
   /** Destruct and unload all mods **/
   ~ModLoader();
-
-  /** Load mods from the mod directory. This function also get the script
-   * environment as an argument. This is used to load the scripts into the
-   * environment **/
-  Result Load(script::Environment& environment);
 
   /** Returns whether or not the specified mod is loaded **/
   bool IsLoaded(const String& modId);

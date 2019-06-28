@@ -13,11 +13,9 @@
 // Tile Declaration
 // ========================================================================== //
 
-namespace dib {
-DIB_FORWARD_DECLARE_CLASS(World);
-}
-
 namespace dib::game {
+
+DIB_FORWARD_DECLARE_CLASS(World);
 
 /** Tile base class **/
 class Tile

@@ -33,7 +33,7 @@ Network<Side::kServer>::StartServer()
 }
 
 static void
-NetworkInfoCommon(World* world)
+NetworkInfoCommon(game::World* world)
 {
   world->GetEntityManager()
     .GetRegistry()
@@ -163,7 +163,8 @@ Network<Side::kClient>::SetupPacketHandler()
       std::numeric_limits<ConnectionId>::min(),
       std::numeric_limits<ConnectionId>::max());
     ConnectionId cid;
-    auto view = world_->GetEntityManager().GetRegistry().view<PlayerConnection>();
+    auto view =
+      world_->GetEntityManager().GetRegistry().view<PlayerConnection>();
     for (;;) {
       cid = dist(mt);
       bool found = false;
@@ -173,17 +174,16 @@ Network<Side::kClient>::SetupPacketHandler()
           break;
         }
       }
-      if (!found) break;
+      if (!found)
+        break;
     }
 
     auto connection_ok = player_create_system::UpdateConnection(
       world_->GetEntityManager().GetRegistry(),
       cid,
       ConnectionState::kConnected);
-    auto uuid_ok =
-      player_create_system::UpdateUuid(world_->GetEntityManager().GetRegistry(),
-                                       cid,
-                                       uuid);
+    auto uuid_ok = player_create_system::UpdateUuid(
+      world_->GetEntityManager().GetRegistry(), cid, uuid);
     auto player_data_ok = player_create_system::UpdatePlayerData(
       world_->GetEntityManager().GetRegistry(), uuid, player_data);
 
