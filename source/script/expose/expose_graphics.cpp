@@ -6,7 +6,7 @@
 
 #include "core/assert.hpp"
 #include "script/util.hpp"
-#include "graphics/color.hpp"
+#include <alflib/graphics/color.hpp>
 #include <dlog.hpp>
 
 // ========================================================================== //
@@ -28,7 +28,7 @@ ScriptColorGetRed(JsValueRef callee,
 {
   DIB_ASSERT(!isConstruct, "Color constructor must be a construct call");
   DIB_ASSERT(argumentCount == 1, "ScriptColorGetRed expects no arguments");
-  graphics::Color* color = GetExternalData<graphics::Color>(arguments[0]);
+  auto color = GetExternalData<alflib::Color>(arguments[0]);
   DIB_ASSERT(color != nullptr, "External object data is null");
   return CreateValue(color->Red());
 }
@@ -44,7 +44,7 @@ ScriptColorGetGreen(JsValueRef callee,
 {
   DIB_ASSERT(!isConstruct, "Color constructor must be a construct call");
   DIB_ASSERT(argumentCount == 1, "ScriptColorGetGreen expects no arguments");
-  graphics::Color* color = GetExternalData<graphics::Color>(arguments[0]);
+  auto color = GetExternalData<alflib::Color>(arguments[0]);
   DIB_ASSERT(color != nullptr, "External object data is null");
   return CreateValue(color->Green());
 }
@@ -60,7 +60,7 @@ ScriptColorGetBlue(JsValueRef callee,
 {
   DIB_ASSERT(!isConstruct, "Color constructor must be a construct call");
   DIB_ASSERT(argumentCount == 1, "ScriptColorGetBlue expects no arguments");
-  graphics::Color* color = GetExternalData<graphics::Color>(arguments[0]);
+  auto color = GetExternalData<alflib::Color>(arguments[0]);
   DIB_ASSERT(color != nullptr, "External object data is null");
   return CreateValue(color->Blue());
 }
@@ -76,7 +76,7 @@ ScriptColorGetAlpha(JsValueRef callee,
 {
   DIB_ASSERT(!isConstruct, "Color constructor must be a construct call");
   DIB_ASSERT(argumentCount == 1, "ScriptColorGetAlpha expects no arguments");
-  graphics::Color* color = GetExternalData<graphics::Color>(arguments[0]);
+  auto color = GetExternalData<alflib::Color>(arguments[0]);
   DIB_ASSERT(color != nullptr, "External object data is null");
   return CreateValue(color->Alpha());
 }
@@ -106,10 +106,9 @@ ScriptColorConstructor([[maybe_unused]] JsValueRef callee,
   }
 
   // Create object
-  graphics::Color* color =
-    new graphics::Color(values[0], values[1], values[2], values[3]);
+  auto color = new alflib::Color(values[0], values[1], values[2], values[3]);
   JsValueRef object = CreateExternalObject(
-    color, [](void* data) { delete static_cast<graphics::Color*>(data); });
+    color, [](void* data) { delete static_cast<alflib::Color*>(data); });
 
   // Set prototype and return
   JsSetPrototype(object, COLOR_PROTOTYPE);
