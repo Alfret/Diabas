@@ -84,7 +84,8 @@ ShowModsDebug(game::ModLoader& modLoader)
 
 /** Show the 'Tile' debug tab **/
 void
-ShowTileDebug(game::TileManager& tileManager,
+ShowTileDebug(Game& game,
+              game::TileManager& tileManager,
               game::Terrain& terrain,
               World& world)
 {
@@ -131,8 +132,49 @@ ShowTileDebug(game::TileManager& tileManager,
       ImVec4(1, 1, 1, 1),
       ImVec4(0, 0, 0, 1));
 
+    // Change block
+    if (game.IsMouseDown(MouseButton::kMouseButtonLeft)) {
+      f64 mouseX, mouseY;
+      game.GetMousePosition(mouseX, mouseY);
+      u32 tileX, tileY;
+      terrain.PickTile(game.GetCamera(), mouseX, mouseY, tileX, tileY);
+      terrain.SetTile(tile, tileX, tileY, game::Terrain::LAYER_FOREGROUND);
+    }
+
     ImGui::TreePop();
   }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+UpdateCamera(Game& game, graphics::Camera& camera, f32 delta)
+{
+  // Move camera
+  Vector3F cameraMove(0.0f, 0.0f, 0.0f);
+  f32 cameraSpeed = 80;
+  if (game.IsKeyDown(Key::kKeyLeft)) {
+    cameraMove.x -= cameraSpeed * delta;
+  }
+  if (game.IsKeyDown(Key::kKeyRight)) {
+    cameraMove.x += cameraSpeed * delta;
+  }
+  if (game.IsKeyDown(Key::kKeyUp)) {
+    cameraMove.y += cameraSpeed * delta;
+  }
+  if (game.IsKeyDown(Key::kKeyDown)) {
+    cameraMove.y -= cameraSpeed * delta;
+  }
+  camera.Move(cameraMove);
+
+  Vector3F minPos = Vector3F(0.0f, 0.0f, 0.0f);
+  Vector3F maxPos =
+    Vector3F(game.GetTerrain().GetWidth() * game::TileManager::TILE_SIZE -
+               camera.GetWidth(),
+             game.GetTerrain().GetHeight() * game::TileManager::TILE_SIZE -
+               camera.GetHeight(),
+             1.0f);
+  camera.ClampPosition(minPos, maxPos);
 }
 
 }
@@ -147,9 +189,9 @@ Game::Game(const Descriptor& descriptor)
   : Application(descriptor)
   , mCamera(GetWidth(), GetHeight())
   , mModLoader(Path{ "./mods" })
-  , mTerrain(mTileManager, 8400, 2400)
+  , mTerrain(world_, mTileManager, 8400, 2400)
 {
-  GetGraphics().SetClearColor(graphics::Color{ 100, 149, 237 });
+  GetGraphics().SetClearColor(alflib::Color::CORNFLOWER_BLUE);
 
   DLOG_INFO("running as {}", SideToString(kSide));
   SetupInputCommands();
@@ -162,6 +204,8 @@ Game::Game(const Descriptor& descriptor)
 
   // Create an atlas from all loaded tiles
   mTileManager.CreateAtlas();
+
+  mTerrain.Generate();
 }
 
 // -------------------------------------------------------------------------- //
@@ -186,9 +230,11 @@ Game::Update(f64 delta)
   if (ImGui::Begin("Diabas - Debug")) {
     ShowScriptDebug(mScriptEnvironment);
     ShowModsDebug(mModLoader);
-    ShowTileDebug(mTileManager, mTerrain, world_);
+    ShowTileDebug(*this, mTileManager, mTerrain, world_);
   }
   ImGui::End();
+
+  UpdateCamera(*this, mCamera, delta);
 
   //
   input_handler_.Update();
@@ -226,6 +272,14 @@ void
 Game::OnKeyReleased(Key key)
 {
   mModLoader.OnKeyRelease(key);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Game::OnWindowResize(u32 width, u32 height)
+{
+  mCamera.Resize(width, height);
 }
 
 // -------------------------------------------------------------------------- //

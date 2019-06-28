@@ -40,6 +40,15 @@ public:
   void OnKeyPressed(Key key) override;
 
   void OnKeyReleased(Key key) override;
+  void OnWindowResize(u32 width, u32 height) override;
+
+  graphics::Camera& GetCamera() { return mCamera; }
+
+  const graphics::Camera& GetCamera() const { return mCamera; }
+
+  game::Terrain& GetTerrain() { return mTerrain; }
+
+  const game::Terrain& GetTerrain() const { return mTerrain; }
 
   // ============================================================ //
   // Private Methods

@@ -220,6 +220,41 @@ void
 Application::GetMousePosition(f64& x, f64& y) const
 {
   glfwGetCursorPos(mWindow, &x, &y);
+  y = mHeight - y;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Application::ToggleFullscreen()
+{
+  if (mIsFullscreen) {
+    glfwSetWindowMonitor(mWindow,
+                         nullptr,
+                         mRestoreX,
+                         mRestoreY,
+                         mRestoreWidth,
+                         mRestoreHeight,
+                         GLFW_DONT_CARE);
+    mIsFullscreen = false;
+  } else {
+    mRestoreWidth = mWidth;
+    mRestoreHeight = mHeight;
+    int x, y;
+    glfwGetWindowPos(mWindow, &x, &y);
+    mRestoreX = x;
+    mRestoreY = y;
+
+    const GLFWvidmode* videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    glfwSetWindowMonitor(mWindow,
+                         glfwGetPrimaryMonitor(),
+                         0,
+                         0,
+                         videoMode->width,
+                         videoMode->height,
+                         GLFW_DONT_CARE);
+    mIsFullscreen = true;
+  }
 }
 
 // -------------------------------------------------------------------------- //
