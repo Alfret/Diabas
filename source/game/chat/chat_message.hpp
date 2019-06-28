@@ -3,8 +3,8 @@
 
 #include "core/types.hpp"
 #include "game/ecs/components/uuid_component.hpp"
-#include <alflib/memory/memory_reader.hpp>
-#include <alflib/memory/memory_writer.hpp>
+#include <alflib/memory/raw_memory_reader.hpp>
+#include <alflib/memory/raw_memory_writer.hpp>
 
 namespace dib::game {
 
@@ -26,9 +26,9 @@ struct ChatMessage
   String msg;
 
   // Serialize //
-  void ToBytes(alflib::MemoryWriter& mw) const;
+  bool ToBytes(alflib::RawMemoryWriter& mw) const;
 
-  static ChatMessage FromBytes(alflib::MemoryReader& mr);
+  static ChatMessage FromBytes(alflib::RawMemoryReader& mr);
 };
 }
 

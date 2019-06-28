@@ -9,8 +9,48 @@
 #include "game/world.hpp"
 #include <random>
 #include <limits>
+#include "game/chat/chat.hpp"
 
 namespace dib {
+
+template<>
+void
+Network<Side::kServer>::PacketBroadcast(const Packet& packet) const
+{
+  auto server = GetServer();
+  server->PacketBroadcast(packet, SendStrategy::kReliable);
+}
+
+template<>
+void
+Network<Side::kClient>::PacketBroadcast(const Packet& packet) const
+{
+  auto client = GetClient();
+  const auto res = client->PacketSend(packet, SendStrategy::kReliable);
+  if (res != SendResult::kSuccess) {
+    // TODO handle this fail
+    DLOG_ERROR("failed to send packet from client, fail not handled");
+  }
+}
+
+template<>
+void
+Network<Side::kServer>::PacketBroadcastExclude(
+  const Packet& packet,
+  const ConnectionId exclude_connection) const
+{
+  auto server = GetServer();
+  server->PacketBroadcastExclude(
+    packet, SendStrategy::kReliable, exclude_connection);
+}
+
+template<>
+void
+Network<Side::kClient>::PacketBroadcastExclude(const Packet&,
+                                               const ConnectionId) const
+{
+  AlfAssert(false, "cannot broadcastExclude from client");
+}
 
 template<>
 void Network<Side::kServer>::ConnectToServer(u32, u16)
@@ -200,9 +240,11 @@ Network<Side::kClient>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto ChatCb = [](const Packet& packet) {
-    alflib::String msg = packet.ToString();
-    DLOG_RAW("Server: {}\n", msg);
+  const auto ChatCb = [this](const Packet& packet) {
+    auto mr = packet.GetMemoryReader();
+    auto msg = mr.Read<game::ChatMessage>();
+    auto& chat = world_->GetChat();
+    chat.ParseMessage(std::move(msg));
   };
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kChat, "chat", ChatCb);
@@ -301,9 +343,15 @@ Network<Side::kServer>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto ChatCb = [](const Packet& packet) {
-    alflib::String msg = packet.ToString();
-    DLOG_RAW("TODO handle chat packets [{}]\n", msg);
+  const auto ChatCb = [this](const Packet& packet) {
+    auto mr = packet.GetMemoryReader();
+    auto msg = mr.Read<game::ChatMessage>();
+    if (world_->GetChat().ValidateMessage(msg)) {
+      PacketBroadcast(packet);
+    } else {
+      DLOG_WARNING("client {} attempted to send invalid packet",
+                   packet.GetFromConnection());
+    }
   };
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kChat, "chat", ChatCb);
@@ -389,45 +437,6 @@ Network<Side::kServer>::Update()
 
 template<>
 void
-Network<Side::kServer>::PacketBroadcast(const Packet& packet) const
-{
-  auto server = GetServer();
-  server->PacketBroadcast(packet, SendStrategy::kReliable);
-}
-
-template<>
-void
-Network<Side::kClient>::PacketBroadcast(const Packet& packet) const
-{
-  auto client = GetClient();
-  const auto res = client->PacketSend(packet, SendStrategy::kReliable);
-  if (res != SendResult::kSuccess) {
-    // TODO handle this fail
-    DLOG_ERROR("failed to send packet from client, fail not handled");
-  }
-}
-
-template<>
-void
-Network<Side::kServer>::PacketBroadcastExclude(
-  const Packet& packet,
-  const ConnectionId exclude_connection) const
-{
-  auto server = GetServer();
-  server->PacketBroadcastExclude(
-    packet, SendStrategy::kReliable, exclude_connection);
-}
-
-template<>
-void
-Network<Side::kClient>::PacketBroadcastExclude(const Packet&,
-                                               const ConnectionId) const
-{
-  AlfAssert(false, "cannot broadcastExclude from client");
-}
-
-template<>
-void
 Network<Side::kServer>::Broadcast(const std::string_view message) const
 {
   auto server = GetServer();
@@ -479,6 +488,23 @@ Network<Side::kClient>::GetOurEntity() const
   }
   AlfAssert(false, "failed to find our entity");
   return 0;
+}
+
+template<>
+Uuid
+Network<Side::kServer>::GetOurUuid() const
+{
+  AlfAssert(false, "cannot get our uuid on server");
+  return Uuid{};
+}
+
+template<>
+Uuid
+Network<Side::kClient>::GetOurUuid() const
+{
+  u32 entity = GetOurEntity();
+  auto& registry = world_->GetEntityManager().GetRegistry();
+  return registry.get<Uuid>(entity);
 }
 
 // ============================================================ //

@@ -12,6 +12,7 @@
 #include <dlog.hpp>
 #include <functional>
 #include "network/connection_state.hpp"
+#include "game/ecs/components/uuid_component.hpp"
 
 namespace dib {
 
@@ -70,6 +71,8 @@ public:
   ConnectionState GetConnectionState() const;
 
   u32 GetOurEntity() const;
+
+  Uuid GetOurUuid() const;
 
   // ============================================================ //
   // TMP

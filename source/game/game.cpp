@@ -5,6 +5,7 @@
 #include "app/imgui/imgui.h"
 #include "script/util.hpp"
 #include "game/player_data_storage.hpp"
+#include "game/chat/chat.hpp"
 
 // TEMP (for thread sleep to not overwork my linux machine)
 #include <chrono>
@@ -149,9 +150,11 @@ ShowTileDebug(Game& game,
 // ============================================================ //
 
 static void
-ShowNetworkDebug(World& world, const game::Chat& chat)
+ShowNetworkDebug(World& world)
 {
-  ImGui::ShowTestWindow();
+  auto& chat = world.GetChat();
+
+  //ImGui::ShowTestWindow();
 
   if (ImGui::CollapsingHeader("Network")) {
 
@@ -195,7 +198,14 @@ ShowNetworkDebug(World& world, const game::Chat& chat)
       static char8 text[textlen] = "";
       ImGui::InputText("chat", text, textlen);
       if (ImGui::Button("send chat message")) {
-        DLOG_INFO("send chat [{}]", text);
+        game::ChatMessage msg{};
+        msg.msg = String(text);
+        msg.type = game::ChatType::kSay;
+        msg.uuid_from = world.GetNetwork().GetOurUuid();
+        if (!chat.SendMessage(msg)) {
+          DLOG_WARNING("failed to send chat message");
+        }
+        text[0] = '\0';
       }
 
       ImGui::InputTextMultiline("",
@@ -295,7 +305,7 @@ Game::Update(f64 delta)
   if (ImGui::Begin("Diabas - Debug")) {
     ShowScriptDebug(mScriptEnvironment);
     ShowModsDebug(mModLoader);
-    ShowNetworkDebug(world_, chat_);
+    ShowNetworkDebug(world_);
     ShowTileDebug(*this, mTileManager, mTerrain, world_);
   }
   ImGui::End();

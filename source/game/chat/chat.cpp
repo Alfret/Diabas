@@ -7,8 +7,44 @@
 
 namespace dib::game {
 
+Chat::Chat(World* world) : world_(world) {};
+
 bool
 Chat::SendMessage(ChatMessage msg) const
+{
+  auto& network = world_->GetNetwork();
+
+  if (!ValidateMessage(msg)) {
+    return false;
+  }
+
+  Packet packet{};
+  auto& packet_handler = network.GetPacketHandler();
+  packet_handler.BuildPacketHeader(packet, PacketHeaderStaticTypes::kChat);
+  auto mw = packet.GetMemoryWriter();
+  mw->Write(msg);
+  mw.Finalize();
+  network.PacketBroadcast(packet);
+
+  return true;
+}
+
+void
+Chat::ParseMessage(ChatMessage&& msg)
+{
+  auto res = messages_.Push(std::move(msg));
+  if (res != dutil::QueueResult::kSuccess) {
+    ChatMessage _{};
+    res = messages_.Pop(_);
+    AlfAssert(res == dutil::QueueResult::kSuccess, "failed to pop");
+    res = messages_.Push(std::move(msg));
+    AlfAssert(res == dutil::QueueResult::kSuccess, "failed the second push");
+  }
+  Debug();
+}
+
+bool
+Chat::ValidateMessage(const ChatMessage& msg) const
 {
   auto& registry = world_->GetEntityManager().GetRegistry();
   auto& network = world_->GetNetwork();
@@ -32,7 +68,7 @@ Chat::SendMessage(ChatMessage msg) const
         return false;
       }
 
-      if (registry.get<Uuid>(network.GetOurEntity()) != msg.uuid_from) {
+      if (network.GetOurUuid() != msg.uuid_from) {
         DLOG_WARNING("attemted to sent a message that was not from us");
         return false;
       }
@@ -52,32 +88,9 @@ Chat::SendMessage(ChatMessage msg) const
           return false;
         }
       }
-
-    } else /* Side::kServer */ {
-      if (msg.type == ChatType::kSay || msg.type == ChatType::kWhisper) {
-        DLOG_WARNING("Server attempted to send a player message");
-        return false;
-      }
     }
   }
-
-  Packet packet{};
-
   return true;
-}
-
-void
-Chat::Add(ChatMessage msg)
-{
-  auto res = messages_.Push(std::move(msg));
-  if (res != dutil::QueueResult::kSuccess) {
-    ChatMessage _{};
-    res = messages_.Pop(_);
-    AlfAssert(res == dutil::QueueResult::kSuccess, "failed to pop");
-    res = messages_.Push(std::move(msg));
-    AlfAssert(res == dutil::QueueResult::kSuccess, "failed the second push");
-  }
-  Debug();
 }
 
 void
@@ -99,9 +112,10 @@ Chat::Debug()
       debug_ += "SERVER";
     }
 
-    debug_ += ":";
+    debug_ += ": ";
     debug_ += message.msg;
     debug_ += "\n\n";
   }
 }
+
 }
