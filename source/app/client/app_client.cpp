@@ -110,7 +110,7 @@ AppClient::AppClient(const AppClient::Descriptor& descriptor)
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   mWindow =
     glfwCreateWindow(mWidth, mHeight, mTitle.GetUTF8(), nullptr, nullptr);
   DIB_ASSERT(mWindow != nullptr, "Failed to create window");

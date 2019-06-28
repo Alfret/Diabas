@@ -6,7 +6,7 @@
 
 #include "app/client/imgui/imgui.h"
 #include "game/client/game_client.hpp"
-#include "game/player_data_storage.hpp"
+#include "game/client/player_data_storage.hpp"
 #include "script/util.hpp"
 
 // ========================================================================== //
@@ -15,30 +15,10 @@
 
 namespace dib::game {
 
-DebugUI::DebugUI(GameClient& gameClient)
-  : mGameClient(gameClient)
-{}
-
-// -------------------------------------------------------------------------- //
-
 void
-DebugUI::Update([[maybe_unused]] f32 delta)
+ShowScriptDebug(GameClient& gameClient)
 {
-  // ImGui
-  if (ImGui::Begin("Diabas - Debug")) {
-    ShowScriptDebug();
-    ShowModDebug();
-    ShowTileDebug();
-  }
-  ImGui::End();
-}
-
-// -------------------------------------------------------------------------- //
-
-void
-DebugUI::ShowScriptDebug()
-{
-  if (ImGui::TreeNode("Script")) {
+  if (ImGui::CollapsingHeader("Script")) {
     static constexpr u32 bufferSize = 4096;
     static char inputBuffer[bufferSize];
     static char outputBuffer[bufferSize];
@@ -48,7 +28,7 @@ DebugUI::ShowScriptDebug()
                          ImGuiInputTextFlags_EnterReturnsTrue)) {
       JsValueRef output;
       script::Result result =
-        mGameClient.GetScriptEnvironment().RunScript(inputBuffer, output);
+        gameClient.GetScriptEnvironment().RunScript(inputBuffer, output);
       if (result == script::Result::kException) {
         String exception = script::GetAndClearException();
         if (exception.GetSize() < 512) {
@@ -72,42 +52,40 @@ DebugUI::ShowScriptDebug()
                               bufferSize,
                               ImVec2(),
                               ImGuiInputTextFlags_ReadOnly);
-    ImGui::TreePop();
   }
 }
 
 // -------------------------------------------------------------------------- //
 
 void
-DebugUI::ShowModDebug()
+ShowModDebug(GameClient& gameClient)
 {
-  if (ImGui::TreeNode("Mods")) {
+  if (ImGui::CollapsingHeader("Mods")) {
     static s32 currentIndex = 0;
     std::vector<const char8*> names;
-    for (auto& mod : mGameClient.GetModLoader().GetMods()) {
+    for (auto& mod : gameClient.GetModLoader().GetMods()) {
       names.push_back(mod.first.GetUTF8());
     }
     ImGui::ListBox("", &currentIndex, names.data(), names.size());
-    auto mod = mGameClient.GetModLoader().GetModById(names[currentIndex]);
+    auto mod = gameClient.GetModLoader().GetModById(names[currentIndex]);
     ImGui::Text("Name: '%s'", mod->GetName().GetUTF8());
     ImGui::Text("Id: '%s'", mod->GetId().GetUTF8());
     ImGui::Text("Authors:");
     for (auto& author : mod->GetAuthors()) {
       ImGui::Text("  %s", author.GetUTF8());
     }
-    ImGui::TreePop();
   }
 }
 
 // -------------------------------------------------------------------------- //
 
 void
-DebugUI::ShowTileDebug()
+ShowTileDebug(GameClient& gameClient)
 {
-  TileManager& tileManager = mGameClient.GetWorld().GetTileManager();
-  Terrain& terrain = mGameClient.GetWorld().GetTerrain();
+  TileManager& tileManager = gameClient.GetWorld().GetTileManager();
+  Terrain& terrain = gameClient.GetWorld().GetTerrain();
 
-  if (ImGui::TreeNode("Tile")) {
+  if (ImGui::CollapsingHeader("Tile")) {
     static s32 currentIndex = 0;
     std::vector<const char8*> names;
     for (auto& tile : tileManager.GetTiles()) {
@@ -139,11 +117,11 @@ DebugUI::ShowTileDebug()
 
     Vector2F texMin, texMax;
     const game::ResourcePath& res =
-      tileAtPos->GetResourcePath(mGameClient.GetWorld(), pos[0], pos[1]);
-    mGameClient.GetTileAtlas().GetTextureCoordinates(res, texMin, texMax);
+      tileAtPos->GetResourcePath(gameClient.GetWorld(), pos[0], pos[1]);
+    gameClient.GetTileAtlas().GetTextureCoordinates(res, texMin, texMax);
 
     ImGui::Image(reinterpret_cast<ImTextureID>(
-                   mGameClient.GetTileAtlas().GetTexture()->GetID()),
+                   gameClient.GetTileAtlas().GetTexture()->GetID()),
                  ImVec2(64, 64),
                  ImVec2(texMin.x, texMin.y),
                  ImVec2(texMax.x, texMax.y),
@@ -151,24 +129,22 @@ DebugUI::ShowTileDebug()
                  ImVec4(0, 0, 0, 1));
 
     // Change block
-    if (mGameClient.IsMouseDown(MouseButton::kMouseButtonLeft)) {
+    if (gameClient.IsMouseDown(MouseButton::kMouseButtonLeft)) {
       f64 mouseX, mouseY;
-      mGameClient.GetMousePosition(mouseX, mouseY);
+      gameClient.GetMousePosition(mouseX, mouseY);
       u32 tileX, tileY;
-      terrain.PickTile(mGameClient.GetCamera(), mouseX, mouseY, tileX, tileY);
+      terrain.PickTile(gameClient.GetCamera(), mouseX, mouseY, tileX, tileY);
       terrain.SetTile(tile, tileX, tileY, game::Terrain::LAYER_FOREGROUND);
     }
-
-    ImGui::TreePop();
   }
 }
 
 // -------------------------------------------------------------------------- //
 
 void
-DebugUI::ShowNetworkDebug()
+ShowNetworkDebug(GameClient& gameClient)
 {
-  World& world = mGameClient.GetWorld();
+  World& world = gameClient.GetWorld();
   auto& chat = world.GetChat();
 
   // ImGui::ShowTestWindow();

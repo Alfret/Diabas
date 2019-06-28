@@ -4,7 +4,9 @@
 // Headers
 // ========================================================================== //
 
+#include "app/client/imgui/imgui.h"
 #include "game/client/world_renderer.hpp"
+#include "game/client/debug_ui.hpp"
 
 // ========================================================================== //
 // Client Implementation
@@ -16,7 +18,6 @@ GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
   : AppClient(descriptor)
   , mModLoader(mScriptEnvironment, Path{ "./mods" })
   , mCamera(GetWidth(), GetHeight())
-  , mDebugUI(*this)
 {
   mModLoader.Init(mWorld);
   mModLoader.RegisterTiles(mWorld.GetTileManager());
@@ -29,8 +30,17 @@ GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
 void
 GameClient::Update(f64 delta)
 {
+  // ImGui
+  if (ImGui::Begin("Diabas - Debug")) {
+    ShowScriptDebug(*this);
+    ShowModDebug(*this);
+    ShowTileDebug(*this);
+    ShowNetworkDebug(*this);
+  }
+  ImGui::End();
+
   UpdateCamera(delta);
-  mDebugUI.Update(delta);
+  mWorld.Update();
 }
 
 // -------------------------------------------------------------------------- //
@@ -50,7 +60,7 @@ GameClient::UpdateCamera(f32 delta)
 {
   // Move camera
   Vector3F cameraMove(0.0f, 0.0f, 0.0f);
-  f32 cameraSpeed = 80;
+  f32 cameraSpeed = 300;
   if (IsKeyDown(Key::kKeyLeft)) {
     cameraMove.x -= cameraSpeed * delta;
   }
