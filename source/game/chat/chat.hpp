@@ -5,11 +5,9 @@
 #include "game/chat/chat_message.hpp"
 #include <dutil/queue.hpp>
 
-namespace dib {
-class World;
-}
-
 namespace dib::game {
+
+class World;
 
 class Chat
 {

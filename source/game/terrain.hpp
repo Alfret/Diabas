@@ -6,7 +6,6 @@
 
 #include "core/types.hpp"
 #include "game/tile/tile_manager.hpp"
-#include "graphics/renderer.hpp"
 #include "graphics/camera.hpp"
 
 // ========================================================================== //
@@ -43,9 +42,6 @@ public:
   Terrain(World& world, TileManager& tileManager, u32 width, u32 height);
 
   void Generate();
-
-  /** Draw the terrain **/
-  void Draw(graphics::Renderer& renderer, graphics::Camera& camera);
 
   /** Returns the tile at the specified position in the terrain **/
   std::shared_ptr<Tile> GetTile(u32 x, u32 y, u32 layer);

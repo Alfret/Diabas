@@ -118,6 +118,7 @@ ShaderProgram::ShaderProgram(const String& vsPath,
 ShaderProgram::~ShaderProgram()
 {
   glDeleteProgram(mProgramID);
+  mProgramID = 0;
 }
 
 // -------------------------------------------------------------------------- //

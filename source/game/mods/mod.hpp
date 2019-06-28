@@ -13,12 +13,9 @@
 // Mod Declaration
 // ========================================================================== //
 
-namespace dib {
-DIB_FORWARD_DECLARE_CLASS(World);
-}
-
 namespace dib::game {
 
+DIB_FORWARD_DECLARE_CLASS(World);
 DIB_FORWARD_DECLARE_CLASS(TileManager);
 
 /** Mod class **/

@@ -6,7 +6,7 @@
 
 namespace dib {
 
-Server::Server(PacketHandler* packet_handler, World* world)
+Server::Server(PacketHandler* packet_handler, game::World* world)
   : socket_interface_(SteamNetworkingSockets())
   , packet_handler_(packet_handler)
   , world_(world)

@@ -37,35 +37,6 @@ TileManager::RegisterTile(const String& modId,
 
 // -------------------------------------------------------------------------- //
 
-void
-TileManager::CreateAtlas()
-{
-  // Load images
-  alflib::ArrayList<alflib::Image> images;
-  images.Resize(mTiles.size());
-  alflib::ArrayList<String> names;
-  s32 index = 0;
-  for (auto& tile : mTiles) {
-    const std::vector<ResourcePath>& resources = tile.tile->GetResourcePaths();
-    for (auto& resource : resources) {
-      images[index].Load(resource.GetPath());
-      names.Append(resource.GetPath().GetPathString());
-    }
-    index++;
-  }
-
-  // Create atlas
-  u32 dim = std::ceil(std::sqrt(mTiles.size())) * TILE_SIZE;
-  mTileAtlas.Build(images, names, dim, dim);
-  mTileAtlas.GetImage().Save(Path{ "./res/tiles/atlas.tga" }, true);
-
-  // Create atlas texture
-  mAtlasTexture = std::make_shared<graphics::Texture>();
-  mAtlasTexture->Load(mTileAtlas.GetImage(), "TileAtlas");
-}
-
-// -------------------------------------------------------------------------- //
-
 std::shared_ptr<Tile>
 TileManager::GetTile(const String& id)
 {
@@ -91,26 +62,6 @@ std::shared_ptr<Tile>
 TileManager::GetTile(Tile::ID id)
 {
   return mTiles[id].tile;
-}
-
-// -------------------------------------------------------------------------- //
-
-void
-TileManager::GetTextureCoordinates(const ResourcePath& path,
-                                   Vector2F& texMin,
-                                   Vector2F& texMax)
-{
-  alflib::ImageAtlasRegion region =
-    mTileAtlas.GetRegion(path.GetPath().GetPathString());
-
-  f32 xOffset = 0.5f / mTileAtlas.GetWidth();
-  f32 yOffset = 0.5f / mTileAtlas.GetHeight();
-
-  texMin = Vector2F((f32(region.x) / mTileAtlas.GetWidth()) + xOffset,
-                    (f32(region.y) / mTileAtlas.GetHeight()) + yOffset);
-  texMax = Vector2F(
-    (f32(region.x + region.width) / mTileAtlas.GetWidth()) - xOffset,
-    (f32(region.y + region.height) / mTileAtlas.GetHeight()) - yOffset);
 }
 
 // -------------------------------------------------------------------------- //

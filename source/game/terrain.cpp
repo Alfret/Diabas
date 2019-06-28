@@ -47,65 +47,6 @@ Terrain::Generate()
 
 // -------------------------------------------------------------------------- //
 
-void
-Terrain::Draw(graphics::Renderer& renderer, graphics::Camera& camera)
-{
-  // Retrieve batch
-  graphics::SpriteBatch& spriteBatch = renderer.GetSpriteBatch();
-  spriteBatch.Begin(&camera);
-
-  // Retrieve block texture
-  std::shared_ptr<graphics::Texture> texture = mTileManager.GetTexture();
-
-  // Calculate first tile in camera
-  const Vector3F& cameraPos = camera.GetPosition();
-  u32 minX = std::floor(camera.GetPosition().x / TileManager::TILE_SIZE);
-  if (minX < 0) {
-    minX = 0;
-  }
-  u32 minY = std::floor(camera.GetPosition().y / TileManager::TILE_SIZE);
-  if (minY < 0) {
-    minY = 0;
-  }
-
-  // Calculate number of tiles in camera
-  u32 countX = std::ceil(camera.GetWidth() / TileManager::TILE_SIZE);
-  if (countX + minX > mWidth) {
-    countX = mWidth - minX;
-  }
-  u32 countY = std::ceil(camera.GetHeight() / TileManager::TILE_SIZE);
-  if (countY + minY > mHeight) {
-    countY = mHeight - minY;
-  }
-
-  // Render each tile
-  for (u32 y = minY; y < minY + countY + 1; y++) {
-    for (u32 x = minX; x < minX + countX + 1; x++) {
-      Vector3F position = Vector3F(x * TileManager::TILE_SIZE - cameraPos.x,
-                                   y * TileManager::TILE_SIZE - cameraPos.y,
-                                   0.5f);
-      alflib::Color tint = alflib::Color::WHITE;
-      std::shared_ptr<game::Tile> tile = GetTile(x, y, LAYER_FOREGROUND);
-      const game::ResourcePath& resourcePath =
-        tile->GetResourcePath(mWorld, x, y);
-      Vector2F texMin, texMax;
-      mTileManager.GetTextureCoordinates(resourcePath, texMin, texMax);
-      spriteBatch.Submit(
-        texture,
-        position,
-        Vector2F(TileManager::TILE_SIZE, TileManager::TILE_SIZE),
-        tint,
-        texMin,
-        texMax);
-    }
-  }
-
-  // Done rendering
-  spriteBatch.End();
-}
-
-// -------------------------------------------------------------------------- //
-
 std::shared_ptr<Tile>
 Terrain::GetTile(u32 x, u32 y, u32 layer)
 {
@@ -132,8 +73,10 @@ Terrain::PickTile(const graphics::Camera& camera,
 {
   tileX =
     std::floor((camera.GetPosition().x + mouseX) / TileManager::TILE_SIZE);
+  tileX = alflib::Clamp(tileX, 0u, mWidth);
   tileY =
     std::floor((camera.GetPosition().y + mouseY) / TileManager::TILE_SIZE);
+  tileY = alflib::Clamp(tileY, 0u, mHeight);
 }
 
 // -------------------------------------------------------------------------- //

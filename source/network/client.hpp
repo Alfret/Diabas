@@ -8,15 +8,26 @@
 #include <steam/steamnetworkingsockets.h>
 #include "network/packet_handler.hpp"
 #include "network/connection_state.hpp"
+#include "core/macros.hpp"
+
+// ========================================================================== //
+// Forward Declarations
+// ========================================================================== //
+
+namespace dib::game {
+DIB_FORWARD_DECLARE_CLASS(World);
+}
+
+// ========================================================================== //
+// Client Declaration
+// ========================================================================== //
 
 namespace dib {
-
-class World;
 
 class Client : public ISteamNetworkingSocketsCallbacks
 {
 public:
-  Client(PacketHandler* packet_handler, World* world);
+  Client(PacketHandler* packet_handler, game::World* world);
 
   virtual ~Client() final;
 
@@ -53,7 +64,7 @@ private:
   ISteamNetworkingSockets* socket_interface_;
   ConnectionState connection_state_;
   PacketHandler* packet_handler_;
-  World* world_;
+  game::World* world_;
 };
 }
 #endif // CLIENT_HPP_

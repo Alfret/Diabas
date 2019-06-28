@@ -1,33 +1,24 @@
 #include "loader.hpp"
 
+// ========================================================================== //
+// Headers
+// ========================================================================== //
+
 #include <cpptoml.h>
 #include <dlog.hpp>
+#include <alflib/core/assert.hpp>
+
 #include "game/mods/script/mod_base.hpp"
 #include "game/mods/script/script_tile.hpp"
-
-namespace dib::game {
 
 // ========================================================================== //
 // ModLoader Implementation
 // ========================================================================== //
 
-ModLoader::ModLoader(const Path& modsFolder)
+namespace dib::game {
+
+ModLoader::ModLoader(script::Environment& environment, const Path& modsFolder)
   : mModsFolder(modsFolder)
-{}
-
-// -------------------------------------------------------------------------- //
-
-ModLoader::~ModLoader()
-{
-  for (auto& mod : mMods) {
-    delete mod.second;
-  }
-}
-
-// -------------------------------------------------------------------------- //
-
-Result
-ModLoader::Load(script::Environment& environment)
 {
   // Expose game-specific things to mods
   ExposeModBase(environment);
@@ -44,9 +35,9 @@ ModLoader::Load(script::Environment& environment)
     const alflib::File modPath = mods_folder.Open(mods_folders[i].GetPath());
     Mod* mod = new Mod(environment);
     Result result = mod->Load(modPath.GetPath());
-    if (result != Result::kSuccess) {
-      return result;
-    }
+    AlfAssert(result == Result::kSuccess,
+              "Failed to load mod {}",
+              modPath.GetPath().GetPathString());
     mMods[mod->GetId()] = mod;
   }
 
@@ -62,8 +53,15 @@ ModLoader::Load(script::Environment& environment)
     mod_list += mod.second->GetName();
   }
   DLOG_INFO("Loaded [{}] mod(s) {{ {} }}", mMods.size(), mod_list);
+}
 
-  return Result::kSuccess;
+// -------------------------------------------------------------------------- //
+
+ModLoader::~ModLoader()
+{
+  for (auto& mod : mMods) {
+    delete mod.second;
+  }
 }
 
 // -------------------------------------------------------------------------- //
