@@ -64,10 +64,13 @@ set(COMMON_SOURCE
   source/game/mods/result.cpp
   source/game/mods/result.hpp
   source/graphics/camera.cpp
+  source/graphics/index_buffer.cpp
   source/graphics/renderer.cpp
+  source/graphics/shader.cpp
   source/graphics/sprite.cpp
   source/graphics/sprite_batch.cpp
   source/graphics/texture.cpp
+  source/graphics/vertex_buffer.cpp
   source/script/env.cpp
   source/script/util.cpp
   source/script/expose/expose_base.cpp

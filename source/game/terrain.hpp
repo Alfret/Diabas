@@ -27,6 +27,8 @@ public:
   static constexpr u32 LAYER_WIRING = 2;
 
 private:
+  /** World **/
+  World& mWorld;
   /** Tile manager **/
   TileManager& mTileManager;
 
@@ -38,7 +40,9 @@ private:
   std::array<Tile::ID*, 3> mTerrainLayers;
 
 public:
-  Terrain(TileManager& tileManager, u32 width, u32 height);
+  Terrain(World& world, TileManager& tileManager, u32 width, u32 height);
+
+  void Generate();
 
   /** Draw the terrain **/
   void Draw(graphics::Renderer& renderer, graphics::Camera& camera);
@@ -47,6 +51,13 @@ public:
   std::shared_ptr<Tile> GetTile(u32 x, u32 y, u32 layer);
 
   void SetTile(const std::shared_ptr<Tile>& tile, u32 x, u32 y, u32 layer);
+
+  /** Pick a tile **/
+  void PickTile(const graphics::Camera& camera,
+                f64 mouseX,
+                f64 mouseY,
+                u32& tileX,
+                u32& tileY);
 
   u32 GetWidth() const { return mWidth; };
 
