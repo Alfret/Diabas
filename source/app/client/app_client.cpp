@@ -1,31 +1,34 @@
-#include "app/app.hpp"
+#include "app/client/app_client.hpp"
 
 // ========================================================================== //
 // Headers
 // ========================================================================== //
 
+#include <dlog.hpp>
+#include <dutil/stopwatch.hpp>
+
 #include "core/assert.hpp"
 #include "core/macros.hpp"
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_glfw_gl3.h"
+#include "app/client/imgui/imgui.h"
+#include "app/client/imgui/imgui_impl_glfw_gl3.h"
 
 // ========================================================================== //
-// Functions
+// Private Functions
 // ========================================================================== //
 
-namespace dib {
+namespace dib::app {
 
 static void
-SetImGuiStyle(ImGuiStyle& style)
+AppClientSetImGuiStyle(ImGuiStyle& style)
 {
   ImVec4* colors = style.Colors;
 
   style.WindowRounding = 2.0f; // Radius of window corners rounding. Set to
-                               // 0.0f to have rectangular windows
+  // 0.0f to have rectangular windows
   style.ScrollbarRounding =
     3.0f;                    // Radius of grab corners rounding for scrollbar
   style.GrabRounding = 2.0f; // Radius of grabs corners rounding. Set to 0.0f
-                             // to have rectangular slider grabs.
+  // to have rectangular slider grabs.
   style.AntiAliasedLines = true;
   style.AntiAliasedShapes = true;
   style.WindowRounding = 2;
@@ -87,18 +90,18 @@ SetImGuiStyle(ImGuiStyle& style)
 }
 
 // ========================================================================== //
-// Application Implementation
+// AppClient
 // ========================================================================== //
 
-namespace dib {
+namespace dib::app {
 
-Application::Application(const Descriptor& descriptor)
+AppClient::AppClient(const AppClient::Descriptor& descriptor)
   : mTitle(descriptor.title)
   , mWidth(descriptor.width)
   , mHeight(descriptor.height)
 {
   // Initialize GLFW
-  const int result = glfwInit();
+  int result = glfwInit();
   DIB_ASSERT(result == GLFW_TRUE, "Failed to initialize SDL2");
 
   // Create window
@@ -121,21 +124,22 @@ Application::Application(const Descriptor& descriptor)
   glfwSetFramebufferSizeCallback(mWindow, ResizeCallback);
 
   // Setup graphics
-  mGraphics = new Graphics(mWindow);
-  DIB_ASSERT(mGraphics != nullptr,
-             "Failed to create application graphics interface");
+  glfwMakeContextCurrent(mWindow);
+  result = gladLoadGL();
+  DIB_ASSERT(result != 0, "Failed to initialize GLAD");
+  glEnable(GL_DEBUG_OUTPUT);
+  glDebugMessageCallback((GLDEBUGPROC)AppClient::DebugCallbackGL, this);
 
   // Initialize ImGui
-  ImGui_ImplGlfwGL3_Init(mWindow, false /*do not install callbacks*/);
-  SetImGuiStyle(ImGui::GetStyle());
+  ImGui_ImplGlfwGL3_Init(mWindow, false);
+  AppClientSetImGuiStyle(ImGui::GetStyle());
 }
 
 // -------------------------------------------------------------------------- //
 
-Application::~Application()
+AppClient::~AppClient()
 {
   ImGui_ImplGlfwGL3_Shutdown();
-  delete mGraphics;
   glfwDestroyWindow(mWindow);
   glfwTerminate();
 }
@@ -143,13 +147,18 @@ Application::~Application()
 // -------------------------------------------------------------------------- //
 
 void
-Application::Run()
+AppClient::Run()
 {
+  // Create and start stopwatch
+  dutil::Stopwatch sw;
+  sw.Start();
+
+  // Run main loop
+  f64 timeLast = sw.fnow_s();
   mRunning = true;
-  f64 timeLast = glfwGetTime();
   while (mRunning) {
     // Update time variables
-    const f64 timeCurrent = glfwGetTime();
+    const f64 timeCurrent = sw.fnow_s();
     const f64 timeDelta = timeCurrent - timeLast;
     timeLast = timeCurrent;
 
@@ -167,17 +176,16 @@ Application::Run()
     Update(timeDelta);
 
     // Render
-    mGraphics->Clear();
     Render();
     ImGui::Render();
-    mGraphics->Present();
+    glfwSwapBuffers(mWindow);
   }
 }
 
 // -------------------------------------------------------------------------- //
 
 void
-Application::Exit()
+AppClient::Exit()
 {
   mRunning = false;
 }
@@ -185,7 +193,7 @@ Application::Exit()
 // -------------------------------------------------------------------------- //
 
 void
-Application::Show() const
+AppClient::Show() const
 {
   glfwShowWindow(mWindow);
 }
@@ -193,15 +201,21 @@ Application::Show() const
 // -------------------------------------------------------------------------- //
 
 void
-Application::Hide() const
+AppClient::Hide() const
 {
   glfwHideWindow(mWindow);
 }
 
 // -------------------------------------------------------------------------- //
 
+void
+AppClient::ToggleFullscreen()
+{}
+
+// -------------------------------------------------------------------------- //
+
 bool
-Application::IsKeyDown(Key key) const
+AppClient::IsKeyDown(Key key) const
 {
   return glfwGetKey(mWindow, int(key)) == GLFW_PRESS;
 }
@@ -209,7 +223,7 @@ Application::IsKeyDown(Key key) const
 // -------------------------------------------------------------------------- //
 
 bool
-Application::IsMouseDown(MouseButton button) const
+AppClient::IsMouseDown(MouseButton button) const
 {
   return glfwGetMouseButton(mWindow, int(button)) == GLFW_PRESS;
 }
@@ -217,7 +231,7 @@ Application::IsMouseDown(MouseButton button) const
 // -------------------------------------------------------------------------- //
 
 void
-Application::GetMousePosition(f64& x, f64& y) const
+AppClient::GetMousePosition(f64& x, f64& y) const
 {
   glfwGetCursorPos(mWindow, &x, &y);
   y = mHeight - y;
@@ -226,53 +240,19 @@ Application::GetMousePosition(f64& x, f64& y) const
 // -------------------------------------------------------------------------- //
 
 void
-Application::ToggleFullscreen()
+AppClient::ErrorCallback(int error, const char8* description)
 {
-  if (mIsFullscreen) {
-    glfwSetWindowMonitor(mWindow,
-                         nullptr,
-                         mRestoreX,
-                         mRestoreY,
-                         mRestoreWidth,
-                         mRestoreHeight,
-                         GLFW_DONT_CARE);
-    mIsFullscreen = false;
-  } else {
-    mRestoreWidth = mWidth;
-    mRestoreHeight = mHeight;
-    int x, y;
-    glfwGetWindowPos(mWindow, &x, &y);
-    mRestoreX = x;
-    mRestoreY = y;
-
-    const GLFWvidmode* videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-    glfwSetWindowMonitor(mWindow,
-                         glfwGetPrimaryMonitor(),
-                         0,
-                         0,
-                         videoMode->width,
-                         videoMode->height,
-                         GLFW_DONT_CARE);
-    mIsFullscreen = true;
-  }
+  DLOG_ERROR("[GLFW]: {} ({})", description, error);
 }
 
 // -------------------------------------------------------------------------- //
 
 void
-Application::ErrorCallback(int error, const char8* description)
-{
-  // Logger::Default().Error("GLFW error ({} - {})", error, description);
-}
-
-// -------------------------------------------------------------------------- //
-
-void
-Application::KeyCallback(GLFWwindow* window,
-                         int key,
-                         int scancode,
-                         int action,
-                         int mods)
+AppClient::KeyCallback(GLFWwindow* window,
+                       int key,
+                       int scancode,
+                       int action,
+                       int mods)
 {
   // First let ImGui handle the key callback
   ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
@@ -281,7 +261,7 @@ Application::KeyCallback(GLFWwindow* window,
   }
 
   // Then let the application get a chance to handle it
-  auto app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+  auto app = static_cast<AppClient*>(glfwGetWindowUserPointer(window));
   if (app) {
     if (action == GLFW_PRESS) {
       app->OnKeyPressed(static_cast<Key>(key));
@@ -294,7 +274,7 @@ Application::KeyCallback(GLFWwindow* window,
 // -------------------------------------------------------------------------- //
 
 void
-Application::CharCallback(GLFWwindow* window, unsigned codepoint)
+AppClient::CharCallback(GLFWwindow* window, unsigned int codepoint)
 {
   // Forward event to GUI
   ImGui_ImplGlfwGL3_CharCallback(window, codepoint);
@@ -306,10 +286,10 @@ Application::CharCallback(GLFWwindow* window, unsigned codepoint)
 // -------------------------------------------------------------------------- //
 
 void
-Application::MouseButtonCallback(GLFWwindow* window,
-                                 int button,
-                                 int action,
-                                 int mods)
+AppClient::MouseButtonCallback(GLFWwindow* window,
+                               int button,
+                               int action,
+                               int mods)
 {
   // Forward event to GUI
   ImGui_ImplGlfwGL3_MouseButtonCallback(window, button, action, mods);
@@ -318,7 +298,7 @@ Application::MouseButtonCallback(GLFWwindow* window,
   }
 
   // Then let app handle it
-  auto app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+  auto app = static_cast<AppClient*>(glfwGetWindowUserPointer(window));
   if (app) {
     if (action == GLFW_PRESS) {
       app->OnMousePressed(static_cast<MouseButton>(button));
@@ -331,7 +311,7 @@ Application::MouseButtonCallback(GLFWwindow* window,
 // -------------------------------------------------------------------------- //
 
 void
-Application::MousePosCallback(GLFWwindow* window, f64 x, f64 y)
+AppClient::MousePosCallback(GLFWwindow* window, f64 x, f64 y)
 {
   // Let ImGui handle mouse
   if (ImGui::GetIO().WantCaptureMouse) {
@@ -339,7 +319,7 @@ Application::MousePosCallback(GLFWwindow* window, f64 x, f64 y)
   }
 
   // Then let app handle it
-  auto app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+  auto app = static_cast<AppClient*>(glfwGetWindowUserPointer(window));
   if (app) {
     app->OnMouseMoved(x, y);
   }
@@ -348,7 +328,7 @@ Application::MousePosCallback(GLFWwindow* window, f64 x, f64 y)
 // -------------------------------------------------------------------------- //
 
 void
-Application::MouseScrollCallback(GLFWwindow* window, f64 x, f64 y)
+AppClient::MouseScrollCallback(GLFWwindow* window, f64 x, f64 y)
 {
   // Let ImGui handle mouse
   ImGui_ImplGlfwGL3_ScrollCallback(window, x, y);
@@ -357,7 +337,7 @@ Application::MouseScrollCallback(GLFWwindow* window, f64 x, f64 y)
   }
 
   // Then let app handle
-  auto app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+  auto app = static_cast<AppClient*>(glfwGetWindowUserPointer(window));
   if (app) {
     app->OnMouseScroll(x, y);
   }
@@ -366,19 +346,41 @@ Application::MouseScrollCallback(GLFWwindow* window, f64 x, f64 y)
 // -------------------------------------------------------------------------- //
 
 void
-Application::ResizeCallback(GLFWwindow* window, int width, int height)
+AppClient::ResizeCallback(GLFWwindow* window, int width, int height)
 {
-  Application* app =
-    static_cast<Application*>(glfwGetWindowUserPointer(window));
+  auto app = static_cast<AppClient*>(glfwGetWindowUserPointer(window));
   if (app) {
     const u32 _width = static_cast<u32>(width);
     const u32 _height = static_cast<u32>(height);
     app->mWidth = _width;
     app->mHeight = _height;
     if (_width && _height) {
-      app->GetGraphics().Resize(_width, _height);
+      glViewport(0, 0, width, height);
     }
     app->OnWindowResize(_width, _height);
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+AppClient::DebugCallbackGL(GLenum source,
+                           GLenum type,
+                           GLuint id,
+                           GLenum severity,
+                           GLsizei length,
+                           const GLchar* message,
+                           void* userParam)
+{
+  auto app = static_cast<AppClient*>(userParam);
+  if (type == GL_DEBUG_TYPE_ERROR) {
+    DLOG_ERROR("OpenGL: {}", message);
+  } else if (type == GL_DEBUG_TYPE_PERFORMANCE ||
+             type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR ||
+             type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR) {
+    DLOG_WARNING("OpenGL: {}", message);
+  } else {
+    // DLOG_VERBOSE("OpenGL: {}", message);
   }
 }
 

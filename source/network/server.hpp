@@ -12,15 +12,26 @@
 #include "network/connection_id.hpp"
 #include <tsl/robin_set.h>
 #include "network/connection_state.hpp"
+#include "core/macros.hpp"
+
+// ========================================================================== //
+// Forward Declarations
+// ========================================================================== //
+
+namespace dib::game {
+DIB_FORWARD_DECLARE_CLASS(World);
+}
+
+// ========================================================================== //
+// Server Declaration
+// ========================================================================== //
 
 namespace dib {
-
-class World;
 
 class Server : public ISteamNetworkingSocketsCallbacks
 {
 public:
-  Server(PacketHandler* packet_handler, World* world);
+  Server(PacketHandler* packet_handler, game::World* world);
 
   virtual ~Server() final;
 
@@ -80,7 +91,7 @@ private:
   tsl::robin_set<ConnectionId> connections_{};
   NetworkState network_state_ = NetworkState::kServer;
   PacketHandler* packet_handler_;
-  World* world_;
+  game::World* world_;
 };
 }
 

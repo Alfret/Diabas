@@ -1,19 +1,94 @@
-#include "input.hpp"
+#include "cli_input.hpp"
 #include <dlog.hpp>
 #include <iostream>
 #include <string>
 
+// ========================================================================== //
+//
+// ========================================================================== //
+
 namespace dib {
 
-alflib::String
-GetLine()
+AsyncGetline::AsyncGetline()
+  : mInput("")
+  , mSendOverNextLine(true)
+  , mContinueGettingInput(true)
 {
-  std::string input{};
-  std::getline(std::cin, input, '\n');
-  return alflib::String{ input };
+
+  std::thread([&]() {
+    std::string synchronousInput;
+    char nextCharacter;
+
+    do {
+      synchronousInput = "";
+      while (mContinueGettingInput) {
+        while (std::cin.peek() == EOF) {
+          std::this_thread::yield();
+        }
+        nextCharacter = std::cin.get();
+        if (nextCharacter == '\n') {
+          break;
+        }
+        synchronousInput += nextCharacter;
+      }
+
+      if (!mContinueGettingInput) {
+        break;
+      }
+
+      while (mContinueGettingInput && !mSendOverNextLine) {
+        std::this_thread::yield();
+      }
+
+      if (!mContinueGettingInput) {
+        break;
+      }
+
+      mInputLock.lock();
+      mInput = synchronousInput;
+      mInputLock.unlock();
+
+      mSendOverNextLine = false;
+    } while (mContinueGettingInput && mInput != "exit");
+  }).detach();
 }
 
-// ============================================================ //
+// -------------------------------------------------------------------------- //
+
+AsyncGetline::~AsyncGetline()
+{
+  // Stop the getline thread.
+  mContinueGettingInput = false;
+}
+
+// -------------------------------------------------------------------------- //
+
+std::string
+AsyncGetline::GetLine()
+{
+  if (mSendOverNextLine) {
+    // Don't consume the CPU while waiting for input; this_thread::yield()
+    // would still consume a lot of CPU, so sleep must be used.
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    return "";
+  } else {
+    mInputLock.lock();
+    std::string returnInput = mInput;
+    mInputLock.unlock();
+
+    mSendOverNextLine = true;
+    return returnInput;
+  }
+}
+
+}
+
+// ========================================================================== //
+// InputCommand Declaration
+// ========================================================================== //
+
+namespace dib {
 
 class InputCommand
 {
@@ -93,29 +168,20 @@ InputCommand::StringToCategory(const alflib::String& string)
 
 // ============================================================ //
 
-template<>
-InputHandler<Side::kServer>::InputHandler()
+CLIInputHandler::CLIInputHandler()
   : commands_()
 {
-  input_ = std::async(std::launch::async, GetLine);
+  // input_ = std::async(std::launch::async, []() -> String { return ""; });
 }
 
-template<>
-InputHandler<Side::kClient>::InputHandler()
-  : commands_()
-{}
+// -------------------------------------------------------------------------- //
 
-template<>
-InputHandler<Side::kServer>::~InputHandler()
-{}
+CLIInputHandler::~CLIInputHandler() {}
 
-template<>
-InputHandler<Side::kClient>::~InputHandler()
-{}
+// -------------------------------------------------------------------------- //
 
-template<>
 void
-InputHandler<Side::kServer>::AddCommand(
+CLIInputHandler::AddCommand(
   const InputCommandCategory category,
   const alflib::String& command,
   std::function<void(const std::string_view)> callback)
@@ -123,17 +189,10 @@ InputHandler<Side::kServer>::AddCommand(
   commands_.emplace_back(category, command, callback);
 }
 
-template<>
-void
-InputHandler<Side::kClient>::AddCommand(
-  [[maybe_unused]] const InputCommandCategory category,
-  [[maybe_unused]] const alflib::String& command,
-  [[maybe_unused]] std::function<void(const std::string_view)> callback)
-{}
+// -------------------------------------------------------------------------- //
 
-template<>
 void
-InputHandler<Side::kServer>::RunCommand(const alflib::String& input) const
+CLIInputHandler::RunCommand(const alflib::String& input) const
 {
   if (input.GetSize() < 1) {
     return;
@@ -190,26 +249,15 @@ InputHandler<Side::kServer>::RunCommand(const alflib::String& input) const
   }
 }
 
-template<>
-void
-InputHandler<Side::kClient>::RunCommand([
-  [maybe_unused]] const alflib::String& command) const
-{}
+// -------------------------------------------------------------------------- //
 
-template<>
 void
-InputHandler<Side::kServer>::Update()
+CLIInputHandler::Update()
 {
-  const auto status = input_.wait_for(std::chrono::nanoseconds(0));
-  if (status == std::future_status::ready) {
-    RunCommand(input_.get());
-    input_ = std::async(std::launch::async, GetLine);
+  String line = async_getline_.GetLine();
+  if (line.GetLength() > 0) {
+    RunCommand(line);
   }
 }
-
-template<>
-void
-InputHandler<Side::kClient>::Update()
-{}
 
 }
