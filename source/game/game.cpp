@@ -139,11 +139,11 @@ ShowTileDebug(game::TileManager& tileManager,
 // ============================================================ //
 
 static void
-ShowNetworkDebug(World& world)
+ShowNetworkDebug(World& world, const game::Chat& chat)
 {
+  ImGui::ShowTestWindow();
 
-
-  if (ImGui::TreeNode("Network")) {
+  if (ImGui::CollapsingHeader("Network")) {
 
     ImGui::Text("Network status: %s",
                 world.GetNetwork().GetConnectionState() ==
@@ -158,32 +158,16 @@ ShowNetworkDebug(World& world)
       }
     } else {
       constexpr std::size_t addrlen = 50;
-      static char8 addr[addrlen];
-      static bool set_once = true;
-      if (set_once) {
-        set_once = false;
-        std::memcpy(addr, "127.0.0.1:24812", 16);
-      }
+      static char8 addr[addrlen] = "127.0.0.1:24812";
       ImGui::InputText("IP Adress", addr, addrlen);
       if (ImGui::Button("connect")) {
         world.GetNetwork().ConnectToServer(addr);
       }
     }
 
-    if (ImGui::TreeNode("General")) {
-
-
-      ImGui::TreePop();
-    }
-
     if (ImGui::TreeNode("Chat")) {
       constexpr std::size_t buflen = 50;
-      static char8 buf[buflen];
-      static bool set_once = true;
-      if (set_once) {
-        set_once = false;
-        std::memcpy(buf, "Rully", 6);
-      }
+      static char8 buf[buflen] = "Rully";
       ImGui::InputText("Name", buf, buflen);
       if (ImGui::Button("Set Name")) {
         if (world.GetNetwork().GetConnectionState() ==
@@ -194,10 +178,26 @@ ShowNetworkDebug(World& world)
       }
       ImGui::Text("Note: name can only be applied when disconnected.");
 
+      ImGui::Spacing();
+      ImGui::Spacing();
+
+      constexpr std::size_t textlen = 128;
+      static char8 text[textlen] = "";
+      ImGui::InputText("chat", text, textlen);
+      if (ImGui::Button("send chat message")) {
+        DLOG_INFO("send chat [{}]", text);
+      }
+
+      ImGui::InputTextMultiline("",
+                                const_cast<char8*>(chat.GetDebug().GetUTF8()),
+                                chat.GetDebug().GetSize(),
+                                ImVec2(-1.0f, ImGui::GetTextLineHeight() * 16),
+                                ImGuiInputTextFlags_AllowTabInput |
+                                  ImGuiInputTextFlags_ReadOnly);
+
       ImGui::TreePop();
     }
 
-    ImGui::TreePop();
   }
 }
 
@@ -253,7 +253,7 @@ Game::Update(f64 delta)
     ShowScriptDebug(mScriptEnvironment);
     ShowModsDebug(mModLoader);
     ShowTileDebug(mTileManager, mTerrain, world_);
-    ShowNetworkDebug(world_);
+    ShowNetworkDebug(world_, chat_);
   }
   ImGui::End();
 

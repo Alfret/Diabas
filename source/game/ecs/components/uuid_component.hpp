@@ -3,8 +3,8 @@
 
 #include <uuid.h>
 #include "core/types.hpp"
-#include <alflib/memory/memory_writer.hpp>
-#include <alflib/memory/memory_reader.hpp>
+#include <alflib/memory/raw_memory_writer.hpp>
+#include <alflib/memory/raw_memory_reader.hpp>
 
 namespace dib {
 
@@ -21,14 +21,14 @@ struct Uuid
 
   String ToString() const { return uuids::to_string(uuid); }
 
-  void ToBytes(alflib::MemoryWriter& mw) const
+  bool ToBytes(alflib::RawMemoryWriter& mw) const
   {
     u8 buf[sizeof(uuid)];
     std::memcpy(buf, &uuid, sizeof(uuid));
-    mw.WriteBytes(buf, sizeof(uuid));
+    return mw.WriteBytes(buf, sizeof(uuid));
   }
 
-  static Uuid FromBytes(alflib::MemoryReader& mr)
+  static Uuid FromBytes(alflib::RawMemoryReader& mr)
   {
     Uuid uuid{};
     const u8* buf = mr.ReadBytes(sizeof(uuid));

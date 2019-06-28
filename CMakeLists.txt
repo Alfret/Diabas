@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 project(diabas)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -184,19 +184,17 @@ add_executable(test tests/main.test.cpp ${COMMON_SOURCE} ${TEST_SOURCE})
 
 # Compile definitions?
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
-  target_compile_definitions(${PROJECT_NAME} PRIVATE DIB_DEBUG)
-  target_compile_definitions(server PRIVATE DIB_DEBUG)
+  add_compile_definitions(DIB_DEBUG)
 else ()
-  target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_DISABLE_TEST_WINDOWS)
-  target_compile_definitions(server PRIVATE IMGUI_DISABLE_TEST_WINDOWS)
-  target_compile_definitions(test PRIVATE IMGUI_DISABLE_TEST_WINDOWS)
+  add_compile_definitions(IMGUI_DISABLE_TEST_WINDOWS)
 endif ()
-add_compile_definitions(${PROJECT_NAME} DLOG_TIMESTAMP DLOG_DATESTAMP)
-#add_compile_definitions(${PROJECT_NAME} DLOG_LOG_TO_FILE)
+
+add_compile_definitions(DLOG_TIMESTAMP DLOG_DATESTAMP)
+#add_compile_definitions(DLOG_LOG_TO_FILE)
 if (WIN32)
-  add_compile_definitions(${PROJECT_NAME} DIB_TARGET_WINDOWS)
+  add_compile_definitions(DIB_TARGET_WINDOWS)
 else ()
-  add_compile_definitions(${PROJECT_NAME} DIB_TARGET_LINUX)
+  add_compile_definitions(DIB_TARGET_LINUX)
 endif ()
 
 target_compile_definitions(server PRIVATE DIB_IS_SERVER)

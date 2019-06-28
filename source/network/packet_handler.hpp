@@ -6,8 +6,7 @@
 #include <string_view>
 #include <optional>
 #include <array>
-#include <alflib/memory/memory_writer.hpp>
-#include <alflib/memory/memory_reader.hpp>
+#include <unordered_map>
 
 namespace dib {
 
@@ -20,6 +19,7 @@ namespace dib {
  * 1. Add the enum here.
  * 2. Register a packet handler callback on the packet_handler with
  *    AddStaticPacketType.
+ * 3. Make sure to send the new packet from somewhere!
  */
 enum class PacketHeaderStaticTypes : std::size_t
 {
@@ -64,13 +64,13 @@ struct PacketMetaSerializable
   PacketHeaderType type;
   String name;
 
-  void ToBytes(alflib::MemoryWriter& mr) const
+  bool ToBytes(alflib::RawMemoryWriter& mr) const
   {
     mr.Write(type);
-    mr.Write(name);
+    return mr.Write(name);
   }
 
-  static PacketMetaSerializable FromBytes(alflib::MemoryReader& mr)
+  static PacketMetaSerializable FromBytes(alflib::RawMemoryReader& mr)
   {
     PacketMetaSerializable p{};
     p.type = mr.Read<decltype(type)>();
