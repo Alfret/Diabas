@@ -61,9 +61,12 @@ Graphics::Present()
 // -------------------------------------------------------------------------- //
 
 void
-Graphics::SetClearColor(const graphics::Color& color)
+Graphics::SetClearColor(alflib::Color color)
 {
-  glClearColor(color.Red(), color.Green(), color.Blue(), color.Alpha());
+  glClearColor(color.GetRedF32(),
+               color.GetGreenF32(),
+               color.GetBlueF32(),
+               color.GetAlphaF32());
 }
 
 // -------------------------------------------------------------------------- //

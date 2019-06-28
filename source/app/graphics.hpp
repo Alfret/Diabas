@@ -6,9 +6,9 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <alflib/graphics/color.hpp>
 
 #include "core/types.hpp"
-#include "graphics/color.hpp"
 
 // ========================================================================== //
 // Graphics Declaration
@@ -46,7 +46,7 @@ public:
   void Present();
 
   /** Set the clear color **/
-  void SetClearColor(const graphics::Color& color);
+  void SetClearColor(alflib::Color color);
 
 private:
   /** OpenGL debug callback function **/

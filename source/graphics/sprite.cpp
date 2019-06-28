@@ -7,10 +7,11 @@
 namespace dib::graphics {
 
 Sprite::Sprite(std::shared_ptr<Texture> texture,
+               Vector2F size,
                Vector2F texMin,
                Vector2F texMax)
   : mPosition({ 0.0f, 0.0f, 0.0f })
-  , mScale({ 1.0f, 1.0f })
+  , mSize(size)
   , mAnchor({ 0.5f, 0.5f })
   , mTexture(std::move(texture))
   , mTexMin(texMin)
@@ -36,9 +37,9 @@ Sprite::Move(const Vector3F& value)
 // -------------------------------------------------------------------------- //
 
 void
-Sprite::SetScale(const Vector2F& scale)
+Sprite::SetSize(const Vector2F& size)
 {
-  mScale = scale;
+  mSize = size;
 }
 
 // -------------------------------------------------------------------------- //

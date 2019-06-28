@@ -19,8 +19,8 @@ class Sprite
 private:
   /** Sprite position **/
   Vector3F mPosition;
-  /** Sprite scale **/
-  Vector2F mScale;
+  /** Sprite size **/
+  Vector2F mSize;
   /** Sprite anchor (center) **/
   Vector2F mAnchor;
 
@@ -34,6 +34,7 @@ private:
 public:
   /** Construct sprite at origin **/
   explicit Sprite(std::shared_ptr<Texture> texture,
+                  Vector2F size = Vector2F(16.0f, 16.0f),
                   Vector2F texMin = Vector2F(0.0f, 0.0f),
                   Vector2F texMax = Vector2F(1.0f, 1.0f));
 
@@ -43,11 +44,20 @@ public:
   /** Move sprite relative to current position **/
   void Move(const Vector3F& value);
 
-  /** Set scale **/
-  void SetScale(const Vector2F& scale);
+  /** Set size **/
+  void SetSize(const Vector2F& size);
 
   /** Set the anchor (center-point) around which the sprite rotates **/
   void SetAnchor(const Vector2F& anchor);
+
+  /** Returns the position of the sprite **/
+  const Vector3F& GetPosition() const { return mPosition; }
+
+  /** Returns the size of the sprite **/
+  const Vector2F& GetSize() const { return mSize; }
+
+  /** Returns the anchor of the sprite **/
+  const Vector2F& GetAnchor() const { return mAnchor; }
 
   /** Returns the texture **/
   const std::shared_ptr<Texture>& GetTexture() const { return mTexture; }

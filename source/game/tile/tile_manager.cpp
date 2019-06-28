@@ -55,7 +55,8 @@ TileManager::CreateAtlas()
   }
 
   // Create atlas
-  mTileAtlas.Build(images, names, 512, 512);
+  u32 dim = std::ceil(std::sqrt(mTiles.size())) * TILE_SIZE;
+  mTileAtlas.Build(images, names, dim, dim);
   mTileAtlas.GetImage().Save(Path{ "./res/tiles/atlas.tga" }, true);
 
   // Create atlas texture
@@ -102,10 +103,14 @@ TileManager::GetTextureCoordinates(const ResourcePath& path,
   alflib::ImageAtlasRegion region =
     mTileAtlas.GetRegion(path.GetPath().GetPathString());
 
-  texMin = Vector2F(f32(region.x) / mTileAtlas.GetWidth(),
-                    f32(region.y) / mTileAtlas.GetHeight());
-  texMax = Vector2F(f32(region.x + region.width) / mTileAtlas.GetWidth(),
-                    f32(region.y + region.height) / mTileAtlas.GetHeight());
+  f32 xOffset = 0.5f / mTileAtlas.GetWidth();
+  f32 yOffset = 0.5f / mTileAtlas.GetHeight();
+
+  texMin = Vector2F((f32(region.x) / mTileAtlas.GetWidth()) + xOffset,
+                    (f32(region.y) / mTileAtlas.GetHeight()) + yOffset);
+  texMax = Vector2F(
+    (f32(region.x + region.width) / mTileAtlas.GetWidth()) - xOffset,
+    (f32(region.y + region.height) / mTileAtlas.GetHeight()) - yOffset);
 }
 
 // -------------------------------------------------------------------------- //

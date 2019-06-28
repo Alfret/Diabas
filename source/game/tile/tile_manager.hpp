@@ -18,6 +18,9 @@ namespace dib::game {
 class TileManager
 {
 public:
+  /** Size of a tile in pixels **/
+  static constexpr u32 TILE_SIZE = 16;
+
   /** Tile-related result values **/
   enum class Result
   {

@@ -88,8 +88,8 @@ Texture::LoadFromImage(const alflib::Image& image, bool generateMipmaps)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D,
                   GL_TEXTURE_MIN_FILTER,
-                  generateMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                  generateMipmaps ? GL_LINEAR_MIPMAP_NEAREST : GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D,
                0,
                ToGLTextureFormat(image.GetFormat()),
