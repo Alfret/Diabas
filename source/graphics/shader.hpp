@@ -6,6 +6,8 @@
 
 #include <glad/glad.h>
 #include "core/types.hpp"
+#include <unordered_map>
+#include <vector>
 
 // ========================================================================== //
 // Shader Declaration
