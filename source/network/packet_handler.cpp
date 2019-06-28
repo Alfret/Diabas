@@ -293,20 +293,18 @@ PacketHandler::BuildPacketSync(Packet& packet)
   BuildPacketHeader(packet, PacketHeaderStaticTypes::kSync);
   auto vec = Serialize();
 
-  alflib::MemoryWriter mr{};
+  auto mw = packet.GetMemoryWriter();
   for (const auto& data : vec) {
-    mr.Write(data);
+    mw->Write(data);
   }
-
-  packet.SetPayload(mr.GetBuffer().GetData(), mr.GetOffset());
+  mw.Finalize();
 }
 
 void
 PacketHandler::OnPacketSync(const Packet& packet)
 {
   std::vector<PacketMetaSerializable> vec{};
-  const alflib::Buffer buffer{ packet.GetPayloadSize(), packet.GetPayload() };
-  alflib::MemoryReader mr{ buffer };
+  auto mr = packet.GetMemoryReader();
 
   for (std::size_t pos = 0; pos < packet.GetPayloadSize();
        pos += mr.GetOffset()) {

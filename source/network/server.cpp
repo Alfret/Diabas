@@ -127,7 +127,7 @@ Server::OnSteamNetConnectionStatusChanged(
 {
   switch (status->m_info.m_eState) {
     case k_ESteamNetworkingConnectionState_None: {
-      DLOG_VERBOSE("state none");
+      // DLOG_VERBOSE("state none");
       break;
     }
 
@@ -151,9 +151,8 @@ Server::OnSteamNetConnectionStatusChanged(
         DLOG_WARNING("unknown state");
       }
 
-      // TODO announce the disconnect to the rest of the connections?
-
       DisconnectConnection(status->m_hConn);
+
       break;
     }
 
@@ -208,10 +207,33 @@ Server::DisconnectConnection(const HSteamNetConnection connection)
   if (auto it = connections_.find(connection); it != connections_.end()) {
     DLOG_INFO("Disconnected connection [{}].", *it);
     CloseConnection(connection);
-    connections_.erase(it);
+
     auto& registry = world_->GetEntityManager().GetRegistry();
+    auto view = registry.view<PlayerConnection>();
+    bool found = false;
+    Uuid uuid;
+    for (auto entity : view) {
+      if (view.get(entity).connection_id == connection) {
+        found = true;
+        uuid = registry.get<Uuid>(entity);
+        break;
+      }
+    }
+
+    connections_.erase(it);
     player_create_system::UpdateConnection(
       registry, connection, ConnectionState::kDisconnected);
+
+    if (found) {
+      Packet packet{};
+      packet_handler_->BuildPacketHeader(packet,
+                                         PacketHeaderStaticTypes::kPlayerLeave);
+      auto mw = packet.GetMemoryWriter();
+      mw->Write(uuid);
+      mw.Finalize();
+      PacketBroadcast(packet, SendStrategy::kReliable);
+      DLOG_VERBOSE("broadcasted disconnect");
+    }
   }
 }
 }

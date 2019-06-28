@@ -35,6 +35,8 @@ private:
   void ShowModDebug();
 
   void ShowTileDebug();
+
+  void ShowNetworkDebug();
 };
 
 }

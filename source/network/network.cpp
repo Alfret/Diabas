@@ -4,24 +4,117 @@
 #include "core/fixed_time_update.hpp"
 #include <functional>
 #include "game/player_data_storage.hpp"
-#include <alflib/memory/memory_reader.hpp>
-#include <alflib/memory/memory_writer.hpp>
 #include "game/ecs/systems/player_create_system.hpp"
 #include "game/ecs/components/uuid_component.hpp"
 #include "game/world.hpp"
 #include <random>
 #include <limits>
+#include "game/chat/chat.hpp"
 
 namespace dib {
 
 template<>
 void
-Network<Side::kClient>::ConnectToServer()
+Network<Side::kServer>::PacketBroadcast(const Packet& packet) const
+{
+  auto server = GetServer();
+  server->PacketBroadcast(packet, SendStrategy::kReliable);
+}
+
+template<>
+void
+Network<Side::kClient>::PacketBroadcast(const Packet& packet) const
+{
+  auto client = GetClient();
+  const auto res = client->PacketSend(packet, SendStrategy::kReliable);
+  if (res != SendResult::kSuccess) {
+    // TODO handle this fail
+    DLOG_ERROR("failed to send packet from client, fail not handled");
+  }
+}
+
+template<>
+void
+Network<Side::kServer>::PacketBroadcastExclude(
+  const Packet& packet,
+  const ConnectionId exclude_connection) const
+{
+  auto server = GetServer();
+  server->PacketBroadcastExclude(
+    packet, SendStrategy::kReliable, exclude_connection);
+}
+
+template<>
+void
+Network<Side::kClient>::PacketBroadcastExclude(const Packet&,
+                                               const ConnectionId) const
+{
+  AlfAssert(false, "cannot broadcastExclude from client");
+}
+
+template<>
+void Network<Side::kServer>::ConnectToServer(u32, u16)
+{
+  AlfAssert(false, "cannot connect to server from server");
+}
+
+template<>
+void
+Network<Side::kClient>::ConnectToServer(u32 ip, u16 port)
 {
   SteamNetworkingIPAddr addr{};
-  addr.SetIPv4(0x7F000001, kPort);
+  addr.SetIPv4(ip, port);
   auto client = GetClient();
   client->Connect(addr);
+}
+
+template<>
+void
+Network<Side::kServer>::ConnectToServer(const String&)
+{
+  AlfAssert(false, "cannot connect to server from server");
+}
+
+template<>
+void
+Network<Side::kClient>::ConnectToServer(const String& addr)
+{
+  SteamNetworkingIPAddr saddr{};
+  saddr.ParseString(addr.GetUTF8());
+  auto client = GetClient();
+  client->Connect(saddr);
+}
+
+template<>
+void
+Network<Side::kServer>::ConnectToServer(const char8*)
+{
+  AlfAssert(false, "cannot connect to server from server");
+}
+
+template<>
+void
+Network<Side::kClient>::ConnectToServer(const char8* addr)
+{
+  SteamNetworkingIPAddr saddr{};
+  saddr.ParseString(addr);
+  auto client = GetClient();
+  client->Connect(saddr);
+}
+
+template<>
+void
+Network<Side::kServer>::Disconnect()
+{
+  AlfAssert(false, "cannot disconnect on the server");
+}
+
+template<>
+void
+Network<Side::kClient>::Disconnect()
+{
+  auto client = GetClient();
+  client->CloseConnection();
 }
 
 template<>
@@ -30,6 +123,13 @@ Network<Side::kServer>::StartServer()
 {
   auto server = GetServer();
   server->StartServer(kPort);
+}
+
+template<>
+void
+Network<Side::kClient>::StartServer()
+{
+  AlfAssert(false, "cannot start server on client");
 }
 
 static void
@@ -82,11 +182,10 @@ Network<Side::kServer>::SendPlayerList(const ConnectionId connection_id) const
                                      const PlayerData& player_data,
                                      const Uuid& uuid) {
         if (connection_id != player_connection.connection_id) {
-          // TODO dont waste memory when alflib is updated
-          alflib::MemoryWriter mw{};
-          mw.Write(player_data);
-          mw.Write(uuid);
-          packet.SetPayload(mw.GetBuffer().GetData(), mw.GetBuffer().GetSize());
+          auto mw = packet.GetMemoryWriter();
+          mw->Write(player_data);
+          mw->Write(uuid);
+          mw.Finalize();
           auto server = GetServer();
           server->PacketUnicast(packet, SendStrategy::kReliable, connection_id);
         }
@@ -100,6 +199,10 @@ Network<Side::kClient>::SendPlayerList(const ConnectionId) const
   AlfAssert(false, "cannot send player list from client");
 }
 
+// ============================================================ //
+// SetupPacketHandler CLIENT
+// ============================================================ //
+
 template<>
 void
 Network<Side::kClient>::SetupPacketHandler()
@@ -111,7 +214,7 @@ Network<Side::kClient>::SetupPacketHandler()
     Packet player_join_packet{};
     packet_handler_.BuildPacketHeader(player_join_packet,
                                       PacketHeaderStaticTypes::kPlayerJoin);
-    auto my_player_data = PlayerDataStorage::Load();
+    auto& my_player_data = PlayerDataStorage::Load();
     Uuid uuid{ uuids::uuid_system_generator{}() };
 
     // insert into our ECS system
@@ -124,12 +227,10 @@ Network<Side::kClient>::SetupPacketHandler()
     AlfAssert(player_data_ok && uuid_ok,
               "failed player_data_ok and/or uuid_ok");
 
-    // TODO dont copy when alflib is updated
-    alflib::MemoryWriter mw{};
-    mw.Write(my_player_data);
-    mw.Write(uuid);
-    player_join_packet.SetPayload(mw.GetBuffer().GetData(),
-                                  mw.GetBuffer().GetSize());
+    auto mw = player_join_packet.GetMemoryWriter();
+    mw->Write(my_player_data);
+    mw->Write(uuid);
+    mw.Finalize();
     auto client = GetClient();
     client->PacketSend(player_join_packet, SendStrategy::kReliable);
   };
@@ -139,9 +240,11 @@ Network<Side::kClient>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto ChatCb = [](const Packet& packet) {
-    alflib::String msg = packet.ToString();
-    DLOG_RAW("Server: {}\n", msg);
+  const auto ChatCb = [this](const Packet& packet) {
+    auto mr = packet.GetMemoryReader();
+    auto msg = mr.Read<game::ChatMessage>();
+    auto& chat = world_->GetChat();
+    chat.ParseMessage(std::move(msg));
   };
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kChat, "chat", ChatCb);
@@ -150,9 +253,7 @@ Network<Side::kClient>::SetupPacketHandler()
   // ============================================================ //
 
   const auto PlayerJoinCb = [this](const Packet& packet) {
-    // TODO dont copy when alflib is updated
-    alflib::Buffer buf(packet.GetPayloadSize(), packet.GetPayload());
-    alflib::MemoryReader mr{ buf };
+    auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
     auto uuid = mr.Read<Uuid>();
 
@@ -198,7 +299,36 @@ Network<Side::kClient>::SetupPacketHandler()
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kPlayerJoin, "player join", PlayerJoinCb);
   AlfAssert(ok, "could not add packet type player join");
+
+  // ============================================================ //
+
+  const auto PlayerLeaveCb = [this](const Packet& packet) {
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    auto view = registry.view<Uuid>();
+
+    auto mr = packet.GetMemoryReader();
+    const auto uuid = mr.Read<Uuid>();
+
+    for (auto entity : view) {
+      if (view.get(entity) == uuid) {
+        auto player_data = registry.get<PlayerData>(entity);
+        DLOG_INFO("{} disconnected", player_data.name);
+        registry.destroy(entity);
+        break;
+      }
+    }
+
+    std::string_view _{};
+    NetworkInfo(_);
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerLeave, "player leave", PlayerLeaveCb);
+  AlfAssert(ok, "could not add packet type player leave");
 }
+
+// ============================================================ //
+// SetupPacketHandler SERVER
+// ============================================================ //
 
 template<>
 void
@@ -213,9 +343,15 @@ Network<Side::kServer>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto ChatCb = [](const Packet& packet) {
-    alflib::String msg = packet.ToString();
-    DLOG_RAW("TODO handle chat packets [{}]\n", msg);
+  const auto ChatCb = [this](const Packet& packet) {
+    auto mr = packet.GetMemoryReader();
+    auto msg = mr.Read<game::ChatMessage>();
+    if (world_->GetChat().ValidateMessage(msg)) {
+      PacketBroadcast(packet);
+    } else {
+      DLOG_WARNING("client {} attempted to send invalid packet",
+                   packet.GetFromConnection());
+    }
   };
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kChat, "chat", ChatCb);
@@ -225,9 +361,7 @@ Network<Side::kServer>::SetupPacketHandler()
 
   const auto PlayerJoinCb = [this](const Packet& packet) {
     DLOG_INFO("player join {}", packet.GetFromConnection());
-    // TODO dont copy when alflib is updated
-    alflib::Buffer buf(packet.GetPayloadSize(), packet.GetPayload());
-    alflib::MemoryReader mr{ buf };
+    auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
     auto uuid = mr.Read<Uuid>();
 
@@ -252,6 +386,15 @@ Network<Side::kServer>::SetupPacketHandler()
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kPlayerJoin, "player join", PlayerJoinCb);
   AlfAssert(ok, "could not add packet type player join");
+
+  // ============================================================ //
+
+  const auto PlayerLeaveCb = [](const Packet&) {
+    DLOG_WARNING("Got player leave packet on server");
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerLeave, "player leave", PlayerLeaveCb);
+  AlfAssert(ok, "could not add packet type player leave");
 }
 
 template<>
@@ -294,45 +437,6 @@ Network<Side::kServer>::Update()
 
 template<>
 void
-Network<Side::kServer>::PacketBroadcast(const Packet& packet) const
-{
-  auto server = GetServer();
-  server->PacketBroadcast(packet, SendStrategy::kReliable);
-}
-
-template<>
-void
-Network<Side::kClient>::PacketBroadcast(const Packet& packet) const
-{
-  auto client = GetClient();
-  const auto res = client->PacketSend(packet, SendStrategy::kReliable);
-  if (res != SendResult::kSuccess) {
-    // TODO handle this fail
-    DLOG_ERROR("failed to send packet from client, fail not handled");
-  }
-}
-
-template<>
-void
-Network<Side::kServer>::PacketBroadcastExclude(
-  const Packet& packet,
-  const ConnectionId exclude_connection) const
-{
-  auto server = GetServer();
-  server->PacketBroadcastExclude(
-    packet, SendStrategy::kReliable, exclude_connection);
-}
-
-template<>
-void
-Network<Side::kClient>::PacketBroadcastExclude(const Packet&,
-                                               const ConnectionId) const
-{
-  AlfAssert(false, "cannot broadcastExclude from client");
-}
-
-template<>
-void
 Network<Side::kServer>::Broadcast(const std::string_view message) const
 {
   auto server = GetServer();
@@ -346,6 +450,62 @@ void
 Network<Side::kClient>::Broadcast([
   [maybe_unused]] const std::string_view message) const
 {}
+
+template<>
+ConnectionState
+Network<Side::kServer>::GetConnectionState() const
+{
+  return ConnectionState::kConnected;
+}
+
+template<>
+ConnectionState
+Network<Side::kClient>::GetConnectionState() const
+{
+  auto client = GetClient();
+  return client->GetConnectionState();
+}
+
+template<>
+u32
+Network<Side::kServer>::GetOurEntity() const
+{
+  AlfAssert(false, "cannot get our entity on server");
+  return 0;
+}
+
+template<>
+u32
+Network<Side::kClient>::GetOurEntity() const
+{
+  auto& registry = world_->GetEntityManager().GetRegistry();
+  auto view = registry.view<PlayerConnection>();
+  auto client = GetClient();
+  for (auto entity : view) {
+    if (view.get(entity).connection_id == client->GetConnectionId()) {
+      return entity;
+    }
+  }
+  AlfAssert(false, "failed to find our entity");
+  return 0;
+}
+
+template<>
+Uuid
+Network<Side::kServer>::GetOurUuid() const
+{
+  AlfAssert(false, "cannot get our uuid on server");
+  return Uuid{};
+}
+
+template<>
+Uuid
+Network<Side::kClient>::GetOurUuid() const
+{
+  u32 entity = GetOurEntity();
+  auto& registry = world_->GetEntityManager().GetRegistry();
+  return registry.get<Uuid>(entity);
+}
 
 // ============================================================ //
 

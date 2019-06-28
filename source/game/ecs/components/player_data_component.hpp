@@ -2,8 +2,8 @@
 #define PLAYER_DATA_COMPONENT_HPP_
 
 #include "core/types.hpp"
-#include <alflib/memory/memory_writer.hpp>
-#include <alflib/memory/memory_reader.hpp>
+#include <alflib/memory/raw_memory_writer.hpp>
+#include <alflib/memory/raw_memory_reader.hpp>
 
 namespace dib {
 struct PlayerData
@@ -15,17 +15,17 @@ struct PlayerData
   u8 direction;
   float speed;
 
-  void ToBytes(alflib::MemoryWriter& mw) const
+  bool ToBytes(alflib::RawMemoryWriter& mw) const
   {
     mw.Write(name);
     mw.Write(xp);
     mw.Write(player_class);
     mw.Write(body);
     mw.Write(direction);
-    mw.Write(speed);
+    return mw.Write(speed);
   }
 
-  static PlayerData FromBytes(alflib::MemoryReader& mr)
+  static PlayerData FromBytes(alflib::RawMemoryReader& mr)
   {
     PlayerData data{};
     data.name = mr.Read<decltype(name)>();

@@ -6,6 +6,7 @@
 
 #include <glad/glad.h>
 #include "core/types.hpp"
+#include <vector>
 
 // ========================================================================== //
 // IndexBuffer Declaration
