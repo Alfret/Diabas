@@ -225,12 +225,11 @@ Server::DisconnectConnection(const HSteamNetConnection connection)
         registry, connection, ConnectionState::kDisconnected);
 
     if (found) {
-      // TODO when alflib update, no copy
       Packet packet{};
       packet_handler_->BuildPacketHeader(packet, PacketHeaderStaticTypes::kPlayerLeave);
-      alflib::MemoryWriter mw{};
-      mw.Write(uuid);
-      packet.SetPayload(mw.GetBuffer().GetData(), mw.GetBuffer().GetSize());
+      auto mw = packet.GetMemoryWriter();
+      mw->Write(uuid);
+      mw.Finalize();
       PacketBroadcast(packet, SendStrategy::kReliable);
       DLOG_VERBOSE("broadcasted disconnect");
     }

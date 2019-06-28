@@ -1,0 +1,112 @@
+#include "chat.hpp"
+#include <alflib/core/assert.hpp>
+#include "game/world.hpp"
+#include "game/ecs/components/uuid_component.hpp"
+#include "game/ecs/components/player_data_component.hpp"
+#include "network/side.hpp"
+
+namespace dib::game
+{
+
+bool
+Chat::SendMessage(ChatMessage msg) const
+{
+  auto& registry = world_->GetEntityManager().GetRegistry();
+  auto& network = world_->GetNetwork();
+
+  // verify the data in chat message
+  {
+    if (msg.msg.GetSize() < 1) {
+      DLOG_WARNING("attemted to sent an empty chat message");
+      return false;
+    }
+
+    if (const u32 v = static_cast<u32>(msg.type);
+        v > static_cast<u32>(ChatType::kEvent)) {
+      DLOG_WARNING("attemted to send a message of unknown type");
+      return false;
+    }
+
+    if constexpr (kSide == Side::kClient) {
+        if (msg.type == ChatType::kEvent ||
+            msg.type == ChatType::kServer) {
+          DLOG_WARNING("Client attempted to send a privileged chat message");
+          return false;
+        }
+
+        if (registry.get<Uuid>(network.GetOurEntity()) != msg.uuid_from) {
+          DLOG_WARNING("attemted to sent a message that was not from us");
+          return false;
+        }
+
+        if (msg.type == ChatType::kWhisper) {
+          auto view = registry.view<Uuid>();
+          bool found = false;
+          for (auto entity : view) {
+            if (view.get(entity) == msg.uuid_to) {
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) {
+            DLOG_WARNING("attemted to send a whisper, but invalid to uuid");
+            return false;
+          }
+        }
+
+      } else /* Side::kServer */ {
+        if (msg.type == ChatType::kSay || msg.type == ChatType::kWhisper) {
+          DLOG_WARNING("Server attempted to send a player message");
+          return false;
+        }
+    }
+  }
+
+  Packet packet{};
+
+
+
+  return true;
+}
+
+void
+Chat::Add(ChatMessage msg)
+{
+  auto res = messages_.Push(std::move(msg));
+  if (res != dutil::QueueResult::kSuccess) {
+    ChatMessage _{};
+    res = messages_.Pop(_);
+    AlfAssert(res == dutil::QueueResult::kSuccess, "failed to pop");
+    res = messages_.Push(std::move(msg));
+    AlfAssert(res == dutil::QueueResult::kSuccess, "failed the second push");
+  }
+  Debug();
+}
+
+void
+Chat::Debug()
+{
+  debug_ = "";
+  auto& registry = world_->GetEntityManager().GetRegistry();
+  for (auto message : messages_) {
+    if (message.type == ChatType::kSay || message.type == ChatType::kWhisper) {
+      auto view = registry.view<Uuid, PlayerData>();
+      bool found = false;
+      for (auto entity : view) {
+        if (view.get<Uuid>(entity) == message.uuid_from) {
+          found = true;
+          debug_ += view.get<PlayerData>(entity).name;
+        }
+      }
+    }
+    else if (message.type == ChatType::kServer) {
+      debug_ += "SERVER";
+    }
+
+    debug_ += ":";
+    debug_ += message.msg;
+    debug_ += "\n\n";
+  }
+}
+}

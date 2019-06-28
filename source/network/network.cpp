@@ -4,8 +4,6 @@
 #include "core/fixed_time_update.hpp"
 #include <functional>
 #include "game/player_data_storage.hpp"
-#include <alflib/memory/memory_reader.hpp>
-#include <alflib/memory/memory_writer.hpp>
 #include "game/ecs/systems/player_create_system.hpp"
 #include "game/ecs/components/uuid_component.hpp"
 #include "game/world.hpp"
@@ -26,7 +24,7 @@ void
 Network<Side::kClient>::ConnectToServer(u32 ip, u16 port)
 {
   SteamNetworkingIPAddr addr{};
-  addr.SetIPv4(0x7F000001, kPort);
+  addr.SetIPv4(ip, port);
   auto client = GetClient();
   client->Connect(addr);
 }
@@ -145,11 +143,10 @@ Network<Side::kServer>::SendPlayerList(const ConnectionId connection_id) const
                                      const PlayerData& player_data,
                                      const Uuid& uuid) {
         if (connection_id != player_connection.connection_id) {
-          // TODO dont waste memory when alflib is updated
-          alflib::MemoryWriter mw{};
-          mw.Write(player_data);
-          mw.Write(uuid);
-          packet.SetPayload(mw.GetBuffer().GetData(), mw.GetBuffer().GetSize());
+          auto mw = packet.GetMemoryWriter();
+          mw->Write(player_data);
+          mw->Write(uuid);
+          mw.Finalize();
           auto server = GetServer();
           server->PacketUnicast(packet, SendStrategy::kReliable, connection_id);
         }
@@ -191,12 +188,10 @@ Network<Side::kClient>::SetupPacketHandler()
     AlfAssert(player_data_ok && uuid_ok,
               "failed player_data_ok and/or uuid_ok");
 
-    // TODO dont copy when alflib is updated
-    alflib::MemoryWriter mw{};
-    mw.Write(my_player_data);
-    mw.Write(uuid);
-    player_join_packet.SetPayload(mw.GetBuffer().GetData(),
-                                  mw.GetBuffer().GetSize());
+    auto mw = player_join_packet.GetMemoryWriter();
+    mw->Write(my_player_data);
+    mw->Write(uuid);
+    mw.Finalize();
     auto client = GetClient();
     client->PacketSend(player_join_packet, SendStrategy::kReliable);
   };
@@ -217,9 +212,7 @@ Network<Side::kClient>::SetupPacketHandler()
   // ============================================================ //
 
   const auto PlayerJoinCb = [this](const Packet& packet) {
-    // TODO dont copy when alflib is updated
-    alflib::Buffer buf(packet.GetPayloadSize(), packet.GetPayload());
-    alflib::MemoryReader mr{ buf };
+    auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
     auto uuid = mr.Read<Uuid>();
 
@@ -240,7 +233,8 @@ Network<Side::kClient>::SetupPacketHandler()
           break;
         }
       }
-      if (!found) break;
+      if (!found)
+        break;
     }
 
     auto connection_ok = player_create_system::UpdateConnection(
@@ -272,9 +266,7 @@ Network<Side::kClient>::SetupPacketHandler()
     auto& registry = world_->GetEntityManager().GetRegistry();
     auto view = registry.view<Uuid>();
 
-    // TODO when alflib updates, no copy
-    alflib::Buffer buf{ packet.GetPayloadSize(), packet.GetPayload() };
-    alflib::MemoryReader mr{buf};
+    auto mr = packet.GetMemoryReader();
     const auto uuid = mr.Read<Uuid>();
 
     for (auto entity : view) {
@@ -323,9 +315,7 @@ Network<Side::kServer>::SetupPacketHandler()
 
   const auto PlayerJoinCb = [this](const Packet& packet) {
     DLOG_INFO("player join {}", packet.GetFromConnection());
-    // TODO dont copy when alflib is updated
-    alflib::Buffer buf(packet.GetPayloadSize(), packet.GetPayload());
-    alflib::MemoryReader mr{ buf };
+    auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
     auto uuid = mr.Read<Uuid>();
 
@@ -467,6 +457,30 @@ Network<Side::kClient>::GetConnectionState() const
 {
   auto client = GetClient();
   return client->GetConnectionState();
+}
+
+template<>
+u32
+Network<Side::kServer>::GetOurEntity() const
+{
+  AlfAssert(false, "cannot get our entity on server");
+  return 0;
+}
+
+template <>
+u32
+Network<Side::kClient>::GetOurEntity() const
+{
+  auto& registry = world_->GetEntityManager().GetRegistry();
+  auto view = registry.view<PlayerConnection>();
+  auto client = GetClient();
+  for (auto entity : view) {
+    if (view.get(entity).connection_id == client->GetConnectionId()) {
+      return entity;
+    }
+  }
+  AlfAssert(false, "failed to find our entity");
+  return 0;
 }
 
 // ============================================================ //

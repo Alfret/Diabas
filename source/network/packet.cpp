@@ -1,5 +1,5 @@
 #include "packet.hpp"
-#include "core/assert.hpp"
+#include <alflib/core/assert.hpp>
 #include <dlog.hpp>
 
 namespace dib {
@@ -46,10 +46,10 @@ Packet::Packet(const std::size_t size)
   SetPacketCapacity(kHeaderSize + size);
 }
 
-Packet::Packet(const u8* data, const std::size_t data_count)
+Packet::Packet(const Packet::ValueType* data, const std::size_t data_count)
   : size_(data_count)
 {
-  DIB_ASSERT(data_count >= kHeaderSize,
+  AlfAssert(data_count >= kHeaderSize,
              "data_count must be larger or equal to header size");
   SetPacketCapacity(data_count);
   SetPacket(data, data_count);
@@ -105,9 +105,9 @@ Packet::GetPacketSize() const
 }
 
 bool
-Packet::SetPacket(const u8* data, const std::size_t data_count)
+Packet::SetPacket(const Packet::ValueType* data, const std::size_t data_count)
 {
-  DIB_ASSERT(container_.capacity() >= kHeaderSize, "container too small");
+  AlfAssert(container_.capacity() >= kHeaderSize, "container too small");
   if (container_.capacity() >= data_count) {
     std::memcpy((&container_[0]), data, data_count);
     size_ = data_count;
@@ -122,7 +122,7 @@ Packet::SetPacket(const u8* data, const std::size_t data_count)
 std::size_t
 Packet::GetHeaderSize() const
 {
-  DIB_ASSERT(container_.capacity() >= kHeaderSize, "container too small");
+  AlfAssert(container_.capacity() >= kHeaderSize, "container too small");
   return kHeaderSize;
 }
 
@@ -153,23 +153,32 @@ Packet::ClearHeader()
 std::size_t
 Packet::GetPayloadSize() const
 {
-  DIB_ASSERT(size_ >= kHeaderSize, "container too small");
-  DIB_ASSERT(container_.capacity() >= kHeaderSize, "container too small");
+  AlfAssert(size_ >= kHeaderSize, "container too small");
+  AlfAssert(container_.capacity() >= kHeaderSize, "container too small");
   return size_ - kHeaderSize;
+}
+
+void
+Packet::SetPayloadSize(const std::size_t size)
+{
+  const std::size_t new_size = GetHeaderSize() + size;
+  AlfAssert(new_size <= GetPacketCapacity(),
+      "size must be <= PacketCapacity - HeaderSize");
+  size_ = new_size;
 }
 
 std::size_t
 Packet::GetPayloadCapacity() const
 {
-  DIB_ASSERT(size_ >= kHeaderSize, "container too small");
-  DIB_ASSERT(container_.capacity() >= kHeaderSize, "container too small");
+  AlfAssert(size_ >= kHeaderSize, "container too small");
+  AlfAssert(container_.capacity() >= kHeaderSize, "container too small");
   return GetPacketCapacity() - kHeaderSize;
 }
 
 bool
-Packet::SetPayload(const u8* data, const std::size_t data_count)
+Packet::SetPayload(const Packet::ValueType* data, const std::size_t data_count)
 {
-  DIB_ASSERT(container_.capacity() >= kHeaderSize, "container too small");
+  AlfAssert(container_.capacity() >= kHeaderSize, "container too small");
   if (GetBytesLeft() >= data_count) {
     std::memcpy((&container_[0]) + size_, data, data_count);
     size_ += data_count;
@@ -182,20 +191,27 @@ Packet::SetPayload(const u8* data, const std::size_t data_count)
 bool
 Packet::SetPayload(const char8* str, const std::size_t str_len)
 {
-  return SetPayload(reinterpret_cast<const u8*>(str), str_len);
+  return SetPayload(reinterpret_cast<const Packet::ValueType*>(str), str_len);
 }
 
-const u8*
+const Packet::ValueType*
 Packet::GetPayload() const
 {
-  DIB_ASSERT(GetPayloadSize() > 0, "container too small");
+  AlfAssert(GetPayloadSize() > 0, "container too small");
   return &container_[kHeaderSize];
 }
 
-u8*
+Packet::ValueType*
 Packet::GetPayload()
 {
-  DIB_ASSERT(GetPayloadSize() > 0, "container too small");
+  AlfAssert(GetPayloadSize() > 0, "container too small");
+  return &container_[kHeaderSize];
+}
+
+Packet::ValueType*
+Packet::GetRawPayload()
+{
+  AlfAssert(container_.size() > kHeaderSize, "container too small");
   return &container_[kHeaderSize];
 }
 
@@ -224,4 +240,36 @@ Packet::ToString() const
   }
   return "";
 }
+
+MemoryWriter
+Packet::GetMemoryWriter()
+{
+  MemoryWriter mw{this};
+  return mw;
+}
+
+alflib::RawMemoryReader
+Packet::GetMemoryReader() const
+{
+  alflib::RawMemoryReader mr{ GetPayload(), GetPayloadSize() };
+  return mr;
+}
+
+// ============================================================ //
+
+MemoryWriter::MemoryWriter(Packet* packet)
+  : mw_(packet->GetRawPayload(), packet->GetPayloadCapacity())
+  , packet_(packet)
+{}
+
+void
+MemoryWriter::Finalize()
+{
+  const std::size_t before = packet_->GetPayloadSize();
+  const std::size_t after = before + mw_.GetOffset();
+  AlfAssert(after >= before, "offset wrong");
+  AlfAssert(after <= packet_->GetPayloadCapacity(), "offset too large");
+  packet_->SetPayloadSize(after);
+}
+
 }

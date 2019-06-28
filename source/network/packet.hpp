@@ -5,10 +5,40 @@
 #include "network/packet_header.hpp"
 #include "network/connection_id.hpp"
 #include <vector>
+#include <alflib/memory/raw_memory_reader.hpp>
+#include <alflib/memory/raw_memory_writer.hpp>
 
 namespace dib {
 
 using ContainerValueType = u8;
+
+// ============================================================ //
+// Memory Writer helpers
+// ============================================================ //
+
+class Packet;
+
+struct MemoryWriter
+{
+  MemoryWriter(Packet* packet);
+
+  alflib::RawMemoryWriter* operator->() { return &mw_; }
+  alflib::RawMemoryWriter* operator*() { return &mw_; }
+
+  /**
+   * Will update the packet's payload size, realizing the writes.
+   */
+  void Finalize();
+
+private:
+  alflib::RawMemoryWriter mw_;
+  Packet* packet_;
+};
+
+// ============================================================ //
+// Payload Iterator
+// ============================================================ //
+
 
 struct PayloadIterator
 {
@@ -162,6 +192,15 @@ public:
   std::size_t GetPayloadSize() const;
 
   /**
+   * Override the payload size and set it yourself.
+   *
+   * Note: After it is set, the PacketSize will be PacketHeaderSize + size.
+   *
+   * @pre size must be <= PacketSize.
+   */
+  void SetPayloadSize(const std::size_t size);
+
+  /**
    * Get the total amount of bytes that can be used by the payload.
    */
   std::size_t GetPayloadCapacity() const;
@@ -176,11 +215,39 @@ public:
 
   ValueType* GetPayload();
 
+ private:
+  friend MemoryWriter;
+  ValueType* GetRawPayload();
+
+ public:
   PayloadIterator begin();
 
   PayloadIterator end();
 
   alflib::String ToString() const;
+
+  /**
+   * Use a memory writer to write the packets payload. Pair it with the
+   * memory reader to read the memory. It will write to the current
+   * payload offset. REMEMBER to call Finialize on the MemoryWriter when done.
+   *
+   * To get a memory writer pointing to the beginning of the
+   * payload, start off with a new packet, or call Clear on the packet.
+   *
+   * This memory writer will update the packets payload size automatically
+   * on destruction
+   *
+   * Will be invalidated on packet resize.
+   */
+  MemoryWriter GetMemoryWriter();
+
+  /**
+   * Read the payload with memory reader. Pair it with the memory writer
+   * to write the memory.
+   *
+   * Will be invalidated on packet resize.
+   */
+  alflib::RawMemoryReader GetMemoryReader() const;
 
   // ============================================================ //
   // Constants
@@ -195,6 +262,9 @@ private:
 private:
   using PacketContainer = std::vector<ValueType>;
 
+  /**
+   * Total used size, header + payload.
+   */
   std::size_t size_;
 
   ConnectionId from_ = kConnectionIdUnknown;
