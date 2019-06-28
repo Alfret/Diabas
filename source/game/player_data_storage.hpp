@@ -6,7 +6,7 @@
 namespace dib {
 class PlayerDataStorage
 {
- private:
+private:
   static PlayerData Default()
   {
     PlayerData data{};

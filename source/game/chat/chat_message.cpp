@@ -1,7 +1,6 @@
 #include "chat_message.hpp"
 
-namespace dib::game
-{
+namespace dib::game {
 
 void
 ChatMessage::ToBytes(alflib::MemoryWriter& mw) const

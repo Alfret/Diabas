@@ -102,7 +102,7 @@ Client::OnSteamNetConnectionStatusChanged(
 {
   switch (status->m_info.m_eState) {
     case k_ESteamNetworkingConnectionState_None: {
-      //DLOG_VERBOSE("state none");
+      // DLOG_VERBOSE("state none");
       break;
     }
 

@@ -5,8 +5,7 @@
 #include "game/ecs/components/player_data_component.hpp"
 #include "network/side.hpp"
 
-namespace dib::game
-{
+namespace dib::game {
 
 bool
 Chat::SendMessage(ChatMessage msg) const
@@ -28,44 +27,41 @@ Chat::SendMessage(ChatMessage msg) const
     }
 
     if constexpr (kSide == Side::kClient) {
-        if (msg.type == ChatType::kEvent ||
-            msg.type == ChatType::kServer) {
-          DLOG_WARNING("Client attempted to send a privileged chat message");
-          return false;
-        }
+      if (msg.type == ChatType::kEvent || msg.type == ChatType::kServer) {
+        DLOG_WARNING("Client attempted to send a privileged chat message");
+        return false;
+      }
 
-        if (registry.get<Uuid>(network.GetOurEntity()) != msg.uuid_from) {
-          DLOG_WARNING("attemted to sent a message that was not from us");
-          return false;
-        }
+      if (registry.get<Uuid>(network.GetOurEntity()) != msg.uuid_from) {
+        DLOG_WARNING("attemted to sent a message that was not from us");
+        return false;
+      }
 
-        if (msg.type == ChatType::kWhisper) {
-          auto view = registry.view<Uuid>();
-          bool found = false;
-          for (auto entity : view) {
-            if (view.get(entity) == msg.uuid_to) {
-              found = true;
-              break;
-            }
-          }
-
-          if (!found) {
-            DLOG_WARNING("attemted to send a whisper, but invalid to uuid");
-            return false;
+      if (msg.type == ChatType::kWhisper) {
+        auto view = registry.view<Uuid>();
+        bool found = false;
+        for (auto entity : view) {
+          if (view.get(entity) == msg.uuid_to) {
+            found = true;
+            break;
           }
         }
 
-      } else /* Side::kServer */ {
-        if (msg.type == ChatType::kSay || msg.type == ChatType::kWhisper) {
-          DLOG_WARNING("Server attempted to send a player message");
+        if (!found) {
+          DLOG_WARNING("attemted to send a whisper, but invalid to uuid");
           return false;
         }
+      }
+
+    } else /* Side::kServer */ {
+      if (msg.type == ChatType::kSay || msg.type == ChatType::kWhisper) {
+        DLOG_WARNING("Server attempted to send a player message");
+        return false;
+      }
     }
   }
 
   Packet packet{};
-
-
 
   return true;
 }
@@ -99,8 +95,7 @@ Chat::Debug()
           debug_ += view.get<PlayerData>(entity).name;
         }
       }
-    }
-    else if (message.type == ChatType::kServer) {
+    } else if (message.type == ChatType::kServer) {
       debug_ += "SERVER";
     }
 

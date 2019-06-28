@@ -6,10 +6,10 @@
 #include <alflib/memory/memory_reader.hpp>
 #include <alflib/memory/memory_writer.hpp>
 
-namespace dib::game
-{
+namespace dib::game {
 
-enum class ChatType : u8 {
+enum class ChatType : u8
+{
   kServer = 0,
   kSay,
   kWhisper,
@@ -32,4 +32,4 @@ struct ChatMessage
 };
 }
 
-#endif//CHAT_MESSAGE_HPP_
+#endif // CHAT_MESSAGE_HPP_

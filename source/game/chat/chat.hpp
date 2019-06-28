@@ -9,12 +9,11 @@ namespace dib {
 class World;
 }
 
-namespace dib::game
-{
+namespace dib::game {
 
 class Chat
 {
- public:
+public:
   /**
    * Send a chat message to server, will not add it locally until
    * we get it back from server.
@@ -30,11 +29,11 @@ private:
   void Debug();
 
 private:
-  dutil::Queue<ChatMessage, dutil::kNoMutex> messages_{10};
+  dutil::Queue<ChatMessage, dutil::kNoMutex> messages_{ 10 };
   String debug_{};
   World* world_;
 };
 
 }
 
-#endif//CHAT_HPP_
+#endif // CHAT_HPP_

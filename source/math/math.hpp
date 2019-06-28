@@ -11,10 +11,8 @@
 // Functions
 // ========================================================================== //
 
-namespace dib
-{
+namespace dib {
 
-	
 /** Returns the minimum of two values.
  * \brief Returns min of two values.
  * \tparam T Type of values.
