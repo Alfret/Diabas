@@ -9,7 +9,6 @@
 #include "game/mods/loader.hpp"
 #include "game/tile/tile_manager.hpp"
 #include "game/client/tile_atlas.hpp"
-#include "game/client/debug_ui.hpp"
 #include "graphics/camera.hpp"
 #include "graphics/renderer.hpp"
 #include "script/env.hpp"
@@ -39,8 +38,6 @@ private:
   graphics::Renderer mRenderer;
   /** Camera **/
   graphics::Camera mCamera;
-  /** Debug UI **/
-  game::DebugUI mDebugUI;
 
 public:
   /** Construct game client **/

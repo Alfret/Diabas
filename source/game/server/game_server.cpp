@@ -23,6 +23,7 @@ void
 GameServer::Update(f64 delta)
 {
   mCLI.Update();
+  mWorld.Update();
 }
 
 // -------------------------------------------------------------------------- //

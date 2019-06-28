@@ -15,28 +15,22 @@ namespace dib::game {
 
 DIB_FORWARD_DECLARE_CLASS(GameClient);
 
-/** Debugging UI **/
-class DebugUI
-{
-private:
-  /** Client that the UI is displayed for **/
-  GameClient& mGameClient;
+void
+ShowScriptDebug(GameClient& gameClient);
 
-public:
-  /** Construct debug UI for client **/
-  DebugUI(GameClient& gameClient);
+// -------------------------------------------------------------------------- //
 
-  /** Update UI **/
-  void Update(f32 delta);
+void
+ShowModDebug(GameClient& gameClient);
 
-private:
-  void ShowScriptDebug();
+// -------------------------------------------------------------------------- //
 
-  void ShowModDebug();
+void
+ShowTileDebug(GameClient& gameClient);
 
-  void ShowTileDebug();
+// -------------------------------------------------------------------------- //
 
-  void ShowNetworkDebug();
-};
+void
+ShowNetworkDebug(GameClient& gameClient);
 
 }
