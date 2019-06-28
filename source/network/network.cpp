@@ -13,8 +13,7 @@
 namespace dib {
 
 template<>
-void
-Network<Side::kServer>::ConnectToServer(u32, u16)
+void Network<Side::kServer>::ConnectToServer(u32, u16)
 {
   AlfAssert(false, "cannot connect to server from server");
 }
@@ -63,7 +62,7 @@ Network<Side::kClient>::ConnectToServer(const char8* addr)
   client->Connect(saddr);
 }
 
-template <>
+template<>
 void
 Network<Side::kServer>::Disconnect()
 {
@@ -223,7 +222,8 @@ Network<Side::kClient>::SetupPacketHandler()
       std::numeric_limits<ConnectionId>::min(),
       std::numeric_limits<ConnectionId>::max());
     ConnectionId cid;
-    auto view = world_->GetEntityManager().GetRegistry().view<PlayerConnection>();
+    auto view =
+      world_->GetEntityManager().GetRegistry().view<PlayerConnection>();
     for (;;) {
       cid = dist(mt);
       bool found = false;
@@ -241,10 +241,8 @@ Network<Side::kClient>::SetupPacketHandler()
       world_->GetEntityManager().GetRegistry(),
       cid,
       ConnectionState::kConnected);
-    auto uuid_ok =
-      player_create_system::UpdateUuid(world_->GetEntityManager().GetRegistry(),
-                                       cid,
-                                       uuid);
+    auto uuid_ok = player_create_system::UpdateUuid(
+      world_->GetEntityManager().GetRegistry(), cid, uuid);
     auto player_data_ok = player_create_system::UpdatePlayerData(
       world_->GetEntityManager().GetRegistry(), uuid, player_data);
 
@@ -444,7 +442,7 @@ Network<Side::kClient>::Broadcast([
   [maybe_unused]] const std::string_view message) const
 {}
 
-template <>
+template<>
 ConnectionState
 Network<Side::kServer>::GetConnectionState() const
 {
@@ -467,7 +465,7 @@ Network<Side::kServer>::GetOurEntity() const
   return 0;
 }
 
-template <>
+template<>
 u32
 Network<Side::kClient>::GetOurEntity() const
 {

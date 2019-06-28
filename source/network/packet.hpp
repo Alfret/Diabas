@@ -39,7 +39,6 @@ private:
 // Payload Iterator
 // ============================================================ //
 
-
 struct PayloadIterator
 {
   /**
@@ -215,11 +214,11 @@ public:
 
   ValueType* GetPayload();
 
- private:
+private:
   friend MemoryWriter;
   ValueType* GetRawPayload();
 
- public:
+public:
   PayloadIterator begin();
 
   PayloadIterator end();

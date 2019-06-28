@@ -50,7 +50,7 @@ Packet::Packet(const Packet::ValueType* data, const std::size_t data_count)
   : size_(data_count)
 {
   AlfAssert(data_count >= kHeaderSize,
-             "data_count must be larger or equal to header size");
+            "data_count must be larger or equal to header size");
   SetPacketCapacity(data_count);
   SetPacket(data, data_count);
 }
@@ -163,7 +163,7 @@ Packet::SetPayloadSize(const std::size_t size)
 {
   const std::size_t new_size = GetHeaderSize() + size;
   AlfAssert(new_size <= GetPacketCapacity(),
-      "size must be <= PacketCapacity - HeaderSize");
+            "size must be <= PacketCapacity - HeaderSize");
   size_ = new_size;
 }
 
@@ -244,7 +244,7 @@ Packet::ToString() const
 MemoryWriter
 Packet::GetMemoryWriter()
 {
-  MemoryWriter mw{this};
+  MemoryWriter mw{ this };
   return mw;
 }
 

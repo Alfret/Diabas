@@ -127,7 +127,7 @@ Server::OnSteamNetConnectionStatusChanged(
 {
   switch (status->m_info.m_eState) {
     case k_ESteamNetworkingConnectionState_None: {
-      //DLOG_VERBOSE("state none");
+      // DLOG_VERBOSE("state none");
       break;
     }
 
@@ -222,11 +222,12 @@ Server::DisconnectConnection(const HSteamNetConnection connection)
 
     connections_.erase(it);
     player_create_system::UpdateConnection(
-        registry, connection, ConnectionState::kDisconnected);
+      registry, connection, ConnectionState::kDisconnected);
 
     if (found) {
       Packet packet{};
-      packet_handler_->BuildPacketHeader(packet, PacketHeaderStaticTypes::kPlayerLeave);
+      packet_handler_->BuildPacketHeader(packet,
+                                         PacketHeaderStaticTypes::kPlayerLeave);
       auto mw = packet.GetMemoryWriter();
       mw->Write(uuid);
       mw.Finalize();

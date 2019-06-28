@@ -157,9 +157,9 @@ ShowNetworkDebug(World& world, const game::Chat& chat)
 
     ImGui::Text("Network status: %s",
                 world.GetNetwork().GetConnectionState() ==
-                ConnectionState::kConnected
-                ? "connected"
-                : "disconnected");
+                    ConnectionState::kConnected
+                  ? "connected"
+                  : "disconnected");
 
     if (world.GetNetwork().GetConnectionState() ==
         ConnectionState::kConnected) {
@@ -207,7 +207,6 @@ ShowNetworkDebug(World& world, const game::Chat& chat)
 
       ImGui::TreePop();
     }
-
   }
 }
 
