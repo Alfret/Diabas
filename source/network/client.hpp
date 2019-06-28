@@ -36,6 +36,8 @@ public:
 
   ConnectionState GetConnectionState() { return connection_state_; }
 
+  ConnectionId GetConnectionId() const { return connection_; }
+
 private:
   void PollSocketStateChanges();
 

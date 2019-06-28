@@ -4,6 +4,8 @@
 #include "network/side.hpp"
 #include "app/imgui/imgui.h"
 #include "script/util.hpp"
+#include "game/player_data_storage.hpp"
+#include "game/chat/chat.hpp"
 
 // TEMP (for thread sleep to not overwork my linux machine)
 #include <chrono>
@@ -145,6 +147,79 @@ ShowTileDebug(Game& game,
   }
 }
 
+// ============================================================ //
+
+static void
+ShowNetworkDebug(World& world)
+{
+  auto& chat = world.GetChat();
+
+  //ImGui::ShowTestWindow();
+
+  if (ImGui::CollapsingHeader("Network")) {
+
+    ImGui::Text("Network status: %s",
+                world.GetNetwork().GetConnectionState() ==
+                    ConnectionState::kConnected
+                  ? "connected"
+                  : "disconnected");
+
+    if (world.GetNetwork().GetConnectionState() ==
+        ConnectionState::kConnected) {
+      if (ImGui::Button("disconnect")) {
+        world.GetNetwork().Disconnect();
+      }
+    } else {
+      constexpr std::size_t addrlen = 50;
+      static char8 addr[addrlen] = "127.0.0.1:24812";
+      ImGui::InputText("IP Adress", addr, addrlen);
+      if (ImGui::Button("connect")) {
+        world.GetNetwork().ConnectToServer(addr);
+      }
+    }
+
+    if (ImGui::TreeNode("Chat")) {
+      constexpr std::size_t buflen = 50;
+      static char8 buf[buflen] = "Rully";
+      ImGui::InputText("Name", buf, buflen);
+      if (ImGui::Button("Set Name")) {
+        if (world.GetNetwork().GetConnectionState() ==
+            ConnectionState::kDisconnected) {
+          auto& player_data = PlayerDataStorage::Load();
+          player_data.name = buf;
+        }
+      }
+      ImGui::Text("Note: name can only be applied when disconnected.");
+
+      ImGui::Spacing();
+      ImGui::Spacing();
+
+      constexpr std::size_t textlen = 128;
+      static char8 text[textlen] = "";
+      ImGui::InputText("chat", text, textlen);
+      if (ImGui::Button("send chat message")) {
+        game::ChatMessage msg{};
+        msg.msg = String(text);
+        msg.type = game::ChatType::kSay;
+        msg.uuid_from = world.GetNetwork().GetOurUuid();
+        if (!chat.SendMessage(msg)) {
+          DLOG_WARNING("failed to send chat message");
+        }
+        text[0] = '\0';
+      }
+
+      ImGui::InputTextMultiline("",
+                                const_cast<char8*>(chat.GetDebug().GetUTF8()),
+                                chat.GetDebug().GetSize(),
+                                ImVec2(-1.0f, ImGui::GetTextLineHeight() * 16),
+                                ImGuiInputTextFlags_AllowTabInput |
+                                  ImGuiInputTextFlags_ReadOnly);
+
+      ImGui::TreePop();
+    }
+  }
+}
+
 // -------------------------------------------------------------------------- //
 
 void
@@ -230,6 +305,7 @@ Game::Update(f64 delta)
   if (ImGui::Begin("Diabas - Debug")) {
     ShowScriptDebug(mScriptEnvironment);
     ShowModsDebug(mModLoader);
+    ShowNetworkDebug(world_);
     ShowTileDebug(*this, mTileManager, mTerrain, world_);
   }
   ImGui::End();
