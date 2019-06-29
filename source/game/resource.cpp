@@ -6,8 +6,11 @@
 
 namespace dib::game {
 
-ResourcePath::ResourcePath(const String& modId, const Path& resourcePath)
-  : mModID(modId)
+ResourcePath::ResourcePath(ResourceType type,
+                           const String& modId,
+                           const Path& resourcePath)
+  : mType(type)
+  , mModID(modId)
   , mResourcePath(resourcePath)
 {
   mPath = Path{ "./mods" }.Join(mModID).Join(mResourcePath);
@@ -15,8 +18,9 @@ ResourcePath::ResourcePath(const String& modId, const Path& resourcePath)
 
 // -------------------------------------------------------------------------- //
 
-ResourcePath::ResourcePath(const Path& resourcePath)
-  : mModID("builtin")
+ResourcePath::ResourcePath(ResourceType type, const Path& resourcePath)
+  : mType(type)
+  , mModID("builtin")
   , mResourcePath(resourcePath)
 {
   mPath = mResourcePath;

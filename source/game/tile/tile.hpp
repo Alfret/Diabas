@@ -4,10 +4,11 @@
 // Headers
 // ========================================================================== //
 
+#include <vector>
+
 #include "core/types.hpp"
 #include "core/macros.hpp"
 #include "game/resource.hpp"
-#include <vector>
 
 // ========================================================================== //
 // Tile Declaration
@@ -46,7 +47,7 @@ public:
   virtual ~Tile() = default;
 
   /** Returns the resource path of the tile **/
-  virtual ResourcePath& GetResourcePath(World& world, u32 x = 0, u32 y = 0);
+  virtual ResourcePath& GetResourcePath(World& world, u32 x, u32 y, u32 layer);
 
   /** Returns the list of paths to all resources used by this tile. For them to
    * be usable when returned from the 'Tile::GetResourcePath()' they must have

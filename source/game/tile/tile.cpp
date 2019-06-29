@@ -20,7 +20,8 @@ Tile::Tile(const ResourcePath& resourcePath)
 ResourcePath&
 Tile::GetResourcePath([[maybe_unused]] World& world,
                       [[maybe_unused]] u32 x,
-                      [[maybe_unused]] u32 y)
+                      [[maybe_unused]] u32 y,
+                      [[maybe_unused]] u32 layer)
 {
   return mResourcePaths[0];
 }

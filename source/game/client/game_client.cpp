@@ -30,8 +30,14 @@ GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
 void
 GameClient::Update(f64 delta)
 {
+  // Exit on escape
+  if (IsKeyDown(Key::kKeyEscape)) {
+    Exit();
+  }
+
   // ImGui
   if (ImGui::Begin("Diabas - Debug")) {
+    ShowStatisticsDebug(*this, delta);
     ShowScriptDebug(*this);
     ShowModDebug(*this);
     ShowTileDebug(*this);
@@ -48,9 +54,17 @@ GameClient::Update(f64 delta)
 void
 GameClient::Render()
 {
-  mRenderer.Clear(alflib::Color::CORNFLOWER_BLUE);
+  mRenderer.NewFrame();
 
   WorldRenderer::RenderWorld(mRenderer, mTileAtlas, mWorld, mCamera);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+GameClient::OnWindowResize(u32 width, u32 height)
+{
+  mCamera.Resize(width, height);
 }
 
 // -------------------------------------------------------------------------- //

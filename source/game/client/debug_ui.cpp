@@ -16,6 +16,21 @@
 namespace dib::game {
 
 void
+ShowStatisticsDebug(GameClient& gameClient, f32 delta)
+{
+  if (ImGui::CollapsingHeader("Statistics")) {
+    ImGui::BulletText("Frame time: %.4f", delta);
+    ImGui::BulletText("Frames per second: %i", u32(1.0f / delta));
+    ImGui::BulletText("Draw calls: %i",
+                      gameClient.GetRenderer().GetDrawCallCount());
+    ImGui::BulletText("Sprites drawn: %i",
+                      gameClient.GetRenderer().GetDrawSpriteCount());
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
 ShowScriptDebug(GameClient& gameClient)
 {
   if (ImGui::CollapsingHeader("Script")) {
@@ -116,8 +131,8 @@ ShowTileDebug(GameClient& gameClient)
     ImGui::Text("%s", tileAtPosStr.GetUTF8());
 
     Vector2F texMin, texMax;
-    const game::ResourcePath& res =
-      tileAtPos->GetResourcePath(gameClient.GetWorld(), pos[0], pos[1]);
+    const game::ResourcePath& res = tileAtPos->GetResourcePath(
+      gameClient.GetWorld(), pos[0], pos[1], game::Terrain::LAYER_FOREGROUND);
     gameClient.GetTileAtlas().GetTextureCoordinates(res, texMin, texMax);
 
     ImGui::Image(reinterpret_cast<ImTextureID>(
@@ -136,6 +151,13 @@ ShowTileDebug(GameClient& gameClient)
       terrain.PickTile(gameClient.GetCamera(), mouseX, mouseY, tileX, tileY);
       terrain.SetTile(tile, tileX, tileY, game::Terrain::LAYER_FOREGROUND);
     }
+
+    f64 mx, my;
+    gameClient.GetMousePosition(mx, my);
+    u32 x, y;
+    gameClient.GetWorld().GetTerrain().PickTile(
+      gameClient.GetCamera(), mx, my, x, y);
+    ImGui::Text("Mouse tile pos [%i, %i]", x, y);
   }
 }
 

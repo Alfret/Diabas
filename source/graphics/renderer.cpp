@@ -12,18 +12,24 @@
 
 namespace dib::graphics {
 
-Renderer::Renderer() {}
+Renderer::Renderer()
+  : mClearColor(Color::CORNFLOWER_BLUE)
+{}
 
 // -------------------------------------------------------------------------- //
 
 void
-Renderer::Clear(alflib::Color color)
+Renderer::NewFrame()
 {
-  glClearColor(color.GetRedF32(),
-               color.GetGreenF32(),
-               color.GetBlueF32(),
-               color.GetAlphaF32());
+  // Clear buffers
+  glClearColor(mClearColor.GetRedF32(),
+               mClearColor.GetGreenF32(),
+               mClearColor.GetBlueF32(),
+               mClearColor.GetAlphaF32());
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+  // New frame
+  mSpriteBatch.NewFrame();
 }
 
 }

@@ -51,9 +51,11 @@ set(COMMON_SOURCE
   source/game/world.cpp
   source/game/world.hpp
   source/game/tile/tile.cpp
+  source/game/tile/tile.hpp
   source/game/tile/tile_manager.cpp
   source/game/tile/tile_manager.hpp
-  source/game/tile/tile.hpp
+  source/game/tile/tile_pattern.cpp
+  source/game/tile/tile_pattern.hpp
   source/game/mods/script/mod_base.cpp
   source/game/mods/script/mod_script.cpp
   source/game/mods/script/script_tile.cpp

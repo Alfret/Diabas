@@ -15,6 +15,11 @@ namespace dib::game {
 
 DIB_FORWARD_DECLARE_CLASS(GameClient);
 
+// -------------------------------------------------------------------------- //
+
+void
+ShowStatisticsDebug(GameClient& gameClient, f32 delta);
+
 void
 ShowScriptDebug(GameClient& gameClient);
 

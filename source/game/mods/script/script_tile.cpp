@@ -139,7 +139,7 @@ ScriptTileConstructor([[maybe_unused]] JsValueRef callee,
 
   // Setup tile data
   auto scriptTile = new ScriptTile;
-  Tile* tile = new Tile(ResourcePath(modId, tilePath));
+  Tile* tile = new Tile(ResourcePath(ResourceType::kTexture, modId, tilePath));
   scriptTile->pointer = std::shared_ptr<Tile>(tile);
   scriptTile->mod = modObject;
 

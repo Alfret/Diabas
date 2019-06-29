@@ -50,7 +50,7 @@ WorldRenderer::RenderWorld(graphics::Renderer& renderer,
       std::shared_ptr<game::Tile> tile =
         terrain.GetTile(x, y, Terrain::LAYER_FOREGROUND);
       const game::ResourcePath& resourcePath =
-        tile->GetResourcePath(world, x, y);
+        tile->GetResourcePath(world, x, y, game::Terrain::LAYER_FOREGROUND);
       Vector2F texMin, texMax;
       tileAtlas.GetTextureCoordinates(resourcePath, texMin, texMax);
       spriteBatch.Submit(

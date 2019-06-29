@@ -5,14 +5,18 @@
 // ========================================================================== //
 
 #include "core/types.hpp"
-#include "game/tile/tile_manager.hpp"
+#include "core/macros.hpp"
 #include "graphics/camera.hpp"
+#include "game/tile/tile.hpp"
 
 // ========================================================================== //
 // Terrain Declaration
 // ========================================================================== //
 
 namespace dib::game {
+
+DIB_FORWARD_DECLARE_CLASS(TileManager);
+DIB_FORWARD_DECLARE_CLASS(World);
 
 /** 2D terrain **/
 class Terrain

@@ -41,6 +41,11 @@ public:
   {
     return mAtlasTexture;
   }
+
+private:
+  void AddRugPattern(const ResourcePath& resource,
+                     alflib::ArrayList<alflib::Image>& images,
+                     alflib::ArrayList<String>& names);
 };
 
 }

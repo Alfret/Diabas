@@ -1,6 +1,15 @@
 #include "game/terrain.hpp"
 
 // ========================================================================== //
+// Headers
+// ========================================================================== //
+
+#include <random>
+
+#include "game/tile/tile_manager.hpp"
+#include "game/world.hpp"
+
+// ========================================================================== //
 // Terrain Implementation
 // ========================================================================== //
 
@@ -30,16 +39,23 @@ Terrain::Generate()
   std::shared_ptr<Tile> tileAir = mTileManager.GetTile("builtin$air");
   std::shared_ptr<Tile> tileGrass = mTileManager.GetTile("core$grass");
   std::shared_ptr<Tile> tileDirt = mTileManager.GetTile("core$dirt");
+  std::shared_ptr<Tile> tileRock = mTileManager.GetTile("core$rock");
+
+  std::random_device device;
+  std::mt19937 rng(device());
+  std::uniform_int_distribution<std::mt19937::result_type> distr(0, 6);
 
   for (u32 y = 0; y < mHeight; y++) {
     for (u32 x = 0; x < mWidth; x++) {
 
-      if (y > 10) {
+      if (y > 13) {
         SetTile(tileAir, x, y, LAYER_FOREGROUND);
-      } else if (y == 10) {
+      } else if (y == 13) {
         SetTile(tileGrass, x, y, LAYER_FOREGROUND);
-      } else {
+      } else if (y >= 6 + distr(rng) - 3) {
         SetTile(tileDirt, x, y, LAYER_FOREGROUND);
+      } else {
+        SetTile(tileRock, x, y, LAYER_FOREGROUND);
       }
     }
   }

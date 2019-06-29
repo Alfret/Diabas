@@ -11,6 +11,7 @@
 #include "core/macros.hpp"
 #include "app/client/imgui/imgui.h"
 #include "app/client/imgui/imgui_impl_glfw_gl3.h"
+#include "graphics/shader.hpp"
 
 // ========================================================================== //
 // Private Functions
@@ -139,6 +140,8 @@ AppClient::AppClient(const AppClient::Descriptor& descriptor)
 
 AppClient::~AppClient()
 {
+  graphics::ShaderManager::UnloadAll();
+
   ImGui_ImplGlfwGL3_Shutdown();
   glfwDestroyWindow(mWindow);
   glfwTerminate();
@@ -355,7 +358,7 @@ AppClient::ResizeCallback(GLFWwindow* window, int width, int height)
     app->mWidth = _width;
     app->mHeight = _height;
     if (_width && _height) {
-      glViewport(0, 0, width, height);
+      glViewport(0, 0, _width, _height);
     }
     app->OnWindowResize(_width, _height);
   }

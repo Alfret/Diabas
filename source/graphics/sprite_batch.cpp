@@ -28,6 +28,15 @@ SpriteBatch::~SpriteBatch() {}
 // -------------------------------------------------------------------------- //
 
 void
+SpriteBatch::NewFrame()
+{
+  mDrawCallCount = 0;
+  mDrawSpriteCount = 0;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
 SpriteBatch::Begin(const Camera* camera)
 {
   mCamera = camera;
@@ -54,6 +63,9 @@ SpriteBatch::End()
   mShaderProgram->SetUniformS32("u_sampler", 0);
   glBindVertexArray(mVAO);
   glDrawElements(GL_TRIANGLES, mDataCount * 6, GL_UNSIGNED_INT, nullptr);
+
+  mDrawCallCount++;
+  mDrawSpriteCount += mDataCount;
 }
 
 // -------------------------------------------------------------------------- //

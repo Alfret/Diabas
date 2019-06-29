@@ -11,21 +11,26 @@ TileAtlas::Build(const game::TileManager& tileManager)
 {
   // Load images
   alflib::ArrayList<alflib::Image> images;
-  images.Resize(tileManager.GetTiles().size());
   alflib::ArrayList<String> names;
   s32 index = 0;
   for (auto& tile : tileManager.GetTiles()) {
     const std::vector<ResourcePath>& resources = tile.tile->GetResourcePaths();
     for (auto& resource : resources) {
-      images[index].Load(resource.GetPath());
-      names.Append(resource.GetPath().GetPathString());
+
+      if (resource.GetType() == ResourceType::kTexture) {
+        alflib::Image image;
+        image.Load(resource.GetPath());
+        images.AppendEmplace(std::move(image));
+        names.Append(resource.GetPath().GetPathString());
+      } else if (resource.GetType() == ResourceType::kTextureTileRug) {
+        AddRugPattern(resource, images, names);
+      }
     }
     index++;
   }
 
   // Create atlas
-  u32 dim = std::ceil(std::sqrt(tileManager.GetTiles().size())) *
-            TileManager::TILE_SIZE;
+  u32 dim = std::ceil(std::sqrt(images.GetSize())) * TileManager::TILE_SIZE;
   mTileAtlas.Build(images, names, dim, dim);
   mTileAtlas.GetImage().Save(Path{ "./res/tiles/atlas.tga" }, true);
 
@@ -52,6 +57,36 @@ TileAtlas::GetTextureCoordinates(const ResourcePath& path,
   texMax = Vector2F(
     (f32(region.x + region.width) / mTileAtlas.GetWidth()) - xOffset,
     (f32(region.y + region.height) / mTileAtlas.GetHeight()) - yOffset);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+TileAtlas::AddRugPattern(const ResourcePath& resource,
+                         alflib::ArrayList<alflib::Image>& images,
+                         alflib::ArrayList<String>& names)
+{
+  alflib::Image atlas;
+  atlas.Load(resource.GetPath());
+
+  for (u32 i = 0; i < 16; i++) {
+    alflib::Image image;
+    image.Create(16, 16);
+
+    u32 x = i % 4;
+    u32 y = std::floor(i / 4);
+    image.Blit(atlas, 0, 0, x * 16, y * 16, 16, 16);
+
+    images.AppendEmplace(std::move(image));
+
+    const Path& resPath = resource.GetResourcePath();
+    String pathName =
+      resPath.GetDirectory().Join(resPath.GetBaseName()).GetPathString();
+    pathName += "_" + String::ToString(i) + resPath.GetExtensionString();
+    names.Append(pathName);
+  }
+
+  int y = 0;
 }
 
 }

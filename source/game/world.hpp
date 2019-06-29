@@ -12,6 +12,7 @@
 #include "game/ecs/entity_manager.hpp"
 #include "game/terrain.hpp"
 #include "game/chat/chat.hpp"
+#include "game/tile/tile_manager.hpp"
 
 // ========================================================================== //
 // World Declaration

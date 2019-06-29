@@ -30,7 +30,7 @@ main(int, char**)
 #if !defined(DIB_IS_SERVER)
   game::GameClient::Descriptor descriptor;
   descriptor.title = "Diabas - Client";
-  descriptor.width = 1280;
+  descriptor.width = 1440;
   descriptor.height = 720;
   game::GameClient client(descriptor);
   client.Run();

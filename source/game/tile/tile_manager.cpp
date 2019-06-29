@@ -1,6 +1,12 @@
 #include "game/tile/tile_manager.hpp"
 
 // ========================================================================== //
+// Headers
+// ========================================================================== //
+
+#include "game/tile/tile_pattern.hpp"
+
+// ========================================================================== //
 // TileManager Implementation
 // ========================================================================== //
 
@@ -69,9 +75,13 @@ TileManager::GetTile(Tile::ID id)
 void
 TileManager::RegisterBuiltinTiles()
 {
-  auto tile =
-    std::make_shared<Tile>(ResourcePath{ Path{ "./res/tiles/air_tile.tga" } });
+  std::shared_ptr<Tile> tile = std::make_shared<Tile>(
+    ResourcePath{ ResourceType::kTexture, Path{ "./res/tiles/air_tile.tga" } });
   RegisterTile("builtin", "air", tile);
+
+  tile = std::make_shared<TilePatternRug>(ResourcePath{
+    ResourceType::kTextureTileRug, Path{ "./res/tiles/ghost_dirt.tga" } });
+  RegisterTile("builtin", "ghost_dirt", tile);
 }
 
 }

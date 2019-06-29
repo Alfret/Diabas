@@ -49,6 +49,8 @@ public:
   /** Render client **/
   void Render() override;
 
+  void OnWindowResize(u32 width, u32 height) override;
+
   /** Returns the world **/
   World& GetWorld() { return mWorld; }
 
@@ -75,6 +77,12 @@ public:
 
   /** Returns the mod loader **/
   const ModLoader& GetModLoader() const { return mModLoader; }
+
+  /** Returns the renderer **/
+  graphics::Renderer& GetRenderer() { return mRenderer; }
+
+  /** Returns the renderer **/
+  const graphics::Renderer& GetRenderer() const { return mRenderer; }
 
   /** Returns the camera **/
   graphics::Camera& GetCamera() { return mCamera; }

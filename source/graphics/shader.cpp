@@ -258,13 +258,7 @@ ShaderProgram::OnProgramError()
 
 namespace dib::graphics {
 
-ShaderManager::~ShaderManager()
-{
-  for (auto& it : mShaderPrograms) {
-    ShaderProgram* program = it.second;
-    delete program;
-  }
-}
+ShaderManager::~ShaderManager() {}
 
 // -------------------------------------------------------------------------- //
 
@@ -311,6 +305,18 @@ ShaderManager::Reload()
   for (auto& it : manager.mShaderPrograms) {
     ShaderProgram* program = it.second;
     program->Reload();
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ShaderManager::UnloadAll()
+{
+  ShaderManager& manager = Instance();
+  for (auto& it : manager.mShaderPrograms) {
+    ShaderProgram* program = it.second;
+    delete program;
   }
 }
 
