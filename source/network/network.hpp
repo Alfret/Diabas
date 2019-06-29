@@ -14,6 +14,7 @@
 #include "network/connection_state.hpp"
 #include "core/macros.hpp"
 #include "core/uuid.hpp"
+#include "game/ecs/components/player_data_component.hpp"
 
 // ========================================================================== //
 // Forward Declarations
@@ -83,7 +84,9 @@ public:
 
   u32 GetOurEntity() const;
 
-  Uuid GetOurUuid() const;
+  const Uuid* GetOurUuid() const;
+
+  const PlayerData* GetOurPlayerData() const;
 
   // ============================================================ //
   // TMP

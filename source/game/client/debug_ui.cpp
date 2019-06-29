@@ -8,6 +8,7 @@
 #include "game/client/game_client.hpp"
 #include "game/client/player_data_storage.hpp"
 #include "script/util.hpp"
+#include "game/ecs/systems/player_system.hpp"
 
 // ========================================================================== //
 // DebugUI Implementation
@@ -174,11 +175,27 @@ ShowNetworkDebug(GameClient& gameClient)
     if (ImGui::TreeNode("Chat")) {
       constexpr std::size_t buflen = 50;
       static char8 buf[buflen] = "Rully";
-      ImGui::InputText("Name", buf, buflen);
-      if (ImGui::Button("Set Name")) {
-        DLOG_INFO("TODO set name");
+      if (world.GetNetwork().GetConnectionState() == ConnectionState::kConnected) {
+        ImGui::InputText("Name", buf, buflen);
+        if (ImGui::Button("Set Name")) {
+          // set our new name
+          auto player_data = *world.GetNetwork().GetOurPlayerData();
+          player_data.name = String(buf);
+
+          // update locally
+          auto& registry = world.GetEntityManager().GetRegistry();
+          system::PlayerDataUpdate(registry, player_data);
+
+          // send update to server
+          Packet packet{};
+          world.GetNetwork().GetPacketHandler().BuildPacketHeader(
+              packet, PacketHeaderStaticTypes::kPlayerUpdate);
+          auto mw = packet.GetMemoryWriter();
+          mw->Write(player_data);
+          mw.Finalize();
+          world.GetNetwork().PacketBroadcast(packet);
+        }
       }
-      ImGui::Text("Note: name can only be applied when disconnected.");
 
       ImGui::Spacing();
       ImGui::Spacing();
@@ -190,7 +207,7 @@ ShowNetworkDebug(GameClient& gameClient)
         game::ChatMessage msg{};
         msg.msg = String(text);
         msg.type = game::ChatType::kSay;
-        msg.uuid_from = world.GetNetwork().GetOurUuid();
+        msg.uuid_from = *world.GetNetwork().GetOurUuid();
         if (!chat.SendMessage(msg)) {
           DLOG_WARNING("failed to send chat message");
         }

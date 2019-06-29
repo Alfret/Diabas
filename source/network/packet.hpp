@@ -107,6 +107,14 @@ public:
    */
   Packet(const alflib::String& string);
 
+  Packet(const Packet& other);
+
+  Packet& operator=(const Packet& other);
+
+  Packet(Packet&& other) noexcept;
+
+  Packet& operator=(Packet&& other) noexcept;
+
   // ============================================================ //
   // Packet / General
   // ============================================================ //
@@ -268,7 +276,7 @@ private:
 
   ConnectionId from_ = kConnectionIdUnknown;
 
-  PacketContainer container_{};
+  PacketContainer container_;
 };
 
 }

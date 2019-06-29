@@ -5,7 +5,6 @@
 #include <functional>
 #include "game/client/player_data_storage.hpp"
 #include "game/ecs/systems/player_system.hpp"
-#include "game/ecs/components/player_data_component.hpp"
 #include "game/world.hpp"
 #include <limits>
 #include "game/chat/chat.hpp"
@@ -276,6 +275,24 @@ Network<Side::kClient>::SetupPacketHandler()
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kPlayerLeave, "player leave", PlayerLeaveCb);
   AlfAssert(ok, "could not add packet type player leave");
+
+  // ============================================================ //
+
+  const auto PlayerUpdateCb = [this](const Packet& packet) {
+    auto mr = packet.GetMemoryReader();
+    auto player_data = mr.Read<PlayerData>();
+
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    system::PlayerDataUpdate(registry, player_data);
+
+    // display all connections
+    DLOG_INFO("All active connections:");
+    std::string_view _{};
+    NetworkInfo(_);
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerUpdate, "player update", PlayerUpdateCb);
+  AlfAssert(ok, "could not add packet type player update");
 }
 
 // ============================================================ //
@@ -299,7 +316,28 @@ Network<Side::kServer>::SetupPacketHandler()
     auto mr = packet.GetMemoryReader();
     auto msg = mr.Read<game::ChatMessage>();
     if (world_->GetChat().ValidateMessage(msg)) {
-      PacketBroadcast(packet);
+      auto& registry = world_->GetEntityManager().GetRegistry();
+
+      // fill in the "extra" field in the chat message
+      if (msg.type == game::ChatType::kSay || msg.type == game::ChatType::kWhisper) {
+        auto maybe_pd = system::PlayerDataFromUuid(registry, msg.uuid_from);
+        if (maybe_pd) {
+          msg.from = (*maybe_pd)->name;
+        }
+        // TODO handle whisper
+      } else if (msg.type == game::ChatType::kServer) {
+        msg.from = "SERVER";
+      } else if (msg.type == game::ChatType::kEvent){
+        // TODO change this
+        msg.from = "EVENT";
+      }
+
+      Packet new_packet{};
+      new_packet.SetHeader(*packet.GetHeader());
+      auto mw = new_packet.GetMemoryWriter();
+      mw->Write(msg);
+      mw.Finalize();
+      PacketBroadcast(new_packet);
     } else {
       DLOG_WARNING("[{}] attempted to send invalid chat message",
                    packet.GetFromConnection());
@@ -334,6 +372,7 @@ Network<Side::kServer>::SetupPacketHandler()
         server->DisconnectConnection(packet.GetFromConnection());
     } else {
       DLOG_INFO("player join [{}]", player_data);
+      system::PlayerDataUpdate(registry, player_data);
       server->PacketBroadcastExclude(
         packet, SendStrategy::kReliable, packet.GetFromConnection());
       SendPlayerList(packet.GetFromConnection());
@@ -355,6 +394,42 @@ Network<Side::kServer>::SetupPacketHandler()
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kPlayerLeave, "player leave", PlayerLeaveCb);
   AlfAssert(ok, "could not add packet type player leave");
+
+  // ============================================================ //
+
+  const auto PlayerUpdateCb = [this](const Packet& packet) {
+    auto mr = packet.GetMemoryReader();
+    auto player_data = mr.Read<PlayerData>();
+    player_data.connection_id = packet.GetFromConnection();
+    auto& registry = world_->GetEntityManager().GetRegistry();
+
+    // check if valid update
+    bool ok = true;
+    if (auto maybe_pd = system::PlayerDataFromConnectionId(registry, player_data.connection_id);
+        maybe_pd) {
+      if (**maybe_pd == player_data) {
+        system::PlayerDataUpdate(registry, player_data);
+        PacketBroadcastExclude(packet, player_data.connection_id);
+      } else {
+        DLOG_WARNING("Player [{}] attempted to update someone else's Player"
+                     "Data [{}], disconnecting.",
+                     **maybe_pd, player_data);
+        ok = false;
+      }
+    } else {
+      DLOG_WARNING("Connection {} sent an invalid PlayerUpdate packet,"
+                   " disconnecting.", player_data.connection_id);
+      ok = false;
+    }
+
+    if (!ok) {
+      auto server = GetServer();
+      server->DisconnectConnection(player_data.connection_id);
+    }
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerUpdate, "player update", PlayerUpdateCb);
+  AlfAssert(ok, "could not add packet type player update");
 }
 
 template<>
@@ -451,20 +526,37 @@ Network<Side::kClient>::GetOurEntity() const
 }
 
 template<>
-Uuid
+const Uuid*
 Network<Side::kServer>::GetOurUuid() const
 {
   AlfAssert(false, "cannot get our uuid on server");
-  return Uuid{};
+  return nullptr;
 }
 
 template<>
-Uuid
+const Uuid*
 Network<Side::kClient>::GetOurUuid() const
 {
   const u32 entity = GetOurEntity();
   const auto& registry = world_->GetEntityManager().GetRegistry();
-  return registry.get<PlayerData>(entity).uuid;
+  return &registry.get<PlayerData>(entity).uuid;
+}
+
+template<>
+const PlayerData*
+Network<Side::kServer>::GetOurPlayerData() const
+{
+  AlfAssert(false, "cannot get our PlayerData on server");
+  return nullptr;
+}
+
+template <>
+const PlayerData*
+Network<Side::kClient>::GetOurPlayerData() const
+{
+  const u32 entity = GetOurEntity();
+  const auto& registry = world_->GetEntityManager().GetRegistry();
+  return &registry.get<PlayerData>(entity);
 }
 
 // ============================================================ //

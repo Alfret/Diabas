@@ -3,6 +3,7 @@
 #include "game/world.hpp"
 #include "core/uuid.hpp"
 #include "game/ecs/components/player_data_component.hpp"
+#include "game/ecs/systems/player_system.hpp"
 #include "network/side.hpp"
 
 namespace dib::game {
@@ -68,7 +69,7 @@ Chat::ValidateMessage(const ChatMessage& msg) const
         return false;
       }
 
-      if (network.GetOurUuid() != msg.uuid_from) {
+      if (*network.GetOurUuid() != msg.uuid_from) {
         DLOG_WARNING("attemted to sent a message that was not from us");
         return false;
       }
@@ -97,24 +98,11 @@ void
 Chat::Debug()
 {
   debug_ = "";
-  auto& registry = world_->GetEntityManager().GetRegistry();
   for (auto message : messages_) {
-    if (message.type == ChatType::kSay || message.type == ChatType::kWhisper) {
-      auto view = registry.view<Uuid, PlayerData>();
-      bool found = false;
-      for (auto entity : view) {
-        if (view.get<Uuid>(entity) == message.uuid_from) {
-          found = true;
-          debug_ += view.get<PlayerData>(entity).name;
-        }
-      }
-    } else if (message.type == ChatType::kServer) {
-      debug_ += "SERVER";
+    if (message.from.GetSize() > 0) {
+      debug_ += message.from + ": ";
     }
-
-    debug_ += ": ";
-    debug_ += message.msg;
-    debug_ += "\n\n";
+    debug_ += message.msg + "\n\n";
   }
 }
 

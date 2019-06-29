@@ -25,6 +25,10 @@ struct ChatMessage
   Uuid uuid_to; // may be unused in some types
   String msg;
 
+  // Don't fill in these, server will do it for you
+  String from;
+  String to;
+
   // Serialize //
   bool ToBytes(alflib::RawMemoryWriter& mw) const;
 
