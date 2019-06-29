@@ -13,7 +13,7 @@
 #include <functional>
 #include "network/connection_state.hpp"
 #include "core/macros.hpp"
-#include "game/ecs/components/uuid_component.hpp"
+#include "core/uuid.hpp"
 
 // ========================================================================== //
 // Forward Declarations

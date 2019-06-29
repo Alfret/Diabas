@@ -2,7 +2,7 @@
 #define CHAT_MESSAGE_HPP_
 
 #include "core/types.hpp"
-#include "game/ecs/components/uuid_component.hpp"
+#include "core/uuid.hpp"
 #include <alflib/memory/raw_memory_reader.hpp>
 #include <alflib/memory/raw_memory_writer.hpp>
 

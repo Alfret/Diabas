@@ -1,7 +1,7 @@
 #include "chat.hpp"
 #include <alflib/core/assert.hpp>
 #include "game/world.hpp"
-#include "game/ecs/components/uuid_component.hpp"
+#include "core/uuid.hpp"
 #include "game/ecs/components/player_data_component.hpp"
 #include "network/side.hpp"
 

@@ -1,8 +1,9 @@
 #include "client.hpp"
 #include <dlog.hpp>
 #include "game/world.hpp"
-#include "game/ecs/components/player_connection_component.hpp"
-#include "game/ecs/systems/player_create_system.hpp"
+#include "game/ecs/components/player_data_component.hpp"
+#include "game/ecs/systems/player_system.hpp"
+#include "game/ecs/systems/destroy_system.hpp"
 
 namespace dib {
 
@@ -44,12 +45,12 @@ Client::CloseConnection()
     connection_ = k_HSteamNetConnection_Invalid;
   }
 
+  // save our PlayerData
+  DLOG_VERBOSE("TODO save player before destroying");
+
   // clear all player entities
   auto& registry = world_->GetEntityManager().GetRegistry();
-  auto view = registry.view<PlayerConnection>();
-  for (auto entity : view) {
-    registry.destroy(entity);
-  }
+  system::DestroyEntitiesWithComponent<PlayerData>(registry);
 }
 
 SendResult
@@ -147,8 +148,5 @@ void
 Client::SetConnectionState(const ConnectionState connection_state)
 {
   connection_state_ = connection_state;
-  auto& registry = world_->GetEntityManager().GetRegistry();
-  player_create_system::UpdateConnection(
-    registry, connection_, connection_state);
 }
 }

@@ -27,6 +27,7 @@ enum class PacketHeaderStaticTypes : std::size_t
   kPlayerJoin,
   kPlayerLeave,
 
+
   // Must be last, used to count number of elements in the enum
   kChat
 };

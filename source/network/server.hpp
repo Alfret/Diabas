@@ -4,15 +4,15 @@
 #include "core/types.hpp"
 #include "network/common.hpp"
 #include "network/packet.hpp"
-#include <optional>
-#include <steam/isteamnetworkingutils.h>
-#include <steam/steamnetworkingsockets.h>
 #include "network/side.hpp"
 #include "network/packet_handler.hpp"
 #include "network/connection_id.hpp"
-#include <tsl/robin_set.h>
 #include "network/connection_state.hpp"
 #include "core/macros.hpp"
+#include <steam/isteamnetworkingutils.h>
+#include <steam/steamnetworkingsockets.h>
+#include <tsl/robin_set.h>
+#include <optional>
 
 // ========================================================================== //
 // Forward Declarations

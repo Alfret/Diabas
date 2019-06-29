@@ -18,7 +18,8 @@ export default class CoreMod extends Mod {
     this.tileFlowerDaisyBlue = new Tile(this, "res/flower_daisy_blue.tga");
     this.tileFlowerDaisyPurple = new Tile(this, "res/flower_daisy_purple.tga");
     this.tileFlowerDaisyWhite = new Tile(this, "res/flower_daisy_white.tga");
-    this.tileSunflowerYellow = new Tile(this, "res/sunflower_yellow.tga");
+      this.tileSunflowerYellow = new Tile(this, "res/sunflower_yellow.tga");
+      this.tileSlime = new Tile(this, "res/slime.tga");
   }
 
   onRegisterTiles(tileManager) {
@@ -35,6 +36,7 @@ export default class CoreMod extends Mod {
     tileManager.registerTile("flower daisy purple", this.tileFlowerDaisyPurple);
       tileManager.registerTile("flower daisy white", this.tileFlowerDaisyWhite);
       tileManager.registerTile("sunflower yellow", this.tileSunflowerYellow);
+      tileManager.registerTile("slime", this.tileSlime);
   }
 
 }

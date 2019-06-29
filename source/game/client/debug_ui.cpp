@@ -176,11 +176,7 @@ ShowNetworkDebug(GameClient& gameClient)
       static char8 buf[buflen] = "Rully";
       ImGui::InputText("Name", buf, buflen);
       if (ImGui::Button("Set Name")) {
-        if (world.GetNetwork().GetConnectionState() ==
-            ConnectionState::kDisconnected) {
-          auto& player_data = PlayerDataStorage::Load();
-          player_data.name = buf;
-        }
+        DLOG_INFO("TODO set name");
       }
       ImGui::Text("Note: name can only be applied when disconnected.");
 

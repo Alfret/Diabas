@@ -4,10 +4,9 @@
 #include "core/fixed_time_update.hpp"
 #include <functional>
 #include "game/client/player_data_storage.hpp"
-#include "game/ecs/systems/player_create_system.hpp"
-#include "game/ecs/components/uuid_component.hpp"
+#include "game/ecs/systems/player_system.hpp"
+#include "game/ecs/components/player_data_component.hpp"
 #include "game/world.hpp"
-#include <random>
 #include <limits>
 #include "game/chat/chat.hpp"
 
@@ -132,30 +131,17 @@ Network<Side::kClient>::StartServer()
   AlfAssert(false, "cannot start server on client");
 }
 
-static void
-NetworkInfoCommon(game::World* world)
-{
-  world->GetEntityManager()
-    .GetRegistry()
-    .view<PlayerConnection, PlayerData, Uuid>()
-    .each([](const PlayerConnection& player_connection,
-             const PlayerData& player_data,
-             const Uuid& uuid) {
-      DLOG_RAW("\tentity {}, conn {}, uuid {}\n"
-               "\t[{}]\n\n",
-               player_connection.entity_id,
-               player_connection.connection_id,
-               uuid.ToString(),
-               player_data.ToString());
-    });
-}
-
 template<>
 void
 Network<Side::kServer>::NetworkInfo([
   [maybe_unused]] const std::string_view message) const
 {
-  NetworkInfoCommon(world_);
+  world_->GetEntityManager().GetRegistry().view<PlayerData>().each(
+    [](const PlayerData& player_data) {
+      DLOG_RAW("\tConnection: {}\n\tPlayer: [{}]\n",
+               player_data.connection_id,
+               player_data);
+    });
 }
 
 template<>
@@ -163,7 +149,10 @@ void
 Network<Side::kClient>::NetworkInfo([
   [maybe_unused]] const std::string_view message) const
 {
-  NetworkInfoCommon(world_);
+  world_->GetEntityManager().GetRegistry().view<PlayerData>().each(
+    [](const PlayerData& player_data) {
+      DLOG_RAW("\tPlayer: [{}]\n", player_data);
+    });
 }
 
 template<>
@@ -176,15 +165,13 @@ Network<Side::kServer>::SendPlayerList(const ConnectionId connection_id) const
 
   world_->GetEntityManager()
     .GetRegistry()
-    .view<PlayerConnection, PlayerData, Uuid>()
+    .view<PlayerData>()
     .each(
-      [&packet, connection_id, this](const PlayerConnection& player_connection,
-                                     const PlayerData& player_data,
-                                     const Uuid& uuid) {
-        if (connection_id != player_connection.connection_id) {
+      [&](const PlayerData& player_data) {
+        if (connection_id != player_data.connection_id) {
+          packet.Clear();
           auto mw = packet.GetMemoryWriter();
           mw->Write(player_data);
-          mw->Write(uuid);
           mw.Finalize();
           auto server = GetServer();
           server->PacketUnicast(packet, SendStrategy::kReliable, connection_id);
@@ -210,29 +197,27 @@ Network<Side::kClient>::SetupPacketHandler()
   const auto SyncCb = [&](const Packet& packet) {
     packet_handler_.OnPacketSync(packet);
 
-    // we are connected, send a player join packet
-    Packet player_join_packet{};
-    packet_handler_.BuildPacketHeader(player_join_packet,
-                                      PacketHeaderStaticTypes::kPlayerJoin);
-    auto& my_player_data = PlayerDataStorage::Load();
-    Uuid uuid{ uuids::uuid_system_generator{}() };
+    // we are connected
+    {
+      // 1. Load our PlayerData
+      PlayerData my_player_data = PlayerDataStorage::Load();
+      my_player_data.connection_id = packet.GetFromConnection();
+      my_player_data.GenerateNewUuid();
 
-    // insert into our ECS system
-    auto uuid_ok =
-      player_create_system::UpdateUuid(world_->GetEntityManager().GetRegistry(),
-                                       packet.GetFromConnection(),
-                                       uuid);
-    auto player_data_ok = player_create_system::UpdatePlayerData(
-      world_->GetEntityManager().GetRegistry(), uuid, my_player_data);
-    AlfAssert(player_data_ok && uuid_ok,
-              "failed player_data_ok and/or uuid_ok");
+      // 2. Insert into ecs system
+      auto& registry = world_->GetEntityManager().GetRegistry();
+      system::PlayerDataUpdate(registry, my_player_data);
 
-    auto mw = player_join_packet.GetMemoryWriter();
-    mw->Write(my_player_data);
-    mw->Write(uuid);
-    mw.Finalize();
-    auto client = GetClient();
-    client->PacketSend(player_join_packet, SendStrategy::kReliable);
+      // 3. Send kPlayerJoin packet
+      Packet player_join_packet{};
+      packet_handler_.BuildPacketHeader(player_join_packet,
+                                        PacketHeaderStaticTypes::kPlayerJoin);
+      auto mw = player_join_packet.GetMemoryWriter();
+      mw->Write(my_player_data);
+      mw.Finalize();
+      auto client = GetClient();
+      client->PacketSend(player_join_packet, SendStrategy::kReliable);
+    }
   };
   bool ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kSync, "sync", SyncCb);
@@ -255,41 +240,10 @@ Network<Side::kClient>::SetupPacketHandler()
   const auto PlayerJoinCb = [this](const Packet& packet) {
     auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
-    auto uuid = mr.Read<Uuid>();
-
-    // find a unique connection id
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_int_distribution<ConnectionId> dist(
-      std::numeric_limits<ConnectionId>::min(),
-      std::numeric_limits<ConnectionId>::max());
-    ConnectionId cid;
-    auto view =
-      world_->GetEntityManager().GetRegistry().view<PlayerConnection>();
-    for (;;) {
-      cid = dist(mt);
-      bool found = false;
-      for (auto entity : view) {
-        if (view.get(entity).connection_id == cid) {
-          found = true;
-          break;
-        }
-      }
-      if (!found)
-        break;
-    }
-
-    auto connection_ok = player_create_system::UpdateConnection(
-      world_->GetEntityManager().GetRegistry(),
-      cid,
-      ConnectionState::kConnected);
-    auto uuid_ok = player_create_system::UpdateUuid(
-      world_->GetEntityManager().GetRegistry(), cid, uuid);
-    auto player_data_ok = player_create_system::UpdatePlayerData(
-      world_->GetEntityManager().GetRegistry(), uuid, player_data);
-
-    AlfAssert(connection_ok && uuid_ok && player_data_ok,
-              "uuid_ok and/or player_data_ok and/or connection_ok failed");
+    constexpr ConnectionId kUnusedConnectionId = 0;
+    player_data.connection_id = kUnusedConnectionId;
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    system::PlayerDataUpdate(registry, player_data);
 
     // display all connections
     DLOG_INFO("All active connections:");
@@ -303,23 +257,21 @@ Network<Side::kClient>::SetupPacketHandler()
   // ============================================================ //
 
   const auto PlayerLeaveCb = [this](const Packet& packet) {
-    auto& registry = world_->GetEntityManager().GetRegistry();
-    auto view = registry.view<Uuid>();
-
     auto mr = packet.GetMemoryReader();
     const auto uuid = mr.Read<Uuid>();
 
-    for (auto entity : view) {
-      if (view.get(entity) == uuid) {
-        auto player_data = registry.get<PlayerData>(entity);
-        DLOG_INFO("{} disconnected", player_data.name);
-        registry.destroy(entity);
-        break;
-      }
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    auto maybe_player_data = system::PlayerDataFromUuid(registry, uuid);
+
+    if (maybe_player_data) {
+      DLOG_INFO("[{}] disconnected", **maybe_player_data);
+      std::string_view _{};
+      NetworkInfo(_);
+    } else {
+      DLOG_WARNING("unknown connection disconnected");
     }
 
-    std::string_view _{};
-    NetworkInfo(_);
+    system::PlayerDataDelete(registry, uuid);
   };
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kPlayerLeave, "player leave", PlayerLeaveCb);
@@ -335,7 +287,7 @@ void
 Network<Side::kServer>::SetupPacketHandler()
 {
   const auto SyncCb = [](const Packet&) {
-    DLOG_INFO("got sync packet, but server does not handle sync packets");
+    DLOG_WARNING("got sync packet, but server does not handle sync packets");
   };
   bool ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kSync, "sync", SyncCb);
@@ -343,13 +295,13 @@ Network<Side::kServer>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto ChatCb = [this](const Packet& packet) {
+  const auto ChatCb = [&](const Packet& packet) {
     auto mr = packet.GetMemoryReader();
     auto msg = mr.Read<game::ChatMessage>();
     if (world_->GetChat().ValidateMessage(msg)) {
       PacketBroadcast(packet);
     } else {
-      DLOG_WARNING("client {} attempted to send invalid packet",
+      DLOG_WARNING("[{}] attempted to send invalid chat message",
                    packet.GetFromConnection());
     }
   };
@@ -359,28 +311,32 @@ Network<Side::kServer>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto PlayerJoinCb = [this](const Packet& packet) {
-    DLOG_INFO("player join {}", packet.GetFromConnection());
+  const auto PlayerJoinCb = [&](const Packet& packet) {
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    auto server = GetServer();
+
+    // Read the PlayerData
     auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
-    auto uuid = mr.Read<Uuid>();
+    player_data.connection_id = packet.GetFromConnection();
 
-    auto uuid_ok =
-      player_create_system::UpdateUuid(world_->GetEntityManager().GetRegistry(),
-                                       packet.GetFromConnection(),
-                                       uuid);
-    auto player_data_ok = player_create_system::UpdatePlayerData(
-      world_->GetEntityManager().GetRegistry(), uuid, player_data);
+    // Does the player exist
+    auto maybe_player_data =
+      system::PlayerDataFromConnectionId(registry, packet.GetFromConnection());
 
-    auto server = GetServer();
-    if (player_data_ok && uuid_ok) {
+    // Do we have the same Uuid, but from another connection?
+    if (maybe_player_data && player_data != **maybe_player_data) {
+        DLOG_WARNING("player [{}] tried to update someone else's PlayerData",
+                     **maybe_player_data);
+        // TODO could the existing player_data be wrong in this case?
+        // Maybe disconnect both, or something.. See if player_data connection
+        // is actually active?
+        server->DisconnectConnection(packet.GetFromConnection());
+    } else {
+      DLOG_INFO("player join [{}]", player_data);
       server->PacketBroadcastExclude(
         packet, SendStrategy::kReliable, packet.GetFromConnection());
       SendPlayerList(packet.GetFromConnection());
-    } else {
-      DLOG_WARNING("failed to update client {}, disconnecting them.",
-                   packet.GetFromConnection());
-      server->DisconnectConnection(packet.GetFromConnection());
     }
   };
   ok = packet_handler_.AddStaticPacketType(
@@ -390,7 +346,11 @@ Network<Side::kServer>::SetupPacketHandler()
   // ============================================================ //
 
   const auto PlayerLeaveCb = [](const Packet&) {
-    DLOG_WARNING("Got player leave packet on server");
+    DLOG_WARNING("Got player leave packet on server, but server does not "
+                 "handle those");
+    // TODO if a player disconnects while "in combat", have an instance of the
+    // player be left inside, to avoid player cheesing combat mechanics
+    // by disconnecting.
   };
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kPlayerLeave, "player leave", PlayerLeaveCb);
@@ -479,9 +439,9 @@ u32
 Network<Side::kClient>::GetOurEntity() const
 {
   auto& registry = world_->GetEntityManager().GetRegistry();
-  auto view = registry.view<PlayerConnection>();
-  auto client = GetClient();
-  for (auto entity : view) {
+  const auto view = registry.view<PlayerData>();
+  const auto client = GetClient();
+  for (const auto entity : view) {
     if (view.get(entity).connection_id == client->GetConnectionId()) {
       return entity;
     }
@@ -502,9 +462,9 @@ template<>
 Uuid
 Network<Side::kClient>::GetOurUuid() const
 {
-  u32 entity = GetOurEntity();
-  auto& registry = world_->GetEntityManager().GetRegistry();
-  return registry.get<Uuid>(entity);
+  const u32 entity = GetOurEntity();
+  const auto& registry = world_->GetEntityManager().GetRegistry();
+  return registry.get<PlayerData>(entity).uuid;
 }
 
 // ============================================================ //
