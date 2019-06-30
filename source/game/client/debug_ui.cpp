@@ -8,7 +8,7 @@
 #include "game/client/game_client.hpp"
 #include "game/client/player_data_storage.hpp"
 #include "script/util.hpp"
-#include "game/ecs/systems/player_system.hpp"
+#include "game/ecs/systems/generic_system.hpp"
 
 // ========================================================================== //
 // DebugUI Implementation
@@ -148,7 +148,7 @@ ShowNetworkDebug(GameClient& gameClient)
   World& world = gameClient.GetWorld();
   auto& chat = world.GetChat();
 
-  // ImGui::ShowTestWindow();
+  ImGui::ShowTestWindow();
 
   if (ImGui::CollapsingHeader("Network")) {
 
@@ -172,11 +172,14 @@ ShowNetworkDebug(GameClient& gameClient)
       }
     }
 
+    ImGui::Spacing();
+
     if (ImGui::TreeNode("Chat")) {
       constexpr std::size_t buflen = 50;
       static char8 buf[buflen] = "Rully";
       if (world.GetNetwork().GetConnectionState() == ConnectionState::kConnected) {
-        ImGui::InputText("Name", buf, buflen);
+        ImGui::InputText("##", buf, buflen);
+        ImGui::SameLine();
         if (ImGui::Button("Set Name")) {
           // set our new name
           auto player_data = *world.GetNetwork().GetOurPlayerData();
@@ -184,9 +187,9 @@ ShowNetworkDebug(GameClient& gameClient)
 
           // update locally
           auto& registry = world.GetEntityManager().GetRegistry();
-          const bool ok = system::PlayerDataUpdate(registry, player_data);
+          const bool ok = system::Replace(registry, player_data);
           if (!ok) {
-            DLOG_ERROR("failed to update our PlayerData, disconnecting");
+            DLOG_ERROR("failed to replace our PlayerData, disconnecting");
             world.GetNetwork().Disconnect();
           } else {
             // send update to server
@@ -202,14 +205,14 @@ ShowNetworkDebug(GameClient& gameClient)
       }
 
       ImGui::Spacing();
-      ImGui::Spacing();
 
       if (world.GetNetwork().GetConnectionState() ==
           ConnectionState::kConnected) {
         constexpr std::size_t textlen = 128;
         static char8 text[textlen] = "";
-        ImGui::InputText("chat", text, textlen);
-        if (ImGui::Button("send chat message")) {
+        ImGui::InputText("", text, textlen);
+        ImGui::SameLine();
+        if (ImGui::Button("Send Chat Message")) {
           game::ChatMessage msg{};
           msg.msg = String(text);
           msg.type = game::ChatType::kSay;
@@ -222,7 +225,7 @@ ShowNetworkDebug(GameClient& gameClient)
       }
 
       ImGui::InputTextMultiline(
-          "",
+          "##",
           const_cast<char8*>(chat.GetDebug().GetUTF8()),
           chat.GetDebug().GetSize(),
           ImVec2(-1.0f, ImGui::GetTextLineHeight() * 16),

@@ -23,10 +23,6 @@ struct PlayerData
   u8 direction;
   float speed;
 
-  void GenerateNewUuid() {
-    uuid.GenerateUuid();
-  }
-
   bool operator==(const PlayerData& other) const {
     return uuid == other.uuid;
   }

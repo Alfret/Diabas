@@ -30,6 +30,10 @@ GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
 void
 GameClient::Update(f64 delta)
 {
+  if (IsKeyDown(Key::kKeyEscape)) {
+    Exit();
+  }
+
   // ImGui
   if (ImGui::Begin("Diabas - Debug")) {
     ShowScriptDebug(*this);

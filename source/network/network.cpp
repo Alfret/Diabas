@@ -5,6 +5,7 @@
 #include <functional>
 #include "game/client/player_data_storage.hpp"
 #include "game/ecs/systems/player_system.hpp"
+#include "game/ecs/systems/generic_system.hpp"
 #include "game/world.hpp"
 #include <limits>
 #include "game/chat/chat.hpp"
@@ -201,13 +202,13 @@ Network<Side::kClient>::SetupPacketHandler()
       // 1. Load our PlayerData
       PlayerData my_player_data = PlayerDataStorage::Load();
       my_player_data.connection_id = packet.GetFromConnection();
-      my_player_data.GenerateNewUuid();
+      my_player_data.uuid.GenerateUuid();
 
       // 2. Insert into ecs system
       auto& registry = world_->GetEntityManager().GetRegistry();
-      const bool ok = system::PlayerDataCreate(registry, my_player_data);
+      const bool ok = system::Create(registry, my_player_data);
       if (!ok) {
-        DLOG_ERROR("failed to create our  PlayerData");
+        DLOG_ERROR("failed to create our PlayerData");
         auto client = GetClient();
         client->CloseConnection();
         return;
@@ -248,9 +249,9 @@ Network<Side::kClient>::SetupPacketHandler()
     constexpr ConnectionId kUnusedConnectionId = 0;
     player_data.connection_id = kUnusedConnectionId;
     auto& registry = world_->GetEntityManager().GetRegistry();
-    const bool ok = system::PlayerDataCreate(registry, player_data);
+    const bool ok = system::Create(registry, player_data);
     if (!ok) {
-      DLOG_ERROR("PlayerDataCreate on PlayerJoin failed, disconnecting us");
+      DLOG_ERROR("Create on PlayerJoin failed, disconnecting us");
       auto client = GetClient();
       client->CloseConnection();
       return;
@@ -272,7 +273,7 @@ Network<Side::kClient>::SetupPacketHandler()
     const auto uuid = mr.Read<Uuid>();
 
     auto& registry = world_->GetEntityManager().GetRegistry();
-    auto maybe_player_data = system::PlayerDataFromUuid(registry, uuid);
+    auto maybe_player_data = system::ComponentFromUuid<PlayerData>(registry, uuid);
 
     if (maybe_player_data) {
       DLOG_INFO("[{}] disconnected", **maybe_player_data);
@@ -282,7 +283,7 @@ Network<Side::kClient>::SetupPacketHandler()
       DLOG_WARNING("unknown connection disconnected");
     }
 
-    system::PlayerDataDelete(registry, uuid);
+    system::Delete<PlayerData>(registry, uuid);
   };
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kPlayerLeave, "player leave", PlayerLeaveCb);
@@ -295,9 +296,9 @@ Network<Side::kClient>::SetupPacketHandler()
     auto player_data = mr.Read<PlayerData>();
 
     auto& registry = world_->GetEntityManager().GetRegistry();
-    const bool ok = system::PlayerDataUpdate(registry, player_data);
+    const bool ok = system::Replace(registry, player_data);
     if (!ok) {
-      DLOG_WARNING("failed to update PlayerData on PlayerUpdate, ignoring");
+      DLOG_WARNING("failed to replace PlayerData on PlayerUpdate, ignoring");
       return;
     }
 
@@ -374,10 +375,10 @@ Network<Side::kServer>::SetupPacketHandler()
         server->DisconnectConnection(packet.GetFromConnection());
     } else {
       DLOG_INFO("player join [{}]", player_data);
-      const bool ok = system::PlayerDataCreate(registry, player_data);
+      const bool ok = system::Create(registry, player_data);
       if (!ok) {
         DLOG_WARNING("failed to create PlayerData, disconnecting the "
-                     "conection {}", packet.GetFromConnection());
+                     "connection {}", packet.GetFromConnection());
         server->DisconnectConnection(packet.GetFromConnection());
       }
       server->PacketBroadcastExclude(
@@ -415,9 +416,9 @@ Network<Side::kServer>::SetupPacketHandler()
     if (auto maybe_pd = system::PlayerDataFromConnectionId(registry, player_data.connection_id);
         maybe_pd) {
       if (**maybe_pd == player_data) {
-        const bool uok = system::PlayerDataUpdate(registry, player_data);
+        const bool uok = system::Replace(registry, player_data);
         if (!uok) {
-          DLOG_WARNING("failed to update PlayerData for [{}], ignoring",
+          DLOG_WARNING("failed to replace PlayerData for [{}], ignoring",
                        **maybe_pd);
         } else {
           PacketBroadcastExclude(packet, player_data.connection_id);

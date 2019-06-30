@@ -3,7 +3,7 @@
 #include "game/world.hpp"
 #include "game/ecs/components/player_data_component.hpp"
 #include "game/ecs/systems/player_system.hpp"
-#include "game/ecs/systems/destroy_system.hpp"
+#include "game/ecs/systems/generic_system.hpp"
 
 namespace dib {
 
@@ -50,7 +50,7 @@ Client::CloseConnection()
 
   // clear all player entities
   auto& registry = world_->GetEntityManager().GetRegistry();
-  system::DestroyEntitiesWithComponent<PlayerData>(registry);
+  system::DeleteEntitiesWithComponent<PlayerData>(registry);
 }
 
 SendResult
@@ -111,7 +111,7 @@ Client::OnSteamNetConnectionStatusChanged(
       if (status->m_eOldState == k_ESteamNetworkingConnectionState_Connecting) {
         DLOG_WARNING("Connection could not be established.");
       } else {
-        DLOG_WARNING("connection closed by peer");
+        DLOG_INFO("connection closed by peer");
       }
 
       // cleanup connection
@@ -120,7 +120,7 @@ Client::OnSteamNetConnectionStatusChanged(
     }
 
     case k_ESteamNetworkingConnectionState_ProblemDetectedLocally: {
-      DLOG_WARNING("problem detected locally");
+      DLOG_INFO("connection problem detected locally");
 
       // cleanup connection
       CloseConnection();
@@ -148,5 +148,7 @@ void
 Client::SetConnectionState(const ConnectionState connection_state)
 {
   connection_state_ = connection_state;
+  DLOG_INFO("{}", connection_state == ConnectionState::kConnected ?
+            "connected" : "disconnected");
 }
 }

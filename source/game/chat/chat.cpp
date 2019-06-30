@@ -3,7 +3,7 @@
 #include "game/world.hpp"
 #include "core/uuid.hpp"
 #include "game/ecs/components/player_data_component.hpp"
-#include "game/ecs/systems/player_system.hpp"
+#include "game/ecs/systems/generic_system.hpp"
 #include "network/side.hpp"
 
 namespace dib::game {
@@ -101,7 +101,7 @@ Chat::FillFromTo(ChatMessage& msg) const
       auto& registry = world_->GetEntityManager().GetRegistry();
 
       if (msg.type == game::ChatType::kSay || msg.type == game::ChatType::kWhisper) {
-        auto maybe_pd = system::PlayerDataFromUuid(registry, msg.uuid_from);
+        auto maybe_pd = system::ComponentFromUuid<PlayerData>(registry, msg.uuid_from);
         if (maybe_pd) {
           msg.from = (*maybe_pd)->name;
         }

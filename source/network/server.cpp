@@ -3,6 +3,7 @@
 #include "game/world.hpp"
 #include "game/ecs/components/player_data_component.hpp"
 #include "game/ecs/systems/player_system.hpp"
+#include "game/ecs/systems/generic_system.hpp"
 
 namespace dib {
 
@@ -207,7 +208,7 @@ Server::DisconnectConnection(const HSteamNetConnection connection)
     auto& registry = world_->GetEntityManager().GetRegistry();
     auto maybe_player_data = system::PlayerDataFromConnectionId(registry, *it);
     if (maybe_player_data) {
-      system::PlayerDataDelete(registry, *maybe_player_data);
+      system::Delete<PlayerData>(registry, (*maybe_player_data)->uuid);
       Packet packet{};
       packet_handler_->BuildPacketHeader(packet,
                                          PacketHeaderStaticTypes::kPlayerLeave);
