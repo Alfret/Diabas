@@ -6,7 +6,6 @@
 
 #include "app/server/app_server.hpp"
 #include "game/world.hpp"
-#include "game/tile/tile_manager.hpp"
 #include "game/mods/loader.hpp"
 #include "game/server/cli_input.hpp"
 #include "script/env.hpp"

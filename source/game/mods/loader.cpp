@@ -8,8 +8,8 @@
 #include <dlog.hpp>
 #include <alflib/core/assert.hpp>
 
-#include "game/mods/script/mod_base.hpp"
-#include "game/mods/script/script_tile.hpp"
+#include "game/mods/script/expose_mod.hpp"
+#include "game/mods/script/expose_tile.hpp"
 
 // ========================================================================== //
 // ModLoader Implementation
@@ -22,7 +22,7 @@ ModLoader::ModLoader(script::Environment& environment, const Path& modsFolder)
 {
   // Expose game-specific things to mods
   ExposeModBase(environment);
-  ExposeScriptTile(environment);
+  ExposeTile(environment);
 
   // Enumerate mod folders
   const alflib::File mods_folder(mModsFolder);
@@ -91,17 +91,6 @@ ModLoader::Init(World& world)
 {
   for (auto& mod : mMods) {
     mod.second->Init(world);
-  }
-  return Result::kSuccess;
-}
-
-// -------------------------------------------------------------------------- //
-
-Result
-ModLoader::RegisterTiles(TileManager& tileManager)
-{
-  for (auto& mod : mMods) {
-    mod.second->RegisterTiles(tileManager);
   }
   return Result::kSuccess;
 }

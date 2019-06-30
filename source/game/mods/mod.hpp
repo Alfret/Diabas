@@ -1,13 +1,18 @@
 #ifndef MOD_HPP_
 #define MOD_HPP_
 
+// ========================================================================== //
+// Headers
+// ========================================================================== //
+
 #include <alflib/file/file.hpp>
-#include "core/types.hpp"
-#include "game/mods/result.hpp"
-#include "script/env.hpp"
-#include "game/mods/script/mod_script.hpp"
-#include "core/macros.hpp"
+
 #include "app/key.hpp"
+#include "core/types.hpp"
+#include "core/macros.hpp"
+#include "game/mods/result.hpp"
+#include "game/mods/script/mod_script.hpp"
+#include "script/env.hpp"
 
 // ========================================================================== //
 // Mod Declaration
@@ -16,7 +21,6 @@
 namespace dib::game {
 
 DIB_FORWARD_DECLARE_CLASS(World);
-DIB_FORWARD_DECLARE_CLASS(TileManager);
 
 /** Mod class **/
 class Mod
@@ -63,9 +67,6 @@ public:
 
   /** Init script **/
   void Init(World& world);
-
-  /** Callback for when the mods must register their blocks **/
-  Result RegisterTiles(TileManager& tileManager);
 
   /** Update mod **/
   void Update(f32 delta);

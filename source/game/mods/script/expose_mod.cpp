@@ -1,13 +1,16 @@
-#include "game/mods/script/mod_base.hpp"
+#include "game/mods/script/expose_mod.hpp"
 
 // ========================================================================== //
 // Headers
 // ========================================================================== //
 
 #include <dlog.hpp>
+
 #include "core/assert.hpp"
 #include "script/util.hpp"
 #include "app/key.hpp"
+#include "game/world.hpp"
+#include "game/tile/tile_registry.hpp"
 
 // ========================================================================== //
 // Private Functions
@@ -101,6 +104,48 @@ ScriptModOnKeyRelease([[maybe_unused]] JsValueRef callee,
                       [[maybe_unused]] void* callbackState)
 {
   return JS_INVALID_REFERENCE;
+}
+
+// -------------------------------------------------------------------------- //
+
+JsValueRef
+ScriptModRegisterTiles([[maybe_unused]] JsValueRef callee,
+                       bool isConstruct,
+                       JsValueRef* arguments,
+                       u16 argumentCount,
+                       [[maybe_unused]] void* callbackState)
+{
+  // Check initial condition
+  DIB_ASSERT(!isConstruct, "'Mod::registerTiles' is not a constructor call");
+  if (argumentCount < 2) {
+    DLOG_WARNING(
+      "'Tile::registerTiles' expects at least two (2) argument, however got {}",
+      argumentCount - 1);
+    return script::CreateValue(false);
+  }
+  if (argumentCount % 2 == 0) {
+    DLOG_WARNING(
+      "'Tile::registerTiles' expected an even number of arguments. Each pair "
+      "represents the key to register the tile with and the tile");
+    return script::CreateValue(false);
+  }
+
+  // Retrieve world object
+  String modId = script::GetString(script::GetProperty(arguments[0], "id"));
+  auto world =
+    script::GetExternalData<World>(script::GetProperty(arguments[0], "world"));
+
+  // Register each tile
+  for (u16 i = 1; i < argumentCount; i += 2) {
+    String registryName = script::GetString(arguments[i]);
+    JsValueRef tileObject = arguments[i + 1];
+    Tile* tile = script::GetExternalData<Tile>(tileObject);
+    if (!world->GetTileRegistry().RegisterTile(modId, registryName, tile)) {
+      return script::CreateValue(false);
+    }
+  }
+
+  return script::CreateValue(true);
 }
 
 // -------------------------------------------------------------------------- //
@@ -301,6 +346,9 @@ ExposeModBase(script::Environment& environment)
   script::SetProperty(MOD_PROTOTYPE,
                       "onKeyRelease",
                       script::CreateFunction(ScriptModOnKeyRelease));
+  script::SetProperty(MOD_PROTOTYPE,
+                      "registerTiles",
+                      script::CreateFunction(ScriptModRegisterTiles));
   script::SetProperty(modConstr, "prototype", MOD_PROTOTYPE);
 
   // Setup constants

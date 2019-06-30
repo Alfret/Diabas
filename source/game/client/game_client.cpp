@@ -4,6 +4,7 @@
 // Headers
 // ========================================================================== //
 
+#include "game/constants.hpp"
 #include "app/client/imgui/imgui.h"
 #include "game/client/world_renderer.hpp"
 #include "game/client/debug_ui.hpp"
@@ -20,9 +21,8 @@ GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
   , mCamera(GetWidth(), GetHeight())
 {
   mModLoader.Init(mWorld);
-  mModLoader.RegisterTiles(mWorld.GetTileManager());
-  mTileAtlas.Build(mWorld.GetTileManager());
-  mWorld.GetTerrain().Generate();
+
+  mClientCache.BuildTileAtlas(mWorld.GetTileRegistry());
 }
 
 // -------------------------------------------------------------------------- //
@@ -55,8 +55,6 @@ void
 GameClient::Render()
 {
   mRenderer.NewFrame();
-
-  WorldRenderer::RenderWorld(mRenderer, mTileAtlas, mWorld, mCamera);
 }
 
 // -------------------------------------------------------------------------- //
@@ -90,12 +88,10 @@ GameClient::UpdateCamera(f32 delta)
   mCamera.Move(cameraMove);
 
   Vector3F minPos = Vector3F(0.0f, 0.0f, 0.0f);
-  Vector3F maxPos =
-    Vector3F(mWorld.GetTerrain().GetWidth() * game::TileManager::TILE_SIZE -
-               mCamera.GetWidth(),
-             mWorld.GetTerrain().GetHeight() * game::TileManager::TILE_SIZE -
-               mCamera.GetHeight(),
-             1.0f);
+  Vector3F maxPos = Vector3F(
+    mWorld.GetTerrain().GetWidth() * game::TILE_SIZE - mCamera.GetWidth(),
+    mWorld.GetTerrain().GetHeight() * game::TILE_SIZE - mCamera.GetHeight(),
+    1.0f);
   mCamera.ClampPosition(minPos, maxPos);
 }
 

@@ -3,7 +3,7 @@
 namespace dib::game {
 
 World::World()
-  : mTerrain(*this, mTileManager, 8400, 2400)
+  : mTerrain(8400, 2400)
 {}
 
 // -------------------------------------------------------------------------- //

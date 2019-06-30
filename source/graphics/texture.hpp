@@ -18,7 +18,10 @@ namespace dib::graphics {
 class Texture
 {
 private:
+  /** Texture ID **/
   GLuint mId;
+  /** Debug name **/
+  String mDebugName;
 
 public:
   /** Construct texture **/

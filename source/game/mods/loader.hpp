@@ -1,16 +1,21 @@
 #ifndef LOADER_HPP_
 #define LOADER_HPP_
 
-#include "game/mods/mod.hpp"
-#include <alflib/file/file.hpp>
-#include <core/types.hpp>
-#include <dlog.hpp>
-#include <tuple>
+// ========================================================================== //
+// Headers
+// ========================================================================== //
+
 #include <vector>
-#include "script/env.hpp"
+#include <tuple>
 #include <unordered_map>
-#include "core/macros.hpp"
+#include <alflib/file/file.hpp>
+#include <dlog.hpp>
+
 #include "app/key.hpp"
+#include "core/types.hpp"
+#include "core/macros.hpp"
+#include "game/mods/mod.hpp"
+#include "script/env.hpp"
 
 // ========================================================================== //
 // ModLoader Declaration
@@ -19,7 +24,6 @@
 namespace dib::game {
 
 DIB_FORWARD_DECLARE_CLASS(World);
-DIB_FORWARD_DECLARE_CLASS(TileManager);
 
 /** Class that loads all mods and makes them available for lookup **/
 class ModLoader
@@ -49,9 +53,6 @@ public:
 
   /** Initialize scripts **/
   Result Init(World& world);
-
-  /** Callback for when the mods must register their blocks **/
-  Result RegisterTiles(TileManager& tileManager);
 
   /** Run the update of all mods **/
   void Update(f32 delta);

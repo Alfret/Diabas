@@ -6,13 +6,14 @@
 // ========================================================================== //
 
 #include <string_view>
+
 #include "core/assert.hpp"
 #include "network/network.hpp"
 #include "network/side.hpp"
 #include "game/ecs/entity_manager.hpp"
 #include "game/terrain.hpp"
 #include "game/chat/chat.hpp"
-#include "game/tile/tile_manager.hpp"
+#include "game/tile/tile_registry.hpp"
 
 // ========================================================================== //
 // World Declaration
@@ -34,21 +35,26 @@ public:
 
   Network<kSide>& GetNetwork() { return network_; }
 
-  TileManager& GetTileManager() { return mTileManager; }
+  /** Returns the tile registry **/
+  TileRegistry& GetTileRegistry() { return mTileRegistry; }
 
-  const TileManager& GetTileManager() const { return mTileManager; }
+  /** Returns the tile registry **/
+  const TileRegistry& GetTileRegistry() const { return mTileRegistry; }
 
+  /** Returns the terrain of the world **/
   Terrain& GetTerrain() { return mTerrain; }
 
+  /** Returns the terrain of the world **/
   const Terrain& GetTerrain() const { return mTerrain; }
 
+  /** Returns the entity manager **/
   dib::EntityManager& GetEntityManager();
 
   game::Chat& GetChat() { return chat_; }
 
 private:
-  /** Tile manager **/
-  TileManager mTileManager;
+  /** Tile registry **/
+  TileRegistry mTileRegistry;
   /** Terrain **/
   Terrain mTerrain;
 

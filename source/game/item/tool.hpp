@@ -1,22 +1,27 @@
-#include "game/terrain.hpp"
+#pragma once
 
 // ========================================================================== //
 // Headers
 // ========================================================================== //
 
-#include <random>
-
-#include "game/world.hpp"
+#include "core/common.hpp"
 
 // ========================================================================== //
-// Terrain Implementation
+// ToolType Enumeration
 // ========================================================================== //
 
 namespace dib::game {
 
-Terrain::Terrain(u32 width, u32 height)
-  : mWidth(width)
-  , mHeight(height)
-{}
+/** Enumeration of tool types. These can be combined together in bit-masks **/
+enum class ToolType : u32
+{
+  /** Pickaxe **/
+  kPickaxe = Bit(0),
+  kAxe = Bit(1),
+  kSpade = Bit(2),
+  kCustom = Bit(3),
+  kAll = kPickaxe | kAxe | kSpade | kCustom
+};
+DIB_ENUM_CLASS_OPERATORS(inline, ToolType, u32);
 
 }

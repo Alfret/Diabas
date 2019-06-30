@@ -11,8 +11,6 @@ GameServer::GameServer(const AppServer::Descriptor& descriptor)
   , mModLoader(mScriptEnvironment, Path{ "./mods" })
 {
   mModLoader.Init(mWorld);
-  mModLoader.RegisterTiles(mWorld.GetTileManager());
-  mWorld.GetTerrain().Generate();
 
   RegisterCommands();
 }

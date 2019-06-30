@@ -1,16 +1,21 @@
 #include "game/mods/mod.hpp"
 
-#include <dlog.hpp>
+// ========================================================================== //
+// Headers
+// ========================================================================== //
+
 #include <cpptoml.h>
-#include "script/util.hpp"
+#include <dlog.hpp>
+
 #include "core/assert.hpp"
 #include "game/world.hpp"
-
-namespace dib::game {
+#include "script/util.hpp"
 
 // ========================================================================== //
 // Mod Implementation
 // ========================================================================== //
+
+namespace dib::game {
 
 Mod::Mod(script::Environment& scriptEnvironment)
   : mMainScript(scriptEnvironment)
@@ -37,14 +42,6 @@ void
 Mod::Init(game::World& world)
 {
   mMainScript.Init(world);
-}
-
-// -------------------------------------------------------------------------- //
-
-Result
-Mod::RegisterTiles(TileManager& tileManager)
-{
-  return mMainScript.RegisterTiles(tileManager);
 }
 
 // -------------------------------------------------------------------------- //

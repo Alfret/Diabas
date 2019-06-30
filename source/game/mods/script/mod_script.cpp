@@ -4,11 +4,9 @@
 // Headers
 // ========================================================================== //
 
+#include "game/world.hpp"
 #include "script/expose/expose_network.hpp"
 #include "script/util.hpp"
-#include "game/world.hpp"
-#include "game/tile/tile_manager.hpp"
-#include "game/mods/script/script_tile.hpp"
 
 // ========================================================================== //
 // Functions
@@ -255,25 +253,6 @@ ModScript::Init(game::World& world)
   }
 
   mInitialized = true;
-  return Result::kSuccess;
-}
-
-// -------------------------------------------------------------------------- //
-
-Result
-ModScript::RegisterTiles(TileManager& tileManager)
-{
-  // Create an object for the tile manager
-  JsValueRef tileManagerObject = CreateTileManagerScriptObject(tileManager);
-
-  // Call the 'onRegisterTiles' function once
-  JsValueRef output;
-  JsValueRef method = script::GetProperty(mInstance, "onRegisterTiles");
-  JsErrorCode error =
-    script::CallMethod(method, { mInstance, tileManagerObject }, output);
-  if (script::HandleException(error)) {
-    return Result::kScriptError;
-  }
   return Result::kSuccess;
 }
 

@@ -51,14 +51,10 @@ set(COMMON_SOURCE
   source/game/world.cpp
   source/game/world.hpp
   source/game/tile/tile.cpp
-  source/game/tile/tile.hpp
-  source/game/tile/tile_manager.cpp
-  source/game/tile/tile_manager.hpp
-  source/game/tile/tile_pattern.cpp
-  source/game/tile/tile_pattern.hpp
-  source/game/mods/script/mod_base.cpp
+  source/game/tile/tile_registry.cpp
+  source/game/mods/script/expose_mod.cpp
+  source/game/mods/script/expose_tile.cpp
   source/game/mods/script/mod_script.cpp
-  source/game/mods/script/script_tile.cpp
   source/game/mods/loader.cpp
   source/game/mods/loader.hpp
   source/game/mods/mod.cpp
@@ -106,10 +102,10 @@ set(CLIENT_SOURCE
   source/app/client/imgui/imgui.cpp
   source/app/client/imgui/imgui_draw.cpp
   source/app/client/imgui/imgui_impl_glfw_gl3.cpp
-  source/game/client/game_client.cpp
+  source/game/client/client_cache.cpp
   source/game/client/debug_ui.cpp
+  source/game/client/game_client.cpp
   source/game/client/world_renderer.cpp
-  source/game/client/tile_atlas.cpp
   source/graphics/camera.cpp
   source/graphics/index_buffer.cpp
   source/graphics/renderer.cpp
