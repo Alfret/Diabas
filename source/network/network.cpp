@@ -205,7 +205,13 @@ Network<Side::kClient>::SetupPacketHandler()
 
       // 2. Insert into ecs system
       auto& registry = world_->GetEntityManager().GetRegistry();
-      system::PlayerDataUpdate(registry, my_player_data);
+      const bool ok = system::PlayerDataCreate(registry, my_player_data);
+      if (!ok) {
+        DLOG_ERROR("failed to create our  PlayerData");
+        auto client = GetClient();
+        client->CloseConnection();
+        return;
+      }
 
       // 3. Send kPlayerJoin packet
       Packet player_join_packet{};
@@ -242,7 +248,13 @@ Network<Side::kClient>::SetupPacketHandler()
     constexpr ConnectionId kUnusedConnectionId = 0;
     player_data.connection_id = kUnusedConnectionId;
     auto& registry = world_->GetEntityManager().GetRegistry();
-    system::PlayerDataUpdate(registry, player_data);
+    const bool ok = system::PlayerDataCreate(registry, player_data);
+    if (!ok) {
+      DLOG_ERROR("PlayerDataCreate on PlayerJoin failed, disconnecting us");
+      auto client = GetClient();
+      client->CloseConnection();
+      return;
+    }
 
     // display all connections
     DLOG_INFO("All active connections:");
@@ -283,7 +295,11 @@ Network<Side::kClient>::SetupPacketHandler()
     auto player_data = mr.Read<PlayerData>();
 
     auto& registry = world_->GetEntityManager().GetRegistry();
-    system::PlayerDataUpdate(registry, player_data);
+    const bool ok = system::PlayerDataUpdate(registry, player_data);
+    if (!ok) {
+      DLOG_WARNING("failed to update PlayerData on PlayerUpdate, ignoring");
+      return;
+    }
 
     // display all connections
     DLOG_INFO("All active connections:");
@@ -316,21 +332,7 @@ Network<Side::kServer>::SetupPacketHandler()
     auto mr = packet.GetMemoryReader();
     auto msg = mr.Read<game::ChatMessage>();
     if (world_->GetChat().ValidateMessage(msg)) {
-      auto& registry = world_->GetEntityManager().GetRegistry();
-
-      // fill in the "extra" field in the chat message
-      if (msg.type == game::ChatType::kSay || msg.type == game::ChatType::kWhisper) {
-        auto maybe_pd = system::PlayerDataFromUuid(registry, msg.uuid_from);
-        if (maybe_pd) {
-          msg.from = (*maybe_pd)->name;
-        }
-        // TODO handle whisper
-      } else if (msg.type == game::ChatType::kServer) {
-        msg.from = "SERVER";
-      } else if (msg.type == game::ChatType::kEvent){
-        // TODO change this
-        msg.from = "EVENT";
-      }
+      world_->GetChat().FillFromTo(msg);
 
       Packet new_packet{};
       new_packet.SetHeader(*packet.GetHeader());
@@ -372,7 +374,12 @@ Network<Side::kServer>::SetupPacketHandler()
         server->DisconnectConnection(packet.GetFromConnection());
     } else {
       DLOG_INFO("player join [{}]", player_data);
-      system::PlayerDataUpdate(registry, player_data);
+      const bool ok = system::PlayerDataCreate(registry, player_data);
+      if (!ok) {
+        DLOG_WARNING("failed to create PlayerData, disconnecting the "
+                     "conection {}", packet.GetFromConnection());
+        server->DisconnectConnection(packet.GetFromConnection());
+      }
       server->PacketBroadcastExclude(
         packet, SendStrategy::kReliable, packet.GetFromConnection());
       SendPlayerList(packet.GetFromConnection());
@@ -408,8 +415,13 @@ Network<Side::kServer>::SetupPacketHandler()
     if (auto maybe_pd = system::PlayerDataFromConnectionId(registry, player_data.connection_id);
         maybe_pd) {
       if (**maybe_pd == player_data) {
-        system::PlayerDataUpdate(registry, player_data);
-        PacketBroadcastExclude(packet, player_data.connection_id);
+        const bool uok = system::PlayerDataUpdate(registry, player_data);
+        if (!uok) {
+          DLOG_WARNING("failed to update PlayerData for [{}], ignoring",
+                       **maybe_pd);
+        } else {
+          PacketBroadcastExclude(packet, player_data.connection_id);
+        }
       } else {
         DLOG_WARNING("Player [{}] attempted to update someone else's Player"
                      "Data [{}], disconnecting.",
@@ -474,10 +486,13 @@ template<>
 void
 Network<Side::kServer>::Broadcast(const std::string_view message) const
 {
-  auto server = GetServer();
-  Packet packet{ message.data(), message.size() };
-  packet_handler_.BuildPacketHeader(packet, PacketHeaderStaticTypes::kChat);
-  server->PacketBroadcast(packet, SendStrategy::kReliable);
+  game::ChatMessage msg{};
+  msg.type = game::ChatType::kServer;
+  msg.msg = String(message.data());
+  world_->GetChat().FillFromTo(msg);
+  if (!world_->GetChat().SendMessage(msg)) {
+    DLOG_WARNING("failed to broadcast a server chat message");
+  }
 }
 
 template<>

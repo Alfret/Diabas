@@ -95,6 +95,29 @@ Chat::ValidateMessage(const ChatMessage& msg) const
 }
 
 void
+Chat::FillFromTo(ChatMessage& msg) const
+{
+  if constexpr (kSide == Side::kServer) {
+      auto& registry = world_->GetEntityManager().GetRegistry();
+
+      if (msg.type == game::ChatType::kSay || msg.type == game::ChatType::kWhisper) {
+        auto maybe_pd = system::PlayerDataFromUuid(registry, msg.uuid_from);
+        if (maybe_pd) {
+          msg.from = (*maybe_pd)->name;
+        }
+        // TODO handle whisper
+      } else if (msg.type == game::ChatType::kServer) {
+        msg.from = "SERVER";
+      } else if (msg.type == game::ChatType::kEvent){
+        // TODO change this
+        msg.from = "EVENT";
+      }
+    } else {
+    AlfAssert(false, "cannot use FillFromTo from client side");
+  }
+}
+
+void
 Chat::Debug()
 {
   debug_ = "";

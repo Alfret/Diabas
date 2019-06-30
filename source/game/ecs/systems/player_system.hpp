@@ -7,9 +7,18 @@
 namespace dib::system {
 
 /**
- * Will create or replace a PlayerData entity.
+ * Will create an entity with the given PlayerData. If the uuid in player_data
+ * is not unique, the creation will fail.
+ *
+ * @return If we created the new entry.
  */
-void
+bool
+PlayerDataCreate(entt::registry& registry, const PlayerData& player_data);
+
+/**
+ * Will replace the PlayerData for the entity with player_data.uuid's uuid.
+ */
+bool
 PlayerDataUpdate(entt::registry& registry,
                  const PlayerData& player_data);
 

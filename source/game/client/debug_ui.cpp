@@ -184,42 +184,49 @@ ShowNetworkDebug(GameClient& gameClient)
 
           // update locally
           auto& registry = world.GetEntityManager().GetRegistry();
-          system::PlayerDataUpdate(registry, player_data);
-
-          // send update to server
-          Packet packet{};
-          world.GetNetwork().GetPacketHandler().BuildPacketHeader(
-              packet, PacketHeaderStaticTypes::kPlayerUpdate);
-          auto mw = packet.GetMemoryWriter();
-          mw->Write(player_data);
-          mw.Finalize();
-          world.GetNetwork().PacketBroadcast(packet);
+          const bool ok = system::PlayerDataUpdate(registry, player_data);
+          if (!ok) {
+            DLOG_ERROR("failed to update our PlayerData, disconnecting");
+            world.GetNetwork().Disconnect();
+          } else {
+            // send update to server
+            Packet packet{};
+            world.GetNetwork().GetPacketHandler().BuildPacketHeader(
+                packet, PacketHeaderStaticTypes::kPlayerUpdate);
+            auto mw = packet.GetMemoryWriter();
+            mw->Write(player_data);
+            mw.Finalize();
+            world.GetNetwork().PacketBroadcast(packet);
+          }
         }
       }
 
       ImGui::Spacing();
       ImGui::Spacing();
 
-      constexpr std::size_t textlen = 128;
-      static char8 text[textlen] = "";
-      ImGui::InputText("chat", text, textlen);
-      if (ImGui::Button("send chat message")) {
-        game::ChatMessage msg{};
-        msg.msg = String(text);
-        msg.type = game::ChatType::kSay;
-        msg.uuid_from = *world.GetNetwork().GetOurUuid();
-        if (!chat.SendMessage(msg)) {
-          DLOG_WARNING("failed to send chat message");
+      if (world.GetNetwork().GetConnectionState() ==
+          ConnectionState::kConnected) {
+        constexpr std::size_t textlen = 128;
+        static char8 text[textlen] = "";
+        ImGui::InputText("chat", text, textlen);
+        if (ImGui::Button("send chat message")) {
+          game::ChatMessage msg{};
+          msg.msg = String(text);
+          msg.type = game::ChatType::kSay;
+          msg.uuid_from = *world.GetNetwork().GetOurUuid();
+          if (!chat.SendMessage(msg)) {
+            DLOG_WARNING("failed to send chat message");
+          }
+          text[0] = '\0';
         }
-        text[0] = '\0';
       }
 
-      ImGui::InputTextMultiline("",
-                                const_cast<char8*>(chat.GetDebug().GetUTF8()),
-                                chat.GetDebug().GetSize(),
-                                ImVec2(-1.0f, ImGui::GetTextLineHeight() * 16),
-                                ImGuiInputTextFlags_AllowTabInput |
-                                  ImGuiInputTextFlags_ReadOnly);
+      ImGui::InputTextMultiline(
+          "",
+          const_cast<char8*>(chat.GetDebug().GetUTF8()),
+          chat.GetDebug().GetSize(),
+          ImVec2(-1.0f, ImGui::GetTextLineHeight() * 16),
+          ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_ReadOnly);
 
       ImGui::TreePop();
     }

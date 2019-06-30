@@ -6,10 +6,31 @@
 
 namespace dib::system {
 
-/**
- * Will create or replace a PlayerData entity.
- */
-void
+bool
+PlayerDataCreate(entt::registry& registry, const PlayerData& player_data)
+{
+  auto view = registry.view<PlayerData>();
+
+  bool found = false;
+  for (u32 e : view) {
+    if (player_data == view.get(e)) {
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    DLOG_VERBOSE("created new PlayerData for [{}]", player_data);
+    auto entity = registry.create();
+    registry.assign<PlayerData>(entity, player_data);
+  } else {
+    DLOG_WARNING("could not create PlayerData, entry already exists");
+  }
+
+  return !found;
+}
+
+bool
 PlayerDataUpdate(entt::registry& registry,
                  const PlayerData& player_data)
 {
@@ -25,19 +46,16 @@ PlayerDataUpdate(entt::registry& registry,
     }
   }
 
-  if (!found) {
-    DLOG_VERBOSE("created new PlayerData for [{}]", player_data);
-    auto new_entity = registry.create();
-    registry.assign<PlayerData>(new_entity, player_data);
-  } else {
+  if (found) {
     DLOG_VERBOSE("updated PlayerData for [{}]", player_data);
     registry.replace<PlayerData>(entity, player_data);
+  } else {
+    DLOG_WARNING("could not find PlayerData entry, update failed.");
   }
+
+  return found;
 }
 
-/**
- * Find and destroy the entity with the given uuid. Noop if not found.
- */
 void
 PlayerDataDelete(entt::registry& registry, const Uuid& uuid)
 {
