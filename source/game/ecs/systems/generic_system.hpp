@@ -10,6 +10,8 @@
 namespace dib::system {
 
 /**
+ * Create an entity with component.
+ *
  * @tparam TComponent Be pod structure, implement operator==,
  * implement operator<<
  * Note: The operator== must uniquely identify it among the entities
@@ -41,6 +43,8 @@ Create(entt::registry& registry, const TComponent& component)
 }
 
 /**
+ * Replace component from existing entity. Uses operator== to identify it.
+ *
  * @tparam TComponent Be pod structure, implement operator==,
  * implement operator<<
  * Note: The operator== must uniquely identify it among the entities
@@ -74,6 +78,7 @@ Replace(entt::registry& registry, const TComponent& component)
 
 /**
  * Delete if entity with TComponent.uuid matches uuid, else noop.
+ *
  * @tparam TComponent Be pod structure, have a Uuid named uuid.
  */
 template <typename TComponent>
