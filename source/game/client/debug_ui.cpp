@@ -148,7 +148,7 @@ ShowNetworkDebug(GameClient& gameClient)
   World& world = gameClient.GetWorld();
   auto& chat = world.GetChat();
 
-  ImGui::ShowTestWindow();
+  // ImGui::ShowTestWindow();
 
   if (ImGui::CollapsingHeader("Network")) {
 
