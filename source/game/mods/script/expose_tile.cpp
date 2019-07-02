@@ -1,4 +1,4 @@
-#include "game/mods/script/expose_mod.hpp"
+#include "game/mods/script/expose_tile.hpp"
 
 // ========================================================================== //
 // Headers

@@ -196,6 +196,37 @@ ShowTileDebug(GameClient& gameClient)
 // -------------------------------------------------------------------------- //
 
 void
+ShowItemDebug(GameClient& gameClient)
+{
+  if (ImGui::CollapsingHeader("Items")) {
+    // Display item atlas
+    if (ImGui::TreeNode("Item atlas")) {
+
+      static s32 atlasSize[2] = { 256, 256 };
+      static bool uniformAtlasSize = true;
+      ImGui::Checkbox("Uniform size", &uniformAtlasSize);
+      ImGui::SliderInt("Width", &atlasSize[0], 64, 2048);
+      ImGui::SliderInt("Height", &atlasSize[1], 64, 2048);
+      if (uniformAtlasSize) {
+        atlasSize[1] = atlasSize[0];
+      }
+
+      const auto& atlasTexture = gameClient.GetCache().GetItemAtlasTexture();
+      ImGui::Image(reinterpret_cast<ImTextureID>(atlasTexture->GetID()),
+                   ImVec2(atlasSize[0], atlasSize[1]),
+                   ImVec2(0, 0),
+                   ImVec2(1, 1),
+                   ImVec4(1, 1, 1, 1),
+                   ImVec4(0, 0, 0, 1));
+
+      ImGui::TreePop();
+    }
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
 ShowNetworkDebug(GameClient& gameClient)
 {
   World& world = gameClient.GetWorld();

@@ -97,7 +97,7 @@ public:
    *
    * A translation key can also be specified that is used for translation of the
    * name of the block **/
-  explicit Tile(ResourcePath resourcePath, String translationKey = "");
+  explicit Tile(ResourcePath resourcePath, String translationKey);
 
   /** Virtual destructor **/
   virtual ~Tile() = default;

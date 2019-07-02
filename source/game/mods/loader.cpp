@@ -89,10 +89,12 @@ ModLoader::GetModById(const String& modId)
 // -------------------------------------------------------------------------- //
 
 Result
-ModLoader::Init(TileRegistry& tileRegistry, World& world)
+ModLoader::Init(ItemRegistry& itemRegistry,
+                TileRegistry& tileRegistry,
+                World& world)
 {
   for (auto& mod : mMods) {
-    mod.second->Init(tileRegistry, world);
+    mod.second->Init(itemRegistry, tileRegistry, world);
   }
   return Result::kSuccess;
 }

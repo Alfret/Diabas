@@ -5,6 +5,7 @@
 // ========================================================================== //
 
 #include "game/world.hpp"
+#include "game/mods/script/expose_world.hpp"
 #include "script/expose/expose_network.hpp"
 #include "script/util.hpp"
 
@@ -223,15 +224,18 @@ ModScript::Load(const Path& path, const String& className)
 // -------------------------------------------------------------------------- //
 
 Result
-ModScript::Init(TileRegistry& tileRegistry, World& world)
+ModScript::Init(ItemRegistry& itemRegistry,
+                TileRegistry& tileRegistry,
+                World& world)
 {
   DIB_ASSERT(!mInitialized, "Mod scripts can only be initialized once");
 
   // Store objects in script
+  JsValueRef itemRegistryObject = script::CreateExternalObject(&itemRegistry);
+  script::SetProperty(mInstance, "itemRegistry", itemRegistryObject);
   JsValueRef tileRegistryObject = script::CreateExternalObject(&tileRegistry);
   script::SetProperty(mInstance, "tileRegistry", tileRegistryObject);
-
-  JsValueRef worldObject = script::CreateExternalObject(&world);
+  JsValueRef worldObject = CreateScriptWorldObject(&world);
   script::SetProperty(mInstance, "world", worldObject);
 
   // Common functions

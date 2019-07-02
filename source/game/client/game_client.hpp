@@ -24,6 +24,8 @@ class GameClient : public app::AppClient
 private:
   /** Tile registry **/
   TileRegistry mTileRegistry;
+  /** Item registry **/
+  ItemRegistry mItemRegistry;
   /** Game world **/
   World mWorld;
 

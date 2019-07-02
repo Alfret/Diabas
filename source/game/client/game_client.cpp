@@ -21,9 +21,10 @@ GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
   , mModLoader(mScriptEnvironment, Path{ "./mods" })
   , mCamera(GetWidth(), GetHeight())
 {
-  mModLoader.Init(mTileRegistry, mWorld);
+  mModLoader.Init(mItemRegistry, mTileRegistry, mWorld);
 
   mClientCache.BuildTileAtlas(mTileRegistry);
+  mClientCache.BuildItemAtlas(mItemRegistry);
 }
 
 // -------------------------------------------------------------------------- //
@@ -42,6 +43,7 @@ GameClient::Update(f64 delta)
     ShowScriptDebug(*this);
     ShowModDebug(*this);
     ShowTileDebug(*this);
+    ShowItemDebug(*this);
     ShowNetworkDebug(*this);
   }
   ImGui::End();

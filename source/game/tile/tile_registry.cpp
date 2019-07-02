@@ -4,6 +4,7 @@
 // Headers
 // ========================================================================== //
 
+#include "core/assert.hpp"
 #include "game/constants.hpp"
 #include "tile_registry.hpp"
 
@@ -61,6 +62,8 @@ TileRegistry::RegisterTile(const String& modId,
 bool
 TileRegistry::RegisterTile(const String& registryKey, Tile* tile)
 {
+  DIB_ASSERT(tile != nullptr, "Cannot register null tile");
+
   // Make sure it's not already registered
   if (mTileRegistryMap.count(registryKey) > 0) {
     return false;

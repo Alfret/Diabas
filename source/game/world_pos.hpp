@@ -18,7 +18,7 @@ private:
 
 public:
   /** Construct a world position from the x and y coordinates **/
-  constexpr WorldPos(u32 x, u32 y)
+  constexpr WorldPos(u32 x = 0, u32 y = 0)
     : mX(x)
     , mY(y)
   {}

@@ -17,6 +17,7 @@
 
 namespace dib::game {
 
+DIB_FORWARD_DECLARE_CLASS(ItemRegistry);
 DIB_FORWARD_DECLARE_CLASS(TileRegistry);
 DIB_FORWARD_DECLARE_CLASS(World);
 
@@ -60,7 +61,9 @@ public:
   Result Load(const Path& path, const String& className = "");
 
   /** Initialize the script **/
-  Result Init(TileRegistry& tileRegistry, World& world);
+  Result Init(ItemRegistry& itemRegistry,
+              TileRegistry& tileRegistry,
+              World& world);
 
   /** Update script **/
   void Update(f32 delta);

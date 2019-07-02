@@ -20,6 +20,7 @@
 
 namespace dib::game {
 
+DIB_FORWARD_DECLARE_CLASS(ItemRegistry);
 DIB_FORWARD_DECLARE_CLASS(TileRegistry);
 DIB_FORWARD_DECLARE_CLASS(World);
 
@@ -67,7 +68,9 @@ public:
   Result Load(const alflib::File& modDirectory);
 
   /** Init script **/
-  void Init(TileRegistry& tileRegistry, World& world);
+  void Init(ItemRegistry& itemRegistry,
+            TileRegistry& tileRegistry,
+            World& world);
 
   /** Update mod **/
   void Update(f32 delta);
