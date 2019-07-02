@@ -18,7 +18,7 @@ namespace dib {
  * Steps to follow when ADDING an element:
  * 1. Add the enum here.
  * 2. Register a packet handler callback on the packet_handler with
- *    AddStaticPacketType.
+ *    AddStaticPacketType. Typically done in Networks's SetupPacketHandler.
  * 3. Make sure to send the new packet from somewhere!
  */
 enum class PacketHeaderStaticTypes : std::size_t
@@ -26,6 +26,7 @@ enum class PacketHeaderStaticTypes : std::size_t
   kSync = 0,
   kPlayerJoin,
   kPlayerLeave,
+  kPlayerUpdate,
 
   // Must be last, used to count number of elements in the enum
   kChat

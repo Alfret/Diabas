@@ -8,6 +8,7 @@
 #include "game/client/game_client.hpp"
 #include "game/client/player_data_storage.hpp"
 #include "script/util.hpp"
+#include "game/ecs/systems/generic_system.hpp"
 
 // ========================================================================== //
 // DebugUI Implementation
@@ -171,42 +172,64 @@ ShowNetworkDebug(GameClient& gameClient)
       }
     }
 
+    ImGui::Spacing();
+
     if (ImGui::TreeNode("Chat")) {
       constexpr std::size_t buflen = 50;
       static char8 buf[buflen] = "Rully";
-      ImGui::InputText("Name", buf, buflen);
-      if (ImGui::Button("Set Name")) {
-        if (world.GetNetwork().GetConnectionState() ==
-            ConnectionState::kDisconnected) {
-          auto& player_data = PlayerDataStorage::Load();
-          player_data.name = buf;
+      if (world.GetNetwork().GetConnectionState() == ConnectionState::kConnected) {
+        ImGui::InputText("##", buf, buflen);
+        ImGui::SameLine();
+        if (ImGui::Button("Set Name")) {
+          // set our new name
+          auto player_data = *world.GetNetwork().GetOurPlayerData();
+          player_data.name = String(buf);
+
+          // update locally
+          auto& registry = world.GetEntityManager().GetRegistry();
+          const bool ok = system::Replace(registry, player_data);
+          if (!ok) {
+            DLOG_ERROR("failed to replace our PlayerData, disconnecting");
+            world.GetNetwork().Disconnect();
+          } else {
+            // send update to server
+            Packet packet{};
+            world.GetNetwork().GetPacketHandler().BuildPacketHeader(
+                packet, PacketHeaderStaticTypes::kPlayerUpdate);
+            auto mw = packet.GetMemoryWriter();
+            mw->Write(player_data);
+            mw.Finalize();
+            world.GetNetwork().PacketBroadcast(packet);
+          }
         }
       }
-      ImGui::Text("Note: name can only be applied when disconnected.");
 
       ImGui::Spacing();
-      ImGui::Spacing();
 
-      constexpr std::size_t textlen = 128;
-      static char8 text[textlen] = "";
-      ImGui::InputText("chat", text, textlen);
-      if (ImGui::Button("send chat message")) {
-        game::ChatMessage msg{};
-        msg.msg = String(text);
-        msg.type = game::ChatType::kSay;
-        msg.uuid_from = world.GetNetwork().GetOurUuid();
-        if (!chat.SendMessage(msg)) {
-          DLOG_WARNING("failed to send chat message");
+      if (world.GetNetwork().GetConnectionState() ==
+          ConnectionState::kConnected) {
+        constexpr std::size_t textlen = 128;
+        static char8 text[textlen] = "";
+        ImGui::InputText("", text, textlen);
+        ImGui::SameLine();
+        if (ImGui::Button("Send Chat Message")) {
+          game::ChatMessage msg{};
+          msg.msg = String(text);
+          msg.type = game::ChatType::kSay;
+          msg.uuid_from = *world.GetNetwork().GetOurUuid();
+          if (!chat.SendMessage(msg)) {
+            DLOG_WARNING("failed to send chat message");
+          }
+          text[0] = '\0';
         }
-        text[0] = '\0';
       }
 
-      ImGui::InputTextMultiline("",
-                                const_cast<char8*>(chat.GetDebug().GetUTF8()),
-                                chat.GetDebug().GetSize(),
-                                ImVec2(-1.0f, ImGui::GetTextLineHeight() * 16),
-                                ImGuiInputTextFlags_AllowTabInput |
-                                  ImGuiInputTextFlags_ReadOnly);
+      ImGui::InputTextMultiline(
+          "##",
+          const_cast<char8*>(chat.GetDebug().GetUTF8()),
+          chat.GetDebug().GetSize(),
+          ImVec2(-1.0f, ImGui::GetTextLineHeight() * 16),
+          ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_ReadOnly);
 
       ImGui::TreePop();
     }
