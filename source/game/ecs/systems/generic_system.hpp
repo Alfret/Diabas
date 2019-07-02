@@ -120,6 +120,22 @@ ComponentFromUuid(entt::registry& registry, const Uuid& uuid)
   }
   return std::nullopt;
 }
+
+/**
+ * Count the number of entities active that has the given component.
+ */
+template <typename TComponent>
+u64
+CountEntities(entt::registry& registry)
+{
+  const auto view = registry.view<TComponent>();
+  u64 count = 0;
+  for (const auto _ : view) {
+    ++count;
+  }
+    return count;
+}
+
 }
 
 #endif//GENERIC_SYSTEM_HPP_

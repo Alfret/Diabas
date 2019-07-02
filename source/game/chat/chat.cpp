@@ -69,7 +69,8 @@ Chat::ValidateMessage(const ChatMessage& msg) const
         return false;
       }
 
-      if (*network.GetOurUuid() != msg.uuid_from) {
+      if (network.GetOurPlayerData() && (*network.GetOurPlayerData())->uuid !=
+          msg.uuid_from) {
         DLOG_WARNING("attemted to sent a message that was not from us");
         return false;
       }

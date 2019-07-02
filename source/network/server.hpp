@@ -71,6 +71,9 @@ public:
 
   NetworkState GetNetworkState() const { return network_state_; }
 
+  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus(const ConnectionId connection_id)
+    const;
+
 private:
   void PollSocketStateChanges();
 

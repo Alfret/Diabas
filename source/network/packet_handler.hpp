@@ -15,20 +15,53 @@ namespace dib {
 // ============================================================ //
 
 /**
- * Steps to follow when ADDING an element:
+ * Steps to follow when ADDING (an element / a new packet type):
  * 1. Add the enum here.
  * 2. Register a packet handler callback on the packet_handler with
  *    AddStaticPacketType. Typically done in Networks's SetupPacketHandler.
- * 3. Make sure to send the new packet from somewhere!
+ *    Remember to register both server and client side.
+ * 3. Make sure to send the new packet from somewhere! You may want to make
+ *    a packet factory function to make it easier to send these types of
+ *    packets, see chat.hpp for an example.
  */
 enum class PacketHeaderStaticTypes : std::size_t
 {
+  /**
+   * Server syncs its packet types with client, make sure they agree on
+   * (name - key) combination.
+   */
   kSync = 0,
+
+  /**
+   * When a player joins the server, it will send a join request introducing
+   * itself and its character.
+   */
   kPlayerJoin,
+
+  /**
+   * When a player leaves, the rest of the players will get notified with
+   * this packet.
+   */
   kPlayerLeave,
+
+  /**
+   * When a player updates it own state, they send a PlayerUpdate. If the
+   * server accepts the PlayerUpdate, it will forward the packet to all
+   * other active players.
+   */
   kPlayerUpdate,
 
+  /**
+   * When the server rejects a PlayerUpdate, it will respond with this
+   * packet type.
+   */
+  kPlayerUpdateRejected,
+
+  // ============================================================ //
   // Must be last, used to count number of elements in the enum
+  /**
+   * Chat message packets.
+   */
   kChat
 };
 

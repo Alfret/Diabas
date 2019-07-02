@@ -49,6 +49,8 @@ public:
 
   ConnectionId GetConnectionId() const { return connection_; }
 
+  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus() const;
+
 private:
   void PollSocketStateChanges();
 

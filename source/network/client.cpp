@@ -45,7 +45,7 @@ Client::CloseConnection()
     connection_ = k_HSteamNetConnection_Invalid;
   }
 
-  // save our PlayerData
+  //TODO save our PlayerData
   DLOG_VERBOSE("TODO save player before destroying");
 
   // clear all player entities
@@ -58,6 +58,15 @@ Client::PacketSend(const Packet& packet, const SendStrategy send_strategy)
 {
   return Common::SendPacket(
     packet, send_strategy, connection_, socket_interface_);
+}
+
+std::optional<SteamNetworkingQuickConnectionStatus>
+Client::GetConnectionStatus() const
+{
+  SteamNetworkingQuickConnectionStatus status;
+  const bool ok =
+    socket_interface_->GetQuickConnectionStatus(connection_, &status);
+  return ok ? std::optional(status) : std::nullopt;
 }
 
 void

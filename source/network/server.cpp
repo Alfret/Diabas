@@ -79,6 +79,15 @@ Server::PacketUnicast(const Packet& packet,
     packet, send_strategy, target_connection, socket_interface_);
 }
 
+std::optional<SteamNetworkingQuickConnectionStatus>
+Server::GetConnectionStatus(const ConnectionId connection_id) const
+{
+  SteamNetworkingQuickConnectionStatus status;
+  const bool ok =
+    socket_interface_->GetQuickConnectionStatus(connection_id, &status);
+  return ok ? std::optional(status) : std::nullopt;
+}
+
 void
 Server::PollSocketStateChanges()
 {
