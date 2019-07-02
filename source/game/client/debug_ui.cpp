@@ -9,6 +9,7 @@
 #include "game/client/player_data_storage.hpp"
 #include "script/util.hpp"
 #include "game/ecs/systems/generic_system.hpp"
+#include <dutil/stopwatch.hpp>
 
 // ========================================================================== //
 // DebugUI Implementation
@@ -152,6 +153,7 @@ ShowNetworkDebug(GameClient& gameClient)
   ImGui::ShowTestWindow();
 
   if (ImGui::CollapsingHeader("Network")) {
+
     ImGui::Text("Network status: %s",
                 world.GetNetwork().GetConnectionState() ==
                     ConnectionState::kConnected
@@ -174,31 +176,123 @@ ShowNetworkDebug(GameClient& gameClient)
 
     ImGui::Spacing();
 
+    // ============================================================ //
+    // Info
+    // ============================================================ //
+
     if (ImGui::TreeNode("Info")) {
       auto& network = world.GetNetwork();
       auto status = network.GetConnectionStatus();
       if (status) {
-        std::string info = dlog::Format("Ping: {}\n"
-                                          "Connection Quality Local: {:.2f}\n"
-                                          "Connection Quality Remote: {:.2f}\n"
-                                          "Out Packets/s:{:.2f}\n"
-                                          "Out Bytes/s:  {:.2f}\n"
-                                          "In  Packets/s:{:.2f}\n"
-                                          "In  Bytes/s:  {:.2f}\n"
-                                          "Bytes/s Capacity Estimation: {}\n",
-                                          status->m_nPing,
-                                          status->m_flConnectionQualityLocal,
-                                          status->m_flConnectionQualityRemote,
-                                          status->m_flOutPacketsPerSec,
-                                          status->m_flOutBytesPerSec,
-                                          status->m_flInPacketsPerSec,
-                                          status->m_flInBytesPerSec,
-                                          status->m_nSendRateBytesPerSecond);
+        std::string info = dlog::Format("Connection Quality Local: {:.2f}\n"
+                                        "Connection Quality Remote: {:.2f}\n"
+                                        "Bytes/s Capacity Estimation: {}\n",
+                                        status->m_flConnectionQualityLocal,
+                                        status->m_flConnectionQualityRemote,
+                                        status->m_nSendRateBytesPerSecond);
         ImGui::TextUnformatted(info.c_str());
+
+        constexpr u32 kCount = 90;
+        static float ping[kCount] = {};
+        static float out_bytes[kCount] = {};
+        static float out_packets[kCount] = {};
+        static float in_bytes[kCount] = {};
+        static float in_packets[kCount] = {};
+
+        const auto ShiftInsertArray =
+          [](float* arr, const u32 arrlen, const float value) {
+            for (u32 i = arrlen; i-- > 1;) {
+              arr[i] = arr[i - 1];
+            }
+            arr[0] = value;
+          };
+
+        static dutil::Stopwatch sw{};
+        if (sw.now_ms() > 1000) {
+          sw.Start();
+          ShiftInsertArray(ping, kCount, status->m_nPing);
+          ShiftInsertArray(out_bytes, kCount, status->m_flOutBytesPerSec);
+          ShiftInsertArray(out_packets, kCount, status->m_flOutPacketsPerSec);
+          ShiftInsertArray(in_bytes, kCount, status->m_flInBytesPerSec);
+          ShiftInsertArray(in_packets, kCount, status->m_flInPacketsPerSec);
+        }
+
+        const auto FindMax = [](float* arr, const u32 arrlen) {
+          float max = arr[0];
+          for (u32 i = 1; i < arrlen; i++) {
+            if (arr[i] > max)
+              max = arr[i];
+          }
+          return max;
+        };
+
+        const auto ping_current =
+          dlog::Format("currently {} ms ping", status->m_nPing);
+        const float ping_max = FindMax(ping, kCount);
+        ImGui::PlotLines("ping ms",
+                         ping,
+                         kCount,
+                         0,
+                         ping_current.c_str(),
+                         0,
+                         ping_max,
+                         ImVec2(0, 80));
+
+        const auto out_bytes_current =
+          dlog::Format("currently {:.2f} bytes/s", status->m_flOutBytesPerSec);
+        const float out_bytes_max = FindMax(out_bytes, kCount);
+        ImGui::PlotLines("out bytes/s",
+                         out_bytes,
+                         kCount,
+                         0,
+                         out_bytes_current.c_str(),
+                         0,
+                         out_bytes_max,
+                         ImVec2(0, 80));
+
+        const auto out_packets_current =
+          dlog::Format("currently {:.2f} packets/s", status->m_flOutPacketsPerSec);
+        const float out_packets_max = FindMax(out_packets, kCount);
+        ImGui::PlotLines("out packets/s",
+                         out_packets,
+                         kCount,
+                         0,
+                         out_packets_current.c_str(),
+                         0,
+                         out_packets_max,
+                         ImVec2(0, 80));
+
+        const auto in_bytes_current =
+          dlog::Format("currently {:.2f} bytes/s", status->m_flOutBytesPerSec);
+        const float in_bytes_max = FindMax(in_bytes, kCount);
+        ImGui::PlotLines("in bytes/s",
+                         in_bytes,
+                         kCount,
+                         0,
+                         in_bytes_current.c_str(),
+                         0,
+                         in_bytes_max,
+                         ImVec2(0, 80));
+
+        const auto in_packets_current = dlog::Format("currently {:.2f} packets/s",
+                                                status->m_flInPacketsPerSec);
+        const float in_packets_max = FindMax(in_packets, kCount);
+        ImGui::PlotLines("in packets/s",
+                         in_packets,
+                         kCount,
+                         0,
+                         in_packets_current.c_str(),
+                         0,
+                         in_packets_max,
+                         ImVec2(0, 80));
       }
 
       ImGui::TreePop();
     }
+
+    // ============================================================ //
+    // Chat
+    // ============================================================ //
 
     if (ImGui::TreeNode("Chat")) {
 
