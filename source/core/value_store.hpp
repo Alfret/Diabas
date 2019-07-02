@@ -24,8 +24,8 @@ public:
 
   enum class VariantTag : u8
   {
-    ku64 = 0,
-    kf64,
+    kU64 = 0,
+    kF64,
     kString
   };
 
