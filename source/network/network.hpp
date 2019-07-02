@@ -41,6 +41,9 @@ public:
 
   ~Network();
 
+  Network(const Network& other) = delete;
+  Network& operator=(const Network& other) = delete;
+
   // ============================================================ //
   // Contants
   // ============================================================ //
@@ -78,15 +81,23 @@ public:
   void StartServer();
 
   /**
-   * Server: always returns kConnected
+   * Server always returns kConnected
    */
   ConnectionState GetConnectionState() const;
 
-  u32 GetOurEntity() const;
+  std::optional<u32> GetOurPlayerEntity() const;
 
-  const Uuid* GetOurUuid() const;
+  std::optional<const PlayerData*> GetOurPlayerData() const;
 
-  const PlayerData* GetOurPlayerData() const;
+  /**
+   * Server only
+   */
+  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus(const ConnectionId connection_id) const;
+
+  /**
+   * Client only
+   */
+  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus() const;
 
   // ============================================================ //
   // TMP
