@@ -77,6 +77,46 @@ ScriptWorldSetTile([[maybe_unused]] JsValueRef callee,
 
 // -------------------------------------------------------------------------- //
 
+/** World constructor **/
+JsValueRef
+ScriptWorldGetWidth([[maybe_unused]] JsValueRef callee,
+                    [[maybe_unused]] bool isConstruct,
+                    [[maybe_unused]] JsValueRef* arguments,
+                    [[maybe_unused]] u16 argumentCount,
+                    [[maybe_unused]] void* callbackState)
+{
+  // Assert initial conditions
+  DIB_ASSERT(!isConstruct, "'World::getWidth' is not a constructor call");
+  if (argumentCount != 1) {
+    DLOG_WARNING("'World::getWidth' expects zero (0) arguments, however got {}",
+                 argumentCount - 1);
+  }
+  auto world = script::GetExternalData<World>(arguments[0]);
+  return script::CreateValue(world->GetTerrain().GetWidth());
+}
+
+// --------------------------------------------------------------------------
+// //
+
+/** World constructor (Not available to mods) **/
+JsValueRef
+ScriptWorldGetHeight([[maybe_unused]] JsValueRef callee,
+                     [[maybe_unused]] bool isConstruct,
+                     [[maybe_unused]] JsValueRef* arguments,
+                     [[maybe_unused]] u16 argumentCount,
+                     [[maybe_unused]] void* callbackState)
+{
+  // Assert initial conditions
+  DIB_ASSERT(!isConstruct, "'World::getHeight' is not a constructor call");
+  if (argumentCount != 1) {
+    DLOG_WARNING(
+      "'World::getHeight' expects zero (0) arguments, however got {}",
+      argumentCount - 1);
+  }
+  auto world = script::GetExternalData<World>(arguments[0]);
+  return script::CreateValue(world->GetTerrain().GetHeight());
+}
+
 }
 
 // ========================================================================== //
@@ -188,6 +228,10 @@ ExposeWorld()
   WORLD_PROTOTYPE = script::CreateObject();
   script::SetProperty(
     WORLD_PROTOTYPE, "setTile", script::CreateFunction(ScriptWorldSetTile));
+  script::SetProperty(
+    WORLD_PROTOTYPE, "getWidth", script::CreateFunction(ScriptWorldGetWidth));
+  script::SetProperty(
+    WORLD_PROTOTYPE, "getHeight", script::CreateFunction(ScriptWorldGetHeight));
   JsSetPrototype(worldConstructor, WORLD_PROTOTYPE);
 
   JsValueRef worldPosConstructor =

@@ -259,6 +259,14 @@ ModScript::Init(ItemRegistry& itemRegistry,
     return Result::kScriptError;
   }
 
+  // TODO(Filip Björklund): Split into phases correctly
+  method = script::GetProperty(mInstance, "generateWorld");
+  error = script::CallMethod(
+    method, { mInstance, worldObject, script::CreateUndefined() }, output);
+  if (script::HandleException(error)) {
+    return Result::kScriptError;
+  }
+
   mInitialized = true;
   return Result::kSuccess;
 }

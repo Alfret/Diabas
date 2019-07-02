@@ -101,7 +101,7 @@ Terrain::InitTerrain()
 
   for (u32 y = 0; y < mHeight; y++) {
     for (u32 x = 0; x < mWidth; x++) {
-      SetTileID(WorldPos{ x, y }, 3);
+      SetTileID(WorldPos{ x, y }, 2);
     }
   }
 }
