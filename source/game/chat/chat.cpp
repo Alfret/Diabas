@@ -8,7 +8,8 @@
 
 namespace dib::game {
 
-Chat::Chat(World* world) : world_(world) {};
+Chat::Chat(World* world)
+  : world_(world){};
 
 bool
 Chat::SendMessage(ChatMessage msg) const
@@ -69,8 +70,8 @@ Chat::ValidateMessage(const ChatMessage& msg) const
         return false;
       }
 
-      if (network.GetOurPlayerData() && (*network.GetOurPlayerData())->uuid !=
-          msg.uuid_from) {
+      if (network.GetOurPlayerData() &&
+          (*network.GetOurPlayerData())->uuid != msg.uuid_from) {
         DLOG_WARNING("attemted to sent a message that was not from us");
         return false;
       }
@@ -99,21 +100,23 @@ void
 Chat::FillFromTo(ChatMessage& msg) const
 {
   if constexpr (kSide == Side::kServer) {
-      auto& registry = world_->GetEntityManager().GetRegistry();
+    auto& registry = world_->GetEntityManager().GetRegistry();
 
-      if (msg.type == game::ChatType::kSay || msg.type == game::ChatType::kWhisper) {
-        auto maybe_pd = system::ComponentFromUuid<PlayerData>(registry, msg.uuid_from);
-        if (maybe_pd) {
-          msg.from = (*maybe_pd)->name;
-        }
-        // TODO handle whisper
-      } else if (msg.type == game::ChatType::kServer) {
-        msg.from = "SERVER";
-      } else if (msg.type == game::ChatType::kEvent){
-        // TODO change this
-        msg.from = "EVENT";
+    if (msg.type == game::ChatType::kSay ||
+        msg.type == game::ChatType::kWhisper) {
+      auto maybe_pd =
+        system::ComponentFromUuid<PlayerData>(registry, msg.uuid_from);
+      if (maybe_pd) {
+        msg.from = (*maybe_pd)->name;
       }
-    } else {
+      // TODO handle whisper
+    } else if (msg.type == game::ChatType::kServer) {
+      msg.from = "SERVER";
+    } else if (msg.type == game::ChatType::kEvent) {
+      // TODO change this
+      msg.from = "EVENT";
+    }
+  } else {
     AlfAssert(false, "cannot use FillFromTo from client side");
   }
 }

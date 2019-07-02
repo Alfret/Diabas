@@ -41,7 +41,8 @@ Packet::Packet()
 {}
 
 Packet::Packet(const std::size_t size)
-    : size_(kHeaderSize), container_()
+  : size_(kHeaderSize)
+  , container_()
 {
   SetPacketCapacity(kHeaderSize + size);
 }
@@ -71,7 +72,7 @@ Packet::Packet(const alflib::String& string)
 }
 
 Packet::Packet(const Packet& other)
-    : Packet(other.GetPacketCapacity())
+  : Packet(other.GetPacketCapacity())
 {
   std::memcpy(GetPacket(), other.GetPacket(), other.GetPacketSize());
   size_ = other.size_;
@@ -88,7 +89,8 @@ Packet::operator=(const Packet& other)
 }
 
 Packet::Packet(Packet&& other) noexcept
-    : size_(other.size_), container_(std::move(other.container_))
+  : size_(other.size_)
+  , container_(std::move(other.container_))
 {
   other.size_ = 0;
 }

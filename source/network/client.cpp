@@ -7,11 +7,10 @@
 
 namespace dib {
 
-Client::Client(PacketHandler* packet_handler, game::World* world)
+Client::Client(game::World* world)
   : connection_(k_HSteamNetConnection_Invalid)
   , socket_interface_(SteamNetworkingSockets())
   , connection_state_(ConnectionState::kDisconnected)
-  , packet_handler_(packet_handler)
   , world_(world)
 {}
 
@@ -45,7 +44,7 @@ Client::CloseConnection()
     connection_ = k_HSteamNetConnection_Invalid;
   }
 
-  //TODO save our PlayerData
+  // TODO save our PlayerData
   DLOG_VERBOSE("TODO save player before destroying");
 
   // clear all player entities
@@ -157,7 +156,8 @@ void
 Client::SetConnectionState(const ConnectionState connection_state)
 {
   connection_state_ = connection_state;
-  DLOG_INFO("{}", connection_state == ConnectionState::kConnected ?
-            "connected" : "disconnected");
+  DLOG_INFO("{}",
+            connection_state == ConnectionState::kConnected ? "connected"
+                                                            : "disconnected");
 }
 }

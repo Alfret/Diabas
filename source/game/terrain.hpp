@@ -4,6 +4,8 @@
 // Headers
 // ========================================================================== //
 
+#include <array>
+
 #include "core/types.hpp"
 #include "game/tile/tile_manager.hpp"
 #include "graphics/camera.hpp"

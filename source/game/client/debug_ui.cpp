@@ -250,8 +250,8 @@ ShowNetworkDebug(GameClient& gameClient)
                          out_bytes_max,
                          ImVec2(0, 80));
 
-        const auto out_packets_current =
-          dlog::Format("currently {:.2f} packets/s", status->m_flOutPacketsPerSec);
+        const auto out_packets_current = dlog::Format(
+          "currently {:.2f} packets/s", status->m_flOutPacketsPerSec);
         const float out_packets_max = FindMax(out_packets, kCount);
         ImGui::PlotLines("out packets/s",
                          out_packets,
@@ -274,8 +274,8 @@ ShowNetworkDebug(GameClient& gameClient)
                          in_bytes_max,
                          ImVec2(0, 80));
 
-        const auto in_packets_current = dlog::Format("currently {:.2f} packets/s",
-                                                status->m_flInPacketsPerSec);
+        const auto in_packets_current = dlog::Format(
+          "currently {:.2f} packets/s", status->m_flInPacketsPerSec);
         const float in_packets_max = FindMax(in_packets, kCount);
         ImGui::PlotLines("in packets/s",
                          in_packets,
@@ -304,7 +304,8 @@ ShowNetworkDebug(GameClient& gameClient)
 
       constexpr std::size_t buflen = 50;
       static char8 buf[buflen] = "Rully";
-      if (world.GetNetwork().GetConnectionState() == ConnectionState::kConnected) {
+      if (world.GetNetwork().GetConnectionState() ==
+          ConnectionState::kConnected) {
         ImGui::InputText("New Player Name", buf, buflen);
         if (ImGui::Button("Set Name") && buf[0] != 0) {
           // set our new name
@@ -321,7 +322,7 @@ ShowNetworkDebug(GameClient& gameClient)
             // send update to server
             Packet packet{};
             world.GetNetwork().GetPacketHandler().BuildPacketHeader(
-                packet, PacketHeaderStaticTypes::kPlayerUpdate);
+              packet, PacketHeaderStaticTypes::kPlayerUpdate);
             auto mw = packet.GetMemoryWriter();
             mw->Write(player_data);
             mw.Finalize();
@@ -349,12 +350,12 @@ ShowNetworkDebug(GameClient& gameClient)
         }
       }
 
-      ImGui::InputTextMultiline(
-          "##source",
-          const_cast<char8*>(chat.GetDebug().GetUTF8()),
-          chat.GetDebug().GetSize(),
-          ImVec2(-1.0f, ImGui::GetTextLineHeight() * 16),
-          ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_ReadOnly);
+      ImGui::InputTextMultiline("##source",
+                                const_cast<char8*>(chat.GetDebug().GetUTF8()),
+                                chat.GetDebug().GetSize(),
+                                ImVec2(-1.0f, ImGui::GetTextLineHeight() * 16),
+                                ImGuiInputTextFlags_AllowTabInput |
+                                  ImGuiInputTextFlags_ReadOnly);
 
       ImGui::TreePop();
     }

@@ -36,6 +36,8 @@ set(COMMON_SOURCE
   source/audio/audio_manager.hpp
   source/core/hash.cpp
   source/core/hash.hpp
+  source/core/value_store.cpp
+  source/core/value_store.hpp
   source/game/chat/chat.cpp
   source/game/chat/chat.hpp
   source/game/chat/chat_message.cpp

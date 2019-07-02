@@ -8,6 +8,7 @@
 #include "network/client.hpp"
 #include "network/common.hpp"
 #include "network/server.hpp"
+#include "network/packet_handler.hpp"
 #include <alflib/core/assert.hpp>
 #include <dlog.hpp>
 #include <functional>
@@ -92,12 +93,16 @@ public:
   /**
    * Server only
    */
-  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus(const ConnectionId connection_id) const;
+  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus(
+    const ConnectionId connection_id) const;
 
   /**
    * Client only
    */
-  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus() const;
+  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus()
+    const;
+
+  PacketHandler& GetPacketHandler() { return packet_handler_; }
 
   // ============================================================ //
   // TMP
@@ -105,8 +110,6 @@ public:
   void NetworkInfo(const std::string_view message) const;
 
   void Broadcast(const std::string_view message) const;
-
-  PacketHandler& GetPacketHandler() { return packet_handler_; }
 
   // ============================================================ //
   // Private Methods
@@ -162,10 +165,10 @@ Network<side>::Network(game::World* world)
   }
   SetupPacketHandler();
   if constexpr (side == Side::kServer) {
-    base_ = new Server(&packet_handler_, world);
+    base_ = new Server(world);
     StartServer();
   } else {
-    base_ = new Client(&packet_handler_, world);
+    base_ = new Client(world);
   }
 }
 

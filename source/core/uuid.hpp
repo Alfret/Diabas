@@ -20,7 +20,8 @@ struct Uuid
 
   String ToString() const { return uuids::to_string(uuid); }
 
-  inline friend std::ostream& operator<<(std::ostream& os, const Uuid& uuid) {
+  inline friend std::ostream& operator<<(std::ostream& os, const Uuid& uuid)
+  {
     return os << uuid.ToString();
   }
 
