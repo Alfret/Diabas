@@ -10,6 +10,7 @@
 
 #include "game/mods/script/expose_mod.hpp"
 #include "game/mods/script/expose_tile.hpp"
+#include "game/mods/script/expose_world.hpp"
 
 // ========================================================================== //
 // ModLoader Implementation
@@ -21,8 +22,9 @@ ModLoader::ModLoader(script::Environment& environment, const Path& modsFolder)
   : mModsFolder(modsFolder)
 {
   // Expose game-specific things to mods
-  ExposeModBase(environment);
-  ExposeTile(environment);
+  ExposeModBase();
+  ExposeWorld();
+  ExposeTile();
 
   // Enumerate mod folders
   const alflib::File mods_folder(mModsFolder);
@@ -87,10 +89,10 @@ ModLoader::GetModById(const String& modId)
 // -------------------------------------------------------------------------- //
 
 Result
-ModLoader::Init(World& world)
+ModLoader::Init(TileRegistry& tileRegistry, World& world)
 {
   for (auto& mod : mMods) {
-    mod.second->Init(world);
+    mod.second->Init(tileRegistry, world);
   }
   return Result::kSuccess;
 }

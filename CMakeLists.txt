@@ -36,6 +36,7 @@ set(COMMON_SOURCE
   source/audio/audio_manager.hpp
   source/core/hash.cpp
   source/core/hash.hpp
+  source/core/memory.cpp
   source/game/chat/chat.cpp
   source/game/chat/chat.hpp
   source/game/chat/chat_message.cpp
@@ -50,10 +51,14 @@ set(COMMON_SOURCE
   source/game/terrain.hpp
   source/game/world.cpp
   source/game/world.hpp
+  source/game/item/item.cpp
+  source/game/item/item_registry.cpp
+  source/game/item/item_stack.cpp
   source/game/tile/tile.cpp
   source/game/tile/tile_registry.cpp
   source/game/mods/script/expose_mod.cpp
   source/game/mods/script/expose_tile.cpp
+  source/game/mods/script/expose_world.cpp
   source/game/mods/script/mod_script.cpp
   source/game/mods/loader.cpp
   source/game/mods/loader.hpp

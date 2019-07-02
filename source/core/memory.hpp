@@ -4,16 +4,15 @@
 // Headers
 // ========================================================================== //
 
-#include "script/env.hpp"
+#include "core/types.hpp"
 
 // ========================================================================== //
 // Functions
 // ========================================================================== //
 
-namespace dib::game {
+namespace dib::core {
 
-/** Expose tile-related functionality to scripts **/
 void
-ExposeTile();
+GetVirtualMemoryUsage(f64& vmUsage, f64& residentSet);
 
 }

@@ -30,6 +30,9 @@ public:
     u32 width;
     /** Height of window **/
     u32 height;
+
+    /** Whether to enable V-sync **/
+    bool enableVSync;
   };
 
 private:

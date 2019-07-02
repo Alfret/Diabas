@@ -17,12 +17,13 @@ namespace dib::game {
 
 GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
   : AppClient(descriptor)
+  , mWorld(mTileRegistry)
   , mModLoader(mScriptEnvironment, Path{ "./mods" })
   , mCamera(GetWidth(), GetHeight())
 {
-  mModLoader.Init(mWorld);
+  mModLoader.Init(mTileRegistry, mWorld);
 
-  mClientCache.BuildTileAtlas(mWorld.GetTileRegistry());
+  mClientCache.BuildTileAtlas(mTileRegistry);
 }
 
 // -------------------------------------------------------------------------- //
@@ -55,6 +56,8 @@ void
 GameClient::Render()
 {
   mRenderer.NewFrame();
+
+  RenderWorldTerrain(mRenderer, mCamera, *this);
 }
 
 // -------------------------------------------------------------------------- //

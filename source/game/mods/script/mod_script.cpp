@@ -223,11 +223,14 @@ ModScript::Load(const Path& path, const String& className)
 // -------------------------------------------------------------------------- //
 
 Result
-ModScript::Init(game::World& world)
+ModScript::Init(TileRegistry& tileRegistry, World& world)
 {
   DIB_ASSERT(!mInitialized, "Mod scripts can only be initialized once");
 
-  // Store the world in the script
+  // Store objects in script
+  JsValueRef tileRegistryObject = script::CreateExternalObject(&tileRegistry);
+  script::SetProperty(mInstance, "tileRegistry", tileRegistryObject);
+
   JsValueRef worldObject = script::CreateExternalObject(&world);
   script::SetProperty(mInstance, "world", worldObject);
 

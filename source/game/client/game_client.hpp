@@ -22,6 +22,8 @@ namespace dib::game {
 class GameClient : public app::AppClient
 {
 private:
+  /** Tile registry **/
+  TileRegistry mTileRegistry;
   /** Game world **/
   World mWorld;
 
@@ -49,6 +51,12 @@ public:
   void Render() override;
 
   void OnWindowResize(u32 width, u32 height) override;
+
+  /** Returns the tile registry **/
+  TileRegistry& GetTileRegistry() { return mTileRegistry; }
+
+  /** Returns the tile registry **/
+  const TileRegistry& GetTileRegistry() const { return mTileRegistry; }
 
   /** Returns the world **/
   World& GetWorld() { return mWorld; }

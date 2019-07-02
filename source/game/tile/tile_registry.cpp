@@ -15,6 +15,19 @@ namespace dib::game {
 
 TileRegistry::TileRegistry()
 {
+  // Register invalid tile
+  mBuiltin.tileInvalid =
+    new Tile(ResourcePath{ Path{ "./res/tiles/invalid.tga" } }, "invalid");
+  mBuiltin.tileInvalid->SetIsDestructible(false);
+  RegisterTile(CreateRegistryKey(BUILTIN_MOD_NAME, "invalid"),
+               mBuiltin.tileInvalid);
+
+  // Register missing tile
+  mBuiltin.tileMissing =
+    new Tile(ResourcePath{ Path{ "./res/tiles/missing.tga" } }, "missing");
+  RegisterTile(CreateRegistryKey(BUILTIN_MOD_NAME, "missing"),
+               mBuiltin.tileMissing);
+
   // Register air tile
   mBuiltin.tileAir =
     new Tile(ResourcePath{ Path{ "./res/tiles/air.tga" } }, "air");
@@ -29,6 +42,8 @@ TileRegistry::TileRegistry()
 TileRegistry::~TileRegistry()
 {
   delete mBuiltin.tileAir;
+  delete mBuiltin.tileMissing;
+  delete mBuiltin.tileInvalid;
 }
 
 // -------------------------------------------------------------------------- //
@@ -55,15 +70,16 @@ TileRegistry::RegisterTile(const String& registryKey, Tile* tile)
   mTiles.push_back(tile);
   const TileID id = mTiles.size() - 1;
 
-  // Set registry key
+  // Setup maps
   mTileRegistryMap[registryKey] = id;
+  mTileMap[tile] = id;
   return true;
 }
 
 // -------------------------------------------------------------------------- //
 
 Tile*
-TileRegistry::GetTile(TileRegistry::TileID id)
+TileRegistry::GetTile(TileRegistry::TileID id) const
 {
   return mTiles[id];
 }
@@ -71,7 +87,7 @@ TileRegistry::GetTile(TileRegistry::TileID id)
 // -------------------------------------------------------------------------- //
 
 Tile*
-TileRegistry::GetTile(const String& registryKey)
+TileRegistry::GetTile(const String& registryKey) const
 {
   return GetTile(GetTileID(registryKey));
 }
@@ -79,9 +95,17 @@ TileRegistry::GetTile(const String& registryKey)
 // -------------------------------------------------------------------------- //
 
 TileRegistry::TileID
-TileRegistry::GetTileID(const String& registryKey)
+TileRegistry::GetTileID(const String& registryKey) const
 {
-  return mTileRegistryMap[registryKey];
+  return mTileRegistryMap.at(registryKey);
+}
+
+// -------------------------------------------------------------------------- //
+
+TileRegistry::TileID
+TileRegistry::GetTileID(Tile* tile) const
+{
+  return mTileMap.at(tile);
 }
 
 // -------------------------------------------------------------------------- //

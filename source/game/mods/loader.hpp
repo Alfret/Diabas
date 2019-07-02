@@ -23,6 +23,7 @@
 
 namespace dib::game {
 
+DIB_FORWARD_DECLARE_CLASS(TileRegistry);
 DIB_FORWARD_DECLARE_CLASS(World);
 
 /** Class that loads all mods and makes them available for lookup **/
@@ -52,7 +53,7 @@ public:
   const std::unordered_map<String, Mod*>& GetMods() const { return mMods; }
 
   /** Initialize scripts **/
-  Result Init(World& world);
+  Result Init(TileRegistry& tileRegistry, World& world);
 
   /** Run the update of all mods **/
   void Update(f32 delta);

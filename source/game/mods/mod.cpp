@@ -39,9 +39,9 @@ Mod::Load(const alflib::File& modDirectory)
 // -------------------------------------------------------------------------- //
 
 void
-Mod::Init(game::World& world)
+Mod::Init(TileRegistry& tileRegistry, World& world)
 {
-  mMainScript.Init(world);
+  mMainScript.Init(tileRegistry, world);
 }
 
 // -------------------------------------------------------------------------- //

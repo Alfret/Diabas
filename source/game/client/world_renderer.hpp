@@ -4,11 +4,24 @@
 // Headers
 // ========================================================================== //
 
-#include "game/world.hpp"
-#include "graphics/renderer.hpp"
+#include "core/macros.hpp"
 
 // ========================================================================== //
 // Functions
 // ========================================================================== //
 
-namespace dib::game {}
+namespace dib::graphics {
+DIB_FORWARD_DECLARE_CLASS(Renderer);
+DIB_FORWARD_DECLARE_CLASS(Camera);
+}
+
+namespace dib::game {
+
+DIB_FORWARD_DECLARE_CLASS(GameClient);
+
+void
+RenderWorldTerrain(graphics::Renderer& renderer,
+                   const graphics::Camera& camera,
+                   GameClient& gameClient);
+
+}

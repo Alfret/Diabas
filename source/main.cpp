@@ -32,6 +32,7 @@ main(int, char**)
   descriptor.title = "Diabas - Client";
   descriptor.width = 1440;
   descriptor.height = 720;
+  descriptor.enableVSync = true;
   game::GameClient client(descriptor);
   client.Run();
 #else

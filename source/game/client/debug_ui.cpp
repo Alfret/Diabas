@@ -4,6 +4,7 @@
 // Headers
 // ========================================================================== //
 
+#include "core/memory.hpp"
 #include "app/client/imgui/imgui.h"
 #include "game/client/game_client.hpp"
 #include "game/client/player_data_storage.hpp"
@@ -26,6 +27,10 @@ ShowStatisticsDebug(GameClient& gameClient, f32 delta)
                       gameClient.GetRenderer().GetDrawCallCount());
     ImGui::BulletText("Sprites drawn: %i",
                       gameClient.GetRenderer().GetDrawSpriteCount());
+
+    f64 vmUsage, residentSet;
+    core::GetVirtualMemoryUsage(vmUsage, residentSet);
+    ImGui::BulletText("Memory usage (MB): %f", residentSet / 1000.0);
   }
 }
 
@@ -98,7 +103,7 @@ ShowModDebug(GameClient& gameClient)
 void
 ShowTileDebug(GameClient& gameClient)
 {
-  TileRegistry& tileRegistry = gameClient.GetWorld().GetTileRegistry();
+  TileRegistry& tileRegistry = gameClient.GetTileRegistry();
   Terrain& terrain = gameClient.GetWorld().GetTerrain();
 
   if (ImGui::CollapsingHeader("Tile")) {

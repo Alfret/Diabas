@@ -37,10 +37,16 @@ private:
   std::vector<Tile*> mTiles;
   /** Map of tiles from their register-key to their IDs **/
   tsl::robin_map<String, TileID> mTileRegistryMap;
+  /** Map of tiles from themselves to their IDs **/
+  tsl::robin_map<Tile*, TileID> mTileMap;
 
   /** Builtin tiles **/
   struct
   {
+    /** Invalid tile **/
+    Tile* tileInvalid = nullptr;
+    /** Missing tile **/
+    Tile* tileMissing = nullptr;
     /** Air tile **/
     Tile* tileAir = nullptr;
   } mBuiltin;
@@ -62,13 +68,16 @@ public:
   bool RegisterTile(const String& registryKey, Tile* tile);
 
   /** Returns the tile for a given ID **/
-  Tile* GetTile(TileID id);
+  Tile* GetTile(TileID id) const;
 
   /** Returns the tile for a given registry key **/
-  Tile* GetTile(const String& registryKey);
+  Tile* GetTile(const String& registryKey) const;
 
   /** Returns the tile ID for a given registry key **/
-  TileID GetTileID(const String& registryKey);
+  TileID GetTileID(const String& registryKey) const;
+
+  /** Returns the tile ID for a given tile **/
+  TileID GetTileID(Tile* tile) const;
 
   /** Returns the list of all registered tiles. Indices are the IDs of the
    * tile **/

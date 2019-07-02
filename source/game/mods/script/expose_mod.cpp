@@ -132,15 +132,15 @@ ScriptModRegisterTiles([[maybe_unused]] JsValueRef callee,
 
   // Retrieve world object
   String modId = script::GetString(script::GetProperty(arguments[0], "id"));
-  auto world =
-    script::GetExternalData<World>(script::GetProperty(arguments[0], "world"));
+  auto tileRegistry = script::GetExternalData<TileRegistry>(
+    script::GetProperty(arguments[0], "tileRegistry"));
 
   // Register each tile
   for (u16 i = 1; i < argumentCount; i += 2) {
     String registryName = script::GetString(arguments[i]);
     JsValueRef tileObject = arguments[i + 1];
     Tile* tile = script::GetExternalData<Tile>(tileObject);
-    if (!world->GetTileRegistry().RegisterTile(modId, registryName, tile)) {
+    if (!tileRegistry->RegisterTile(modId, registryName, tile)) {
       return script::CreateValue(false);
     }
   }
@@ -323,7 +323,7 @@ ExposeModKeyPresses()
 namespace dib::game {
 
 void
-ExposeModBase(script::Environment& environment)
+ExposeModBase()
 {
   // Retrieve global
   JsValueRef global = script::GetGlobal();

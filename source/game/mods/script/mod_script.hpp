@@ -17,6 +17,7 @@
 
 namespace dib::game {
 
+DIB_FORWARD_DECLARE_CLASS(TileRegistry);
 DIB_FORWARD_DECLARE_CLASS(World);
 
 /** Mod script **/
@@ -58,10 +59,8 @@ public:
    * use when looking for the exported mod class **/
   Result Load(const Path& path, const String& className = "");
 
-  /** Initialize the script with the world as the argument. This is stored in
-   * the mod class so that many of the objects accessible from the world are
-   * available to scripts  **/
-  Result Init(World& world);
+  /** Initialize the script **/
+  Result Init(TileRegistry& tileRegistry, World& world);
 
   /** Update script **/
   void Update(f32 delta);

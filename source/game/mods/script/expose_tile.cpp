@@ -115,7 +115,7 @@ ExposeTileClass()
 namespace dib::game {
 
 void
-ExposeTile([[maybe_unused]] script::Environment& environment)
+ExposeTile()
 {
   ExposeTileClass();
 }

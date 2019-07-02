@@ -24,8 +24,12 @@ namespace dib::game {
 /** Class representing the game world **/
 class World
 {
+private:
+  /** Tile registry **/
+  const TileRegistry& mTileRegistry;
+
 public:
-  World();
+  World(const TileRegistry& tileRegistry);
 
   void Update();
 
@@ -34,12 +38,6 @@ public:
   void OnCommandBroadcast(const std::string_view input);
 
   Network<kSide>& GetNetwork() { return network_; }
-
-  /** Returns the tile registry **/
-  TileRegistry& GetTileRegistry() { return mTileRegistry; }
-
-  /** Returns the tile registry **/
-  const TileRegistry& GetTileRegistry() const { return mTileRegistry; }
 
   /** Returns the terrain of the world **/
   Terrain& GetTerrain() { return mTerrain; }
@@ -53,8 +51,6 @@ public:
   game::Chat& GetChat() { return chat_; }
 
 private:
-  /** Tile registry **/
-  TileRegistry mTileRegistry;
   /** Terrain **/
   Terrain mTerrain;
 

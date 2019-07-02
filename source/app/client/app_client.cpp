@@ -131,6 +131,9 @@ AppClient::AppClient(const AppClient::Descriptor& descriptor)
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback((GLDEBUGPROC)AppClient::DebugCallbackGL, this);
 
+  // Set VSync
+  glfwSwapInterval(descriptor.enableVSync ? 1 : 0);
+
   // Initialize ImGui
   ImGui_ImplGlfwGL3_Init(mWindow, false);
   AppClientSetImGuiStyle(ImGui::GetStyle());

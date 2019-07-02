@@ -6,8 +6,8 @@
 
 namespace dib::game {
 
-/** Expose the base mod **/
+/** Expose World functionality to scripts **/
 void
-ExposeModBase();
+ExposeWorld();
 
 }
