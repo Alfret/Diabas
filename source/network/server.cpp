@@ -7,9 +7,8 @@
 
 namespace dib {
 
-Server::Server(PacketHandler* packet_handler, game::World* world)
+Server::Server(game::World* world)
   : socket_interface_(SteamNetworkingSockets())
-  , packet_handler_(packet_handler)
   , world_(world)
 {}
 
@@ -190,7 +189,8 @@ Server::OnSteamNetConnectionStatusChanged(
 
       // Send a sync packet to the connection
       Packet packet{};
-      packet_handler_->BuildPacketSync(packet);
+      auto& packet_handler = world_->GetNetwork().GetPacketHandler();
+      packet_handler.BuildPacketSync(packet);
       const auto res =
         PacketUnicast(packet, SendStrategy::kReliable, status->m_hConn);
       if (res != SendResult::kSuccess) {
@@ -219,8 +219,9 @@ Server::DisconnectConnection(const HSteamNetConnection connection)
     if (maybe_player_data) {
       system::Delete<PlayerData>(registry, (*maybe_player_data)->uuid);
       Packet packet{};
-      packet_handler_->BuildPacketHeader(packet,
-                                         PacketHeaderStaticTypes::kPlayerLeave);
+      auto& packet_handler = world_->GetNetwork().GetPacketHandler();
+      packet_handler.BuildPacketHeader(packet,
+                                       PacketHeaderStaticTypes::kPlayerLeave);
       auto mw = packet.GetMemoryWriter();
       mw->Write((*maybe_player_data)->uuid);
       mw.Finalize();

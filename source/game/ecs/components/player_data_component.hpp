@@ -6,6 +6,7 @@
 #include "core/types.hpp"
 #include "core/uuid.hpp"
 #include "network/connection_id.hpp"
+#include "core/value_store.hpp"
 
 namespace dib {
 
@@ -16,6 +17,7 @@ struct PlayerData
 {
   Uuid uuid;
   ConnectionId connection_id;
+
   String name;
   u64 xp;
   u8 player_class;
@@ -23,11 +25,14 @@ struct PlayerData
   u8 direction;
   float speed;
 
-  bool operator==(const PlayerData& other) const {
-    return uuid == other.uuid;
-  }
+  ValueStore dynamic_state{};
 
-  bool operator!=(const PlayerData& other) const { return !(operator==(other)); }
+  bool operator==(const PlayerData& other) const { return uuid == other.uuid; }
+
+  bool operator!=(const PlayerData& other) const
+  {
+    return !(operator==(other));
+  }
 
   bool ToBytes(alflib::RawMemoryWriter& mw) const
   {
@@ -37,7 +42,8 @@ struct PlayerData
     mw.Write(player_class);
     mw.Write(body);
     mw.Write(direction);
-    return mw.Write(speed);
+    mw.Write(speed);
+    return mw.Write(dynamic_state);
   }
 
   static PlayerData FromBytes(alflib::RawMemoryReader& mr)
@@ -50,6 +56,7 @@ struct PlayerData
     data.body = mr.Read<decltype(body)>();
     data.direction = mr.Read<decltype(direction)>();
     data.speed = mr.Read<decltype(speed)>();
+    data.dynamic_state = mr.Read<decltype(dynamic_state)>();
     return data;
   }
 
@@ -61,7 +68,9 @@ struct PlayerData
     return str;
   }
 
-  inline friend std::ostream& operator<<(std::ostream& os, const PlayerData& player_data) {
+  inline friend std::ostream& operator<<(std::ostream& os,
+                                         const PlayerData& player_data)
+  {
     return os << player_data.ToString();
   }
 };

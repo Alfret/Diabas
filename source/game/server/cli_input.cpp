@@ -50,7 +50,8 @@ AsyncGetline::AsyncGetline()
 
       mSendOverNextLine = false;
     } while (mContinueGettingInput && mInput != "exit");
-  }).detach();
+  })
+    .detach();
 }
 
 // -------------------------------------------------------------------------- //

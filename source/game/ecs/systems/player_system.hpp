@@ -10,7 +10,8 @@ namespace dib::system {
  *
  */
 std::optional<const PlayerData*>
-PlayerDataFromConnectionId(entt::registry& registry, const ConnectionId connection_id);
+PlayerDataFromConnectionId(entt::registry& registry,
+                           const ConnectionId connection_id);
 
 }
 

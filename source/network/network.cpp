@@ -163,20 +163,17 @@ Network<Side::kServer>::SendPlayerList(const ConnectionId connection_id) const
   packet_handler_.BuildPacketHeader(packet,
                                     PacketHeaderStaticTypes::kPlayerJoin);
 
-  world_->GetEntityManager()
-    .GetRegistry()
-    .view<PlayerData>()
-    .each(
-      [&](const PlayerData& player_data) {
-        if (connection_id != player_data.connection_id) {
-          packet.Clear();
-          auto mw = packet.GetMemoryWriter();
-          mw->Write(player_data);
-          mw.Finalize();
-          auto server = GetServer();
-          server->PacketUnicast(packet, SendStrategy::kReliable, connection_id);
-        }
-      });
+  world_->GetEntityManager().GetRegistry().view<PlayerData>().each(
+    [&](const PlayerData& player_data) {
+      if (connection_id != player_data.connection_id) {
+        packet.Clear();
+        auto mw = packet.GetMemoryWriter();
+        mw->Write(player_data);
+        mw.Finalize();
+        auto server = GetServer();
+        server->PacketUnicast(packet, SendStrategy::kReliable, connection_id);
+      }
+    });
 }
 
 template<>
@@ -273,7 +270,8 @@ Network<Side::kClient>::SetupPacketHandler()
     const auto uuid = mr.Read<Uuid>();
 
     auto& registry = world_->GetEntityManager().GetRegistry();
-    auto maybe_player_data = system::ComponentFromUuid<PlayerData>(registry, uuid);
+    auto maybe_player_data =
+      system::ComponentFromUuid<PlayerData>(registry, uuid);
 
     if (maybe_player_data) {
       DLOG_INFO("[{}] disconnected", **maybe_player_data);
@@ -324,7 +322,8 @@ Network<Side::kClient>::SetupPacketHandler()
     auto& registry = world_->GetEntityManager().GetRegistry();
     const bool ok = system::Replace(registry, player_data);
     if (!ok) {
-      DLOG_ERROR("failed to replace PlayerData on PlayerUpdateRejected, disconnecting us");
+      DLOG_ERROR("failed to replace PlayerData on PlayerUpdateRejected, "
+                 "disconnecting us");
       auto client = GetClient();
       client->CloseConnection();
       return;
@@ -392,18 +391,19 @@ Network<Side::kServer>::SetupPacketHandler()
 
     // Do we have the same Uuid, but from another connection?
     if (maybe_player_data && player_data != **maybe_player_data) {
-        DLOG_WARNING("player [{}] tried to update someone else's PlayerData",
-                     **maybe_player_data);
-        // TODO could the existing player_data be wrong in this case?
-        // Maybe disconnect both, or something.. See if player_data connection
-        // is actually active?
-        server->DisconnectConnection(packet.GetFromConnection());
+      DLOG_WARNING("player [{}] tried to update someone else's PlayerData",
+                   **maybe_player_data);
+      // TODO could the existing player_data be wrong in this case?
+      // Maybe disconnect both, or something.. See if player_data connection
+      // is actually active?
+      server->DisconnectConnection(packet.GetFromConnection());
     } else {
       DLOG_INFO("player join [{}]", player_data);
       const bool ok = system::Create(registry, player_data);
       if (!ok) {
         DLOG_WARNING("failed to create PlayerData, disconnecting the "
-                     "connection {}", packet.GetFromConnection());
+                     "connection {}",
+                     packet.GetFromConnection());
         server->DisconnectConnection(packet.GetFromConnection());
       }
       server->PacketBroadcastExclude(
@@ -437,16 +437,17 @@ Network<Side::kServer>::SetupPacketHandler()
     auto& registry = world_->GetEntityManager().GetRegistry();
 
     // TODO tmp function
-    const auto CanPlayerUpdate = [](const PlayerData& player_data){
-                                   return player_data.name != "dumheter";
-                                 };
+    const auto CanPlayerUpdate = [](const PlayerData& player_data) {
+      return player_data.name != "dumheter";
+    };
 
     bool legal = true;
-    if (const auto maybe_pd = system::PlayerDataFromConnectionId(registry, player_data.connection_id);
+    if (const auto maybe_pd = system::PlayerDataFromConnectionId(
+          registry, player_data.connection_id);
         maybe_pd) {
       if (**maybe_pd == player_data) {
 
-          const bool accept = CanPlayerUpdate(player_data);
+        const bool accept = CanPlayerUpdate(player_data);
         if (accept) {
           const bool replace_ok = system::Replace(registry, player_data);
           if (!replace_ok) {
@@ -460,23 +461,27 @@ Network<Side::kServer>::SetupPacketHandler()
 
           // Reject the PlayerUpdate
           Packet reject_packet{};
-          packet_handler_.BuildPacketHeader(reject_packet, PacketHeaderStaticTypes::kPlayerUpdateRejected);
+          packet_handler_.BuildPacketHeader(
+            reject_packet, PacketHeaderStaticTypes::kPlayerUpdateRejected);
           auto mw = reject_packet.GetMemoryWriter();
           mw->Write(**maybe_pd);
           mw.Finalize();
           auto server = GetServer();
-          server->PacketUnicast(reject_packet, SendStrategy::kReliable, packet.GetFromConnection());
+          server->PacketUnicast(
+            reject_packet, SendStrategy::kReliable, packet.GetFromConnection());
         }
 
       } else {
         DLOG_WARNING("Player [{}] attempted to update someone else's Player"
                      "Data [{}], disconnecting.",
-                     **maybe_pd, player_data);
+                     **maybe_pd,
+                     player_data);
         legal = false;
       }
     } else {
       DLOG_WARNING("Connection {} sent an invalid PlayerUpdate packet,"
-                   " disconnecting.", player_data.connection_id);
+                   " disconnecting.",
+                   player_data.connection_id);
       legal = false;
     }
 
@@ -607,7 +612,7 @@ Network<Side::kServer>::GetOurPlayerData() const
   return std::nullopt;
 }
 
-template <>
+template<>
 std::optional<const PlayerData*>
 Network<Side::kClient>::GetOurPlayerData() const
 {
@@ -637,10 +642,11 @@ Network<Side::kServer>::GetConnectionStatus(
 
 template<>
 std::optional<SteamNetworkingQuickConnectionStatus>
-Network<Side::kClient>::GetConnectionStatus(
-  [[maybe_unused]] const ConnectionId connection_id) const
+Network<Side::kClient>::GetConnectionStatus([
+  [maybe_unused]] const ConnectionId connection_id) const
 {
-  AlfAssert(false, "cannot call GetConnectionStatus(connection_id) from client");
+  AlfAssert(false,
+            "cannot call GetConnectionStatus(connection_id) from client");
   return std::nullopt;
 }
 

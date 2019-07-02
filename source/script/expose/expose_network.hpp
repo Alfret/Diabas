@@ -51,8 +51,8 @@ struct SimplePacket
 struct WritePacket : SimplePacket
 {
   /** Writer for writing to the packet **/
-  alflib::Buffer buffer{128};
-  alflib::MemoryWriter writer{buffer};
+  alflib::Buffer buffer{ 128 };
+  alflib::MemoryWriter writer{ buffer };
 
   explicit WritePacket(String packetType)
     : SimplePacket(true, std::move(packetType))

@@ -5,7 +5,6 @@
 #include "network/common.hpp"
 #include "network/packet.hpp"
 #include "network/side.hpp"
-#include "network/packet_handler.hpp"
 #include "network/connection_id.hpp"
 #include "network/connection_state.hpp"
 #include "core/macros.hpp"
@@ -31,7 +30,7 @@ namespace dib {
 class Server : public ISteamNetworkingSocketsCallbacks
 {
 public:
-  Server(PacketHandler* packet_handler, game::World* world);
+  Server(game::World* world);
 
   virtual ~Server() final;
 
@@ -71,8 +70,8 @@ public:
 
   NetworkState GetNetworkState() const { return network_state_; }
 
-  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus(const ConnectionId connection_id)
-    const;
+  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus(
+    const ConnectionId connection_id) const;
 
 private:
   void PollSocketStateChanges();
@@ -93,7 +92,6 @@ private:
   ISteamNetworkingSockets* socket_interface_;
   tsl::robin_set<ConnectionId> connections_{};
   NetworkState network_state_ = NetworkState::kServer;
-  PacketHandler* packet_handler_;
   game::World* world_;
 };
 }

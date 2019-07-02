@@ -17,7 +17,7 @@ namespace dib::system {
  * Note: The operator== must uniquely identify it among the entities
  * @return If the component didn't already exist and could be created.
  */
-template <typename TComponent>
+template<typename TComponent>
 bool
 Create(entt::registry& registry, const TComponent& component)
 {
@@ -50,7 +50,7 @@ Create(entt::registry& registry, const TComponent& component)
  * Note: The operator== must uniquely identify it among the entities
  * @return If the component was found and could be replaced.
  */
-template <typename TComponent>
+template<typename TComponent>
 bool
 Replace(entt::registry& registry, const TComponent& component)
 {
@@ -81,7 +81,7 @@ Replace(entt::registry& registry, const TComponent& component)
  *
  * @tparam TComponent Be pod structure, have a Uuid named uuid.
  */
-template <typename TComponent>
+template<typename TComponent>
 void
 Delete(entt::registry& registry, const Uuid& uuid)
 {
@@ -98,7 +98,8 @@ Delete(entt::registry& registry, const Uuid& uuid)
  * Delete all entities that has the given component.
  */
 template<typename TComponent>
-void DeleteEntitiesWithComponent(entt::registry& registry)
+void
+DeleteEntitiesWithComponent(entt::registry& registry)
 {
   for (const auto entity : registry.view<TComponent>()) {
     registry.destroy(entity);
@@ -108,7 +109,7 @@ void DeleteEntitiesWithComponent(entt::registry& registry)
 /**
  * @tparam TComponent must have a uuid member.
  */
-template <typename TComponent>
+template<typename TComponent>
 std::optional<const TComponent*>
 ComponentFromUuid(entt::registry& registry, const Uuid& uuid)
 {
@@ -124,18 +125,18 @@ ComponentFromUuid(entt::registry& registry, const Uuid& uuid)
 /**
  * Count the number of entities active that has the given component.
  */
-template <typename TComponent>
+template<typename TComponent>
 u64
 CountEntities(entt::registry& registry)
 {
   const auto view = registry.view<TComponent>();
   u64 count = 0;
-  for (const auto _ : view) {
+  for ([[maybe_unused]] const auto _ : view) {
     ++count;
   }
-    return count;
+  return count;
 }
 
 }
 
-#endif//GENERIC_SYSTEM_HPP_
+#endif // GENERIC_SYSTEM_HPP_
