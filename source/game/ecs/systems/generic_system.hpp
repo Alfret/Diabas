@@ -12,8 +12,7 @@ namespace dib::system {
 /**
  * Create an entity with component.
  *
- * @tparam TComponent Be pod structure, implement operator==,
- * implement operator<<
+ * @tparam TComponent Be pod structure, implement operator==
  * Note: The operator== must uniquely identify it among the entities
  * @return If the component didn't already exist and could be created.
  */
@@ -32,7 +31,6 @@ Create(entt::registry& registry, const TComponent& component)
   }
 
   if (!found) {
-    DLOG_VERBOSE("created new entity [{}]", component);
     auto entity = registry.create();
     registry.assign<TComponent>(entity, component);
   } else {
@@ -45,8 +43,7 @@ Create(entt::registry& registry, const TComponent& component)
 /**
  * Replace component from existing entity. Uses operator== to identify it.
  *
- * @tparam TComponent Be pod structure, implement operator==,
- * implement operator<<
+ * @tparam TComponent Be pod structure, implement operator==
  * Note: The operator== must uniquely identify it among the entities
  * @return If the component was found and could be replaced.
  */
@@ -67,7 +64,6 @@ Replace(entt::registry& registry, const TComponent& component)
   }
 
   if (found) {
-    DLOG_VERBOSE("replaced component for [{}]", component);
     registry.replace<TComponent>(entity, component);
   } else {
     DLOG_WARNING("could not find entity with component, replace failed");

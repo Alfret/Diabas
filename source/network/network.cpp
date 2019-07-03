@@ -6,6 +6,10 @@
 #include "game/client/player_data_storage.hpp"
 #include "game/ecs/systems/player_system.hpp"
 #include "game/ecs/systems/generic_system.hpp"
+#include "game/ecs/components/item_data_component.hpp"
+#include "game/ecs/components/npc_data_component.hpp"
+#include "game/ecs/components/projectile_data_component.hpp"
+#include "game/ecs/components/tile_data_component.hpp"
 #include "game/world.hpp"
 #include <limits>
 #include "game/chat/chat.hpp"
@@ -334,6 +338,76 @@ Network<Side::kClient>::SetupPacketHandler()
     "player update rejected",
     PlayerUpdateRejectedCb);
   AlfAssert(ok, "could not add packet type player update rejected");
+
+  // ============================================================ //
+
+  const auto ItemUpdateCb = [this](const Packet& packet) {
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    auto mr = packet.GetMemoryReader();
+    auto item_data = mr.Read<ItemData>();
+
+    if (!system::Replace(registry, item_data)) {
+      if (!system::Create(registry, item_data)) {
+          AlfAssert(false, "could not replace, or create ItemData");
+      }
+    }
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kItemUpdate,
+    "item update",
+    ItemUpdateCb);
+  AlfAssert(ok, "could not add packet type item update");
+
+  // ============================================================ //
+
+  const auto NpcUpdateCb = [this](const Packet& packet) {
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    auto mr = packet.GetMemoryReader();
+    auto npc_data = mr.Read<NpcData>();
+
+    if (!system::Replace(registry, npc_data)) {
+      if (!system::Create(registry, npc_data)) {
+        AlfAssert(false, "could not replace, or create NpcData");
+      }
+    }
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kNpcUpdate, "npc update", NpcUpdateCb);
+  AlfAssert(ok, "could not add packet type npc update");
+
+  // ============================================================ //
+
+  const auto ProjectileUpdateCb = [this](const Packet& packet) {
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    auto mr = packet.GetMemoryReader();
+    auto projectile_data = mr.Read<ProjectileData>();
+
+    if (!system::Replace(registry, projectile_data)) {
+      if (!system::Create(registry, projectile_data)) {
+        AlfAssert(false, "could not replace, or create ProjectileData");
+      }
+    }
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kProjectileUpdate, "projectile update", ProjectileUpdateCb);
+  AlfAssert(ok, "could not add packet type projectile update");
+
+  // ============================================================ //
+
+  const auto TileUpdateCb = [this](const Packet& packet) {
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    auto mr = packet.GetMemoryReader();
+    auto tile_data = mr.Read<TileData>();
+
+    if (!system::Replace(registry, tile_data)) {
+      if (!system::Create(registry, tile_data)) {
+        AlfAssert(false, "could not replace, or create TileData");
+      }
+    }
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kTileUpdate, "tile update", TileUpdateCb);
+  AlfAssert(ok, "could not add packet type tile update");
 }
 
 // ============================================================ //
@@ -507,6 +581,55 @@ Network<Side::kServer>::SetupPacketHandler()
     "player update rejected",
     PlayerUpdateRejectedCb);
   AlfAssert(ok, "could not add packet type player update rejected");
+
+  // ============================================================ //
+
+  const auto ItemUpdateCb = [this](const Packet& packet) {
+    DLOG_WARNING("got a ItemUpdate packet, but client should "
+                 "not send those, disconnecting the client");
+    auto server = GetServer();
+    server->DisconnectConnection(packet.GetFromConnection());
+  };
+  ok = packet_handler_.AddStaticPacketType(PacketHeaderStaticTypes::kItemUpdate,
+                                           "item update",
+                                           ItemUpdateCb);
+  AlfAssert(ok, "could not add packet type item update");
+
+  // ============================================================ //
+
+  const auto NpcUpdateCb = [this](const Packet& packet) {
+    DLOG_WARNING("got a NpcUpdate packet, but client should "
+                 "not send those, disconnecting the client");
+    auto server = GetServer();
+    server->DisconnectConnection(packet.GetFromConnection());
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kNpcUpdate, "npc update", NpcUpdateCb);
+  AlfAssert(ok, "could not add packet type npc update");
+
+  // ============================================================ //
+
+  const auto ProjectileUpdateCb = [this](const Packet& packet) {
+    DLOG_WARNING("got a ProjectileUpdate packet, but client should "
+                 "not send those, disconnecting the client");
+    auto server = GetServer();
+    server->DisconnectConnection(packet.GetFromConnection());
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kProjectileUpdate, "projectile update", ProjectileUpdateCb);
+  AlfAssert(ok, "could not add packet type projectile update");
+
+  // ============================================================ //
+
+  const auto TileUpdateCb = [this](const Packet& packet) {
+    DLOG_WARNING("got a TileUpdate packet, but client should "
+                 "not send those, disconnecting the client");
+    auto server = GetServer();
+    server->DisconnectConnection(packet.GetFromConnection());
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kTileUpdate, "tile update", TileUpdateCb);
+  AlfAssert(ok, "could not add packet type tile update");
 }
 
 template<>

@@ -57,6 +57,26 @@ enum class PacketHeaderStaticTypes : std::size_t
    */
   kPlayerUpdateRejected,
 
+  /**
+   * An item was created, or its state was changed.
+   */
+  kItemUpdate,
+
+  /**
+   * A npc was created, or its state was changed.
+   */
+  kNpcUpdate,
+
+  /**
+   * A projectile was created, or its state was changed.
+   */
+  kProjectileUpdate,
+
+  /**
+   * A tile was created, or its state was changed.
+   */
+  kTileUpdate,
+
   // ============================================================ //
   // Must be last, used to count number of elements in the enum
   /**
