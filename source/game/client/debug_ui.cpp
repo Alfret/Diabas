@@ -178,6 +178,27 @@ ShowNetworkDebug(GameClient& gameClient)
     ImGui::Spacing();
 
     // ============================================================ //
+    // Player List
+    // ============================================================ //
+
+    if (ImGui::TreeNode("player list")) {
+      std::string player_list = dlog::Format("{:<5} {:<20} {:<4} {:<4}\n", "Ping", "Name", "CQLc", "CQRm");
+      auto& registry =
+          world.GetEntityManager().GetRegistry();
+      const auto view = registry.view<PlayerData>();
+      for (const auto entity : view) {
+        const auto pd = view.get(entity);
+        player_list +=
+            dlog::Format("{:<5} {:<20} {:.1f}  {:.1f}\n", pd.ping, pd.name,
+                         pd.con_quality_local/255.0f, pd.con_quality_remote/255.0f);
+      }
+
+      ImGui::TextUnformatted(player_list.c_str());
+
+      ImGui::TreePop();
+    }
+
+    // ============================================================ //
     // Packet Handler
     // ============================================================ //
 

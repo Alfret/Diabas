@@ -6,6 +6,7 @@
 #include <optional>
 #include "core/types.hpp"
 #include "core/uuid.hpp"
+#include "game/ecs/components/player_data_component.hpp"
 
 namespace dib::system {
 
@@ -65,6 +66,36 @@ Replace(entt::registry& registry, const TComponent& component)
 
   if (found) {
     registry.replace<TComponent>(entity, component);
+  } else {
+    DLOG_WARNING("could not find entity with component, replace failed");
+  }
+
+  return found;
+}
+
+template<>
+inline bool
+Replace(entt::registry& registry, const PlayerData& player_data)
+{
+  const auto view = registry.view<PlayerData>();
+  bool found = false;
+
+  u32 entity;
+  for (const u32 e : view) {
+    const auto current_pd = view.get(e);
+    if (player_data == current_pd) {
+      AlfAssert(
+        player_data.connection_id == current_pd.connection_id,
+        "Attempting to update PlayerData, but connection_id is not matching. "
+        "It is likely it was not set (and you have to set it manually).");
+      found = true;
+      entity = e;
+      break;
+    }
+  }
+
+  if (found) {
+    registry.replace<PlayerData>(entity, player_data);
   } else {
     DLOG_WARNING("could not find entity with component, replace failed");
   }

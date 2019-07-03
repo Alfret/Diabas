@@ -13,6 +13,7 @@
 #include "game/world.hpp"
 #include <limits>
 #include "game/chat/chat.hpp"
+#include <dutil/misc.hpp>
 
 namespace dib {
 
@@ -133,6 +134,68 @@ void
 Network<Side::kClient>::StartServer()
 {
   AlfAssert(false, "cannot start server on client");
+}
+
+template<>
+std::optional<const PlayerData*>
+Network<Side::kServer>::GetOurPlayerData() const
+{
+  AlfAssert(false, "cannot get our PlayerData on server");
+  return std::nullopt;
+}
+
+template<>
+std::optional<const PlayerData*>
+Network<Side::kClient>::GetOurPlayerData() const
+{
+  auto& registry = world_->GetEntityManager().GetRegistry();
+  auto client = GetClient();
+  auto res =
+    system::PlayerDataFromConnectionId(registry, client->GetConnectionId());
+  if (!res && client->GetConnectionState() == ConnectionState::kConnected &&
+      system::CountEntities<PlayerData>(registry) > 0) {
+    AlfAssert(
+      false,
+      "Attempted to get our PlayerData by connection_id, but it was "
+      "not found. This is likely caused by forgetting to set connection_id "
+      "before calling system::Replace().");
+  }
+  return res;
+}
+
+template<>
+std::optional<SteamNetworkingQuickConnectionStatus>
+Network<Side::kServer>::GetConnectionStatus(
+  const ConnectionId connection_id) const
+{
+  auto server = GetServer();
+  return server->GetConnectionStatus(connection_id);
+}
+
+template<>
+std::optional<SteamNetworkingQuickConnectionStatus>
+Network<Side::kClient>::GetConnectionStatus([
+  [maybe_unused]] const ConnectionId connection_id) const
+{
+  AlfAssert(false,
+            "cannot call GetConnectionStatus(connection_id) from client");
+  return std::nullopt;
+}
+
+template<>
+std::optional<SteamNetworkingQuickConnectionStatus>
+Network<Side::kServer>::GetConnectionStatus() const
+{
+  AlfAssert(false, "cannot call GetConnectionStatus() from server");
+  return std::nullopt;
+}
+
+template<>
+std::optional<SteamNetworkingQuickConnectionStatus>
+Network<Side::kClient>::GetConnectionStatus() const
+{
+  auto client = GetClient();
+  return client->GetConnectionStatus();
 }
 
 template<>
@@ -269,7 +332,7 @@ Network<Side::kClient>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto PlayerLeaveCb = [this](const Packet& packet) {
+  const auto PlayerLeaveCb = [&](const Packet& packet) {
     auto mr = packet.GetMemoryReader();
     const auto uuid = mr.Read<Uuid>();
 
@@ -504,7 +567,7 @@ Network<Side::kServer>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto PlayerUpdateCb = [this](const Packet& packet) {
+  const auto PlayerUpdateCb = [&](const Packet& packet) {
     auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
     player_data.connection_id = packet.GetFromConnection();
@@ -528,12 +591,38 @@ Network<Side::kServer>::SetupPacketHandler()
             DLOG_WARNING("failed to replace PlayerData for [{}], ignoring",
                          **maybe_pd);
           } else {
-            DLOG_VERBOSE("rejected PlayerUpdate");
-            PacketBroadcastExclude(packet, player_data.connection_id);
+            // fill in connection info
+            const auto con_status =
+              GetConnectionStatus(packet.GetFromConnection());
+            if (con_status) {
+              player_data.ping = static_cast<u16>(con_status->m_nPing);
+              player_data.con_quality_local = static_cast<u8>(
+                std::lroundf(dutil::Map(con_status->m_flConnectionQualityLocal,
+                                      -1.0f,
+                                      1.0f,
+                                      0.0f,
+                                      255.0f)));
+              player_data.con_quality_remote = static_cast<u8>(
+                std::lroundf(dutil::Map(con_status->m_flConnectionQualityRemote,
+                                      -1.0f,
+                                      1.0f,
+                                      0.0f,
+                                      255.0f)));
+            } else {
+              DLOG_WARNING("failed to get connection status");
+            }
+
+            Packet modified_packet(packet.GetPacketSize());
+            modified_packet.SetHeader(*packet.GetHeader());
+            auto mw = modified_packet.GetMemoryWriter();
+            mw->Write(player_data);
+            mw.Finalize();
+            PacketBroadcastExclude(modified_packet, player_data.connection_id);
           }
         } else /* !accept */ {
 
           // Reject the PlayerUpdate
+          DLOG_VERBOSE("rejected PlayerUpdate");
           Packet reject_packet{};
           packet_handler_.BuildPacketHeader(
             reject_packet, PacketHeaderStaticTypes::kPlayerUpdateRejected);
@@ -725,68 +814,6 @@ Network<Side::kClient>::GetOurPlayerEntity() const
     }
   }
   return std::nullopt;
-}
-
-template<>
-std::optional<const PlayerData*>
-Network<Side::kServer>::GetOurPlayerData() const
-{
-  AlfAssert(false, "cannot get our PlayerData on server");
-  return std::nullopt;
-}
-
-template<>
-std::optional<const PlayerData*>
-Network<Side::kClient>::GetOurPlayerData() const
-{
-  auto& registry = world_->GetEntityManager().GetRegistry();
-  auto client = GetClient();
-  auto res =
-    system::PlayerDataFromConnectionId(registry, client->GetConnectionId());
-  if (!res && client->GetConnectionState() == ConnectionState::kConnected &&
-      system::CountEntities<PlayerData>(registry) > 0) {
-    AlfAssert(
-      false,
-      "Attempted to get our PlayerData by connection_id, but it was "
-      "not found. This is likely caused by forgetting to set connection_id "
-      "before calling system::Replace().");
-  }
-  return res;
-}
-
-template<>
-std::optional<SteamNetworkingQuickConnectionStatus>
-Network<Side::kServer>::GetConnectionStatus(
-  const ConnectionId connection_id) const
-{
-  auto server = GetServer();
-  return server->GetConnectionStatus(connection_id);
-}
-
-template<>
-std::optional<SteamNetworkingQuickConnectionStatus>
-Network<Side::kClient>::GetConnectionStatus([
-  [maybe_unused]] const ConnectionId connection_id) const
-{
-  AlfAssert(false,
-            "cannot call GetConnectionStatus(connection_id) from client");
-  return std::nullopt;
-}
-
-template<>
-std::optional<SteamNetworkingQuickConnectionStatus>
-Network<Side::kServer>::GetConnectionStatus() const
-{
-  AlfAssert(false, "cannot call GetConnectionStatus() from server");
-  return std::nullopt;
-}
-
-template<>
-std::optional<SteamNetworkingQuickConnectionStatus>
-Network<Side::kClient>::GetConnectionStatus() const
-{
-  auto client = GetClient();
-  return client->GetConnectionStatus();
 }
 
 // ============================================================ //
