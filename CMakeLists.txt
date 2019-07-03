@@ -55,6 +55,7 @@ set(COMMON_SOURCE
   source/game/item/item_registry.cpp
   source/game/item/item_stack.cpp
   source/game/tile/tile.cpp
+  source/game/tile/tile_entity.cpp
   source/game/tile/tile_registry.cpp
   source/game/mods/script/expose_item.cpp
   source/game/mods/script/expose_mod.cpp

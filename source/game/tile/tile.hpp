@@ -4,6 +4,8 @@
 // Headers
 // ========================================================================== //
 
+#include <memory>
+
 #include "core/types.hpp"
 #include "core/macros.hpp"
 #include "game/world_pos.hpp"
@@ -16,6 +18,7 @@
 
 namespace dib::game {
 
+DIB_FORWARD_DECLARE_CLASS(TileEntity);
 DIB_FORWARD_DECLARE_CLASS(World);
 
 /** Class representing a tile in the world. Walls and wires are not tiles
@@ -168,6 +171,13 @@ public:
 
   /** Sets whether or not the tile can actually be destroyed **/
   virtual Tile* SetIsDestructible(bool isDestructible);
+
+  /** Returns whether or not this tile has a corresponding tile entity **/
+  virtual bool HasTileEntity(World& world, WorldPos pos);
+
+  /** Create a tile entity for the tile at the given position in the world **/
+  virtual std::unique_ptr<TileEntity> CreateTileEntity(World& world,
+                                                       WorldPos pos);
 
   /** Returns the index of the resource for the tile at a given position in
    * the world. Indices determine which sub-resource in the resource loaded

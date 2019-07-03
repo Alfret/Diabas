@@ -1,6 +1,12 @@
 #include "game/tile/tile.hpp"
 
 // ========================================================================== //
+// Headers
+// ========================================================================== //
+
+#include "game/tile/tile_entity.hpp"
+
+// ========================================================================== //
 // Tile Implementation
 // ========================================================================== //
 
@@ -173,6 +179,22 @@ Tile::SetIsDestructible(bool isDestructible)
 {
   mIsDestructible = isDestructible;
   return this;
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Tile::HasTileEntity(World& world, WorldPos pos)
+{
+  return false;
+}
+
+// -------------------------------------------------------------------------- //
+
+std::unique_ptr<TileEntity>
+Tile::CreateTileEntity(World& world, WorldPos pos)
+{
+  return std::unique_ptr<TileEntity>(nullptr);
 }
 
 // -------------------------------------------------------------------------- //

@@ -46,18 +46,6 @@ export default class CoreMod extends Mod {
    */
   generateWorld(world, phase) {
 
-    for (let y = 0; y <= 1500; y++) {
-      for (let x = 0; x < world.getWidth(); x++) {
-        if (y === 1500) {
-          world.setTile(x, y, this.tileGrass);
-        } else if (y < 1500 && y >= 500) {
-          world.setTile(x, y, this.tileDirt);
-        } else if (y < 500) {
-          world.setTile(x, y, this.tileRock);
-        }
-      }
-    }
-
   }
 
 
