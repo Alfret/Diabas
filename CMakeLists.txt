@@ -37,14 +37,20 @@ set(COMMON_SOURCE
   source/core/hash.cpp
   source/core/hash.hpp
   source/core/memory.cpp
+  source/core/value_store.cpp
+  source/core/value_store.hpp
   source/game/chat/chat.cpp
   source/game/chat/chat.hpp
   source/game/chat/chat_message.cpp
   source/game/chat/chat_message.hpp
   source/game/ecs/entity_manager.cpp
   source/game/ecs/entity_manager.hpp
-  source/game/ecs/components/player_connection_component.cpp
-  source/game/ecs/components/player_connection_component.hpp
+  source/game/ecs/components/player_data_component.hpp
+  source/game/ecs/systems/player_system.cpp
+  source/game/ecs/systems/player_system.hpp
+  source/game/ecs/systems/generic_system.hpp
+  source/game/ecs/systems/npc_system.cpp
+  source/game/ecs/systems/npc_system.hpp
   source/game/resource.cpp
   source/game/resource.hpp
   source/game/terrain.cpp
@@ -108,6 +114,7 @@ set(CLIENT_SOURCE
   source/app/client/app_client.cpp
   source/app/client/imgui/imgui.cpp
   source/app/client/imgui/imgui_draw.cpp
+  source/app/client/imgui/imgui_demo.cpp
   source/app/client/imgui/imgui_impl_glfw_gl3.cpp
   source/game/client/client_cache.cpp
   source/game/client/debug_ui.cpp

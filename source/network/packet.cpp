@@ -42,12 +42,14 @@ Packet::Packet()
 
 Packet::Packet(const std::size_t size)
   : size_(kHeaderSize)
+  , container_()
 {
   SetPacketCapacity(kHeaderSize + size);
 }
 
 Packet::Packet(const Packet::ValueType* data, const std::size_t data_count)
   : size_(data_count)
+  , container_()
 {
   AlfAssert(data_count >= kHeaderSize,
             "data_count must be larger or equal to header size");
@@ -67,6 +69,41 @@ Packet::Packet(const alflib::String& string)
 {
   ClearHeader();
   SetPayload(string.GetUTF8(), string.GetSize());
+}
+
+Packet::Packet(const Packet& other)
+  : Packet(other.GetPacketCapacity())
+{
+  std::memcpy(GetPacket(), other.GetPacket(), other.GetPacketSize());
+  size_ = other.size_;
+}
+
+Packet&
+Packet::operator=(const Packet& other)
+{
+  if (this != &other) {
+    std::memcpy(GetPacket(), other.GetPacket(), other.GetPacketSize());
+    size_ = other.size_;
+  }
+  return *this;
+}
+
+Packet::Packet(Packet&& other) noexcept
+  : size_(other.size_)
+  , container_(std::move(other.container_))
+{
+  other.size_ = 0;
+}
+
+Packet&
+Packet::operator=(Packet&& other) noexcept
+{
+  if (this != &other) {
+    size_ = other.size_;
+    container_ = std::move(other.container_);
+    other.size_ = 0;
+  }
+  return *this;
 }
 
 // ============================================================ //

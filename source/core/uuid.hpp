@@ -1,25 +1,29 @@
-#ifndef UUID_COMPONENT_HPP_
-#define UUID_COMPONENT_HPP_
+#ifndef UUID_HPP_
+#define UUID_HPP_
 
-#include <uuid.h>
 #include "core/types.hpp"
 #include <alflib/memory/raw_memory_writer.hpp>
 #include <alflib/memory/raw_memory_reader.hpp>
+#include <uuid.h>
 
 namespace dib {
 
-/**
- * Generate a uuid value with uuids::uuid_system_generator{}();
- */
 struct Uuid
 {
   uuids::uuid uuid;
+
+  void GenerateUuid() { uuid = uuids::uuid_system_generator{}(); }
 
   bool operator==(const Uuid& other) const { return uuid == other.uuid; }
 
   bool operator!=(const Uuid& other) const { return !(operator==(other)); }
 
   String ToString() const { return uuids::to_string(uuid); }
+
+  inline friend std::ostream& operator<<(std::ostream& os, const Uuid& uuid)
+  {
+    return os << uuid.ToString();
+  }
 
   bool ToBytes(alflib::RawMemoryWriter& mw) const
   {
@@ -38,4 +42,4 @@ struct Uuid
 };
 }
 
-#endif // UUID_COMPONENT_HPP_
+#endif // UUID_HPP_

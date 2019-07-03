@@ -4,6 +4,8 @@
 // Headers
 // ========================================================================== //
 
+#include <array>
+
 #include "core/types.hpp"
 #include "core/macros.hpp"
 #include "graphics/camera.hpp"

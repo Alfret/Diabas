@@ -6,7 +6,6 @@
 #include "network/packet.hpp"
 #include <steam/isteamnetworkingutils.h>
 #include <steam/steamnetworkingsockets.h>
-#include "network/packet_handler.hpp"
 #include "network/connection_state.hpp"
 #include "core/macros.hpp"
 
@@ -27,7 +26,7 @@ namespace dib {
 class Client : public ISteamNetworkingSocketsCallbacks
 {
 public:
-  Client(PacketHandler* packet_handler, game::World* world);
+  Client(game::World* world);
 
   virtual ~Client() final;
 
@@ -49,6 +48,9 @@ public:
 
   ConnectionId GetConnectionId() const { return connection_; }
 
+  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus()
+    const;
+
 private:
   void PollSocketStateChanges();
 
@@ -63,7 +65,6 @@ private:
   HSteamNetConnection connection_;
   ISteamNetworkingSockets* socket_interface_;
   ConnectionState connection_state_;
-  PacketHandler* packet_handler_;
   game::World* world_;
 };
 }

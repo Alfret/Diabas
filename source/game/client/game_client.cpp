@@ -32,7 +32,6 @@ GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
 void
 GameClient::Update(f64 delta)
 {
-  // Exit on escape
   if (IsKeyDown(Key::kKeyEscape)) {
     Exit();
   }

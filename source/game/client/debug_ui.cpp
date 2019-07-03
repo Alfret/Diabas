@@ -10,6 +10,8 @@
 #include "game/client/player_data_storage.hpp"
 #include "game/tile/tile_registry.hpp"
 #include "script/util.hpp"
+#include "game/ecs/systems/generic_system.hpp"
+#include <dutil/stopwatch.hpp>
 
 // ========================================================================== //
 // DebugUI Implementation
@@ -211,7 +213,7 @@ ShowItemDebug(GameClient& gameClient)
       if (uniformAtlasSize) {
         atlasSize[1] = atlasSize[0];
       }
-      
+
       const auto& atlasTexture = gameClient.GetCache().GetItemAtlasTexture();
       ImGui::Image(reinterpret_cast<ImTextureID>(atlasTexture->GetID()),
                    ImVec2(atlasSize[0], atlasSize[1]),
@@ -231,9 +233,10 @@ void
 ShowNetworkDebug(GameClient& gameClient)
 {
   World& world = gameClient.GetWorld();
+  Network<Side::kClient>& network = world.GetNetwork();
   auto& chat = world.GetChat();
 
-  // ImGui::ShowTestWindow();
+  ImGui::ShowTestWindow();
 
   if (ImGui::CollapsingHeader("Network")) {
 
@@ -257,37 +260,183 @@ ShowNetworkDebug(GameClient& gameClient)
       }
     }
 
+    ImGui::Spacing();
+
+    // ============================================================ //
+    // Info
+    // ============================================================ //
+
+    if (ImGui::TreeNode("Info")) {
+      auto& network = world.GetNetwork();
+      auto status = network.GetConnectionStatus();
+      if (status) {
+        std::string info = dlog::Format("Connection Quality Local: {:.2f}\n"
+                                        "Connection Quality Remote: {:.2f}\n"
+                                        "Bytes/s Capacity Estimation: {}\n",
+                                        status->m_flConnectionQualityLocal,
+                                        status->m_flConnectionQualityRemote,
+                                        status->m_nSendRateBytesPerSecond);
+        ImGui::TextUnformatted(info.c_str());
+
+        constexpr u32 kCount = 90;
+        static float ping[kCount] = {};
+        static float out_bytes[kCount] = {};
+        static float out_packets[kCount] = {};
+        static float in_bytes[kCount] = {};
+        static float in_packets[kCount] = {};
+
+        const auto ShiftInsertArray =
+          [](float* arr, const u32 arrlen, const float value) {
+            for (u32 i = arrlen; i-- > 1;) {
+              arr[i] = arr[i - 1];
+            }
+            arr[0] = value;
+          };
+
+        static dutil::Stopwatch sw{};
+        if (sw.now_ms() > 1000) {
+          sw.Start();
+          ShiftInsertArray(ping, kCount, status->m_nPing);
+          ShiftInsertArray(out_bytes, kCount, status->m_flOutBytesPerSec);
+          ShiftInsertArray(out_packets, kCount, status->m_flOutPacketsPerSec);
+          ShiftInsertArray(in_bytes, kCount, status->m_flInBytesPerSec);
+          ShiftInsertArray(in_packets, kCount, status->m_flInPacketsPerSec);
+        }
+
+        const auto FindMax = [](float* arr, const u32 arrlen) {
+          float max = arr[0];
+          for (u32 i = 1; i < arrlen; i++) {
+            if (arr[i] > max)
+              max = arr[i];
+          }
+          return max;
+        };
+
+        const auto ping_current =
+          dlog::Format("currently {} ms ping", status->m_nPing);
+        const float ping_max = FindMax(ping, kCount);
+        ImGui::PlotLines("ping ms",
+                         ping,
+                         kCount,
+                         0,
+                         ping_current.c_str(),
+                         0,
+                         ping_max,
+                         ImVec2(0, 80));
+
+        const auto out_bytes_current =
+          dlog::Format("currently {:.2f} bytes/s", status->m_flOutBytesPerSec);
+        const float out_bytes_max = FindMax(out_bytes, kCount);
+        ImGui::PlotLines("out bytes/s",
+                         out_bytes,
+                         kCount,
+                         0,
+                         out_bytes_current.c_str(),
+                         0,
+                         out_bytes_max,
+                         ImVec2(0, 80));
+
+        const auto out_packets_current = dlog::Format(
+          "currently {:.2f} packets/s", status->m_flOutPacketsPerSec);
+        const float out_packets_max = FindMax(out_packets, kCount);
+        ImGui::PlotLines("out packets/s",
+                         out_packets,
+                         kCount,
+                         0,
+                         out_packets_current.c_str(),
+                         0,
+                         out_packets_max,
+                         ImVec2(0, 80));
+
+        const auto in_bytes_current =
+          dlog::Format("currently {:.2f} bytes/s", status->m_flOutBytesPerSec);
+        const float in_bytes_max = FindMax(in_bytes, kCount);
+        ImGui::PlotLines("in bytes/s",
+                         in_bytes,
+                         kCount,
+                         0,
+                         in_bytes_current.c_str(),
+                         0,
+                         in_bytes_max,
+                         ImVec2(0, 80));
+
+        const auto in_packets_current = dlog::Format(
+          "currently {:.2f} packets/s", status->m_flInPacketsPerSec);
+        const float in_packets_max = FindMax(in_packets, kCount);
+        ImGui::PlotLines("in packets/s",
+                         in_packets,
+                         kCount,
+                         0,
+                         in_packets_current.c_str(),
+                         0,
+                         in_packets_max,
+                         ImVec2(0, 80));
+      }
+
+      ImGui::TreePop();
+    }
+
+    // ============================================================ //
+    // Chat
+    // ============================================================ //
+
     if (ImGui::TreeNode("Chat")) {
+
+      const auto maybe_our_player_data = network.GetOurPlayerData();
+      if (maybe_our_player_data) {
+        ImGui::Text("Player Name: %s",
+                    (*maybe_our_player_data)->name.GetUTF8());
+      }
+
       constexpr std::size_t buflen = 50;
       static char8 buf[buflen] = "Rully";
-      ImGui::InputText("Name", buf, buflen);
-      if (ImGui::Button("Set Name")) {
-        if (world.GetNetwork().GetConnectionState() ==
-            ConnectionState::kDisconnected) {
-          auto& player_data = PlayerDataStorage::Load();
-          player_data.name = buf;
+      if (world.GetNetwork().GetConnectionState() ==
+          ConnectionState::kConnected) {
+        ImGui::InputText("New Player Name", buf, buflen);
+        if (ImGui::Button("Set Name") && buf[0] != 0) {
+          // set our new name
+          PlayerData player_data = **world.GetNetwork().GetOurPlayerData();
+          player_data.name = String(buf);
+
+          // update locally
+          auto& registry = world.GetEntityManager().GetRegistry();
+          const bool ok = system::Replace(registry, player_data);
+          if (!ok) {
+            DLOG_ERROR("failed to replace our PlayerData, disconnecting");
+            world.GetNetwork().Disconnect();
+          } else {
+            // send update to server
+            Packet packet{};
+            world.GetNetwork().GetPacketHandler().BuildPacketHeader(
+              packet, PacketHeaderStaticTypes::kPlayerUpdate);
+            auto mw = packet.GetMemoryWriter();
+            mw->Write(player_data);
+            mw.Finalize();
+            world.GetNetwork().PacketBroadcast(packet);
+          }
         }
       }
-      ImGui::Text("Note: name can only be applied when disconnected.");
 
       ImGui::Spacing();
-      ImGui::Spacing();
 
-      constexpr std::size_t textlen = 128;
-      static char8 text[textlen] = "";
-      ImGui::InputText("chat", text, textlen);
-      if (ImGui::Button("send chat message")) {
-        game::ChatMessage msg{};
-        msg.msg = String(text);
-        msg.type = game::ChatType::kSay;
-        msg.uuid_from = world.GetNetwork().GetOurUuid();
-        if (!chat.SendMessage(msg)) {
-          DLOG_WARNING("failed to send chat message");
+      if (world.GetNetwork().GetConnectionState() ==
+          ConnectionState::kConnected) {
+        constexpr std::size_t textlen = 128;
+        static char8 text[textlen] = "";
+        ImGui::InputText("Chat Message", text, textlen);
+        if (ImGui::Button("Send Chat Message") && text[0] != 0) {
+          game::ChatMessage msg{};
+          msg.msg = String(text);
+          msg.type = game::ChatType::kSay;
+          msg.uuid_from = (*world.GetNetwork().GetOurPlayerData())->uuid;
+          if (!chat.SendMessage(msg)) {
+            DLOG_WARNING("failed to send chat message");
+          }
+          text[0] = '\0';
         }
-        text[0] = '\0';
       }
 
-      ImGui::InputTextMultiline("",
+      ImGui::InputTextMultiline("##source",
                                 const_cast<char8*>(chat.GetDebug().GetUTF8()),
                                 chat.GetDebug().GetSize(),
                                 ImVec2(-1.0f, ImGui::GetTextLineHeight() * 16),
@@ -298,4 +447,5 @@ ShowNetworkDebug(GameClient& gameClient)
     }
   }
 }
+
 }

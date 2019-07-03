@@ -26,12 +26,14 @@ public:
    */
   void ParseMessage(ChatMessage&& msg);
 
-  String GetDebug() const { return debug_; };
-
   /**
    * Check if the message is valid. Behaves differently on server and client.
    */
   bool ValidateMessage(const ChatMessage& msg) const;
+
+  void FillFromTo(ChatMessage& msg) const;
+
+  String GetDebug() const { return debug_; };
 
 private:
   void Debug();

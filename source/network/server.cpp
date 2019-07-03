@@ -1,14 +1,14 @@
 #include "server.hpp"
 #include <dlog.hpp>
 #include "game/world.hpp"
-#include "game/ecs/components/player_connection_component.hpp"
-#include "game/ecs/systems/player_create_system.hpp"
+#include "game/ecs/components/player_data_component.hpp"
+#include "game/ecs/systems/player_system.hpp"
+#include "game/ecs/systems/generic_system.hpp"
 
 namespace dib {
 
-Server::Server(PacketHandler* packet_handler, game::World* world)
+Server::Server(game::World* world)
   : socket_interface_(SteamNetworkingSockets())
-  , packet_handler_(packet_handler)
   , world_(world)
 {}
 
@@ -76,6 +76,15 @@ Server::PacketUnicast(const Packet& packet,
 {
   return Common::SendPacket(
     packet, send_strategy, target_connection, socket_interface_);
+}
+
+std::optional<SteamNetworkingQuickConnectionStatus>
+Server::GetConnectionStatus(const ConnectionId connection_id) const
+{
+  SteamNetworkingQuickConnectionStatus status;
+  const bool ok =
+    socket_interface_->GetQuickConnectionStatus(connection_id, &status);
+  return ok ? std::optional(status) : std::nullopt;
 }
 
 void
@@ -172,10 +181,6 @@ Server::OnSteamNetConnectionStatusChanged(
         DLOG_WARNING("Failed to accept a connection");
       }
 
-      auto& registry = world_->GetEntityManager().GetRegistry();
-      player_create_system::UpdateConnection(
-        registry, status->m_hConn, ConnectionState::kConnected);
-
       break;
     }
 
@@ -184,7 +189,8 @@ Server::OnSteamNetConnectionStatusChanged(
 
       // Send a sync packet to the connection
       Packet packet{};
-      packet_handler_->BuildPacketSync(packet);
+      auto& packet_handler = world_->GetNetwork().GetPacketHandler();
+      packet_handler.BuildPacketSync(packet);
       const auto res =
         PacketUnicast(packet, SendStrategy::kReliable, status->m_hConn);
       if (res != SendResult::kSuccess) {
@@ -205,35 +211,27 @@ void
 Server::DisconnectConnection(const HSteamNetConnection connection)
 {
   if (auto it = connections_.find(connection); it != connections_.end()) {
-    DLOG_INFO("Disconnected connection [{}].", *it);
     CloseConnection(connection);
 
+    // remove from ecs system
     auto& registry = world_->GetEntityManager().GetRegistry();
-    auto view = registry.view<PlayerConnection>();
-    bool found = false;
-    Uuid uuid;
-    for (auto entity : view) {
-      if (view.get(entity).connection_id == connection) {
-        found = true;
-        uuid = registry.get<Uuid>(entity);
-        break;
-      }
+    auto maybe_player_data = system::PlayerDataFromConnectionId(registry, *it);
+    if (maybe_player_data) {
+      system::Delete<PlayerData>(registry, (*maybe_player_data)->uuid);
+      Packet packet{};
+      auto& packet_handler = world_->GetNetwork().GetPacketHandler();
+      packet_handler.BuildPacketHeader(packet,
+                                       PacketHeaderStaticTypes::kPlayerLeave);
+      auto mw = packet.GetMemoryWriter();
+      mw->Write((*maybe_player_data)->uuid);
+      mw.Finalize();
+      PacketBroadcast(packet, SendStrategy::kReliable);
+      DLOG_INFO("Disconnected [{}]", **maybe_player_data);
+    } else {
+      DLOG_INFO("Disconnected connection [{}], (not a player).", *it);
     }
 
     connections_.erase(it);
-    player_create_system::UpdateConnection(
-      registry, connection, ConnectionState::kDisconnected);
-
-    if (found) {
-      Packet packet{};
-      packet_handler_->BuildPacketHeader(packet,
-                                         PacketHeaderStaticTypes::kPlayerLeave);
-      auto mw = packet.GetMemoryWriter();
-      mw->Write(uuid);
-      mw.Finalize();
-      PacketBroadcast(packet, SendStrategy::kReliable);
-      DLOG_VERBOSE("broadcasted disconnect");
-    }
   }
 }
 }

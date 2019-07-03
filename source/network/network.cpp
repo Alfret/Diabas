@@ -4,10 +4,9 @@
 #include "core/fixed_time_update.hpp"
 #include <functional>
 #include "game/client/player_data_storage.hpp"
-#include "game/ecs/systems/player_create_system.hpp"
-#include "game/ecs/components/uuid_component.hpp"
+#include "game/ecs/systems/player_system.hpp"
+#include "game/ecs/systems/generic_system.hpp"
 #include "game/world.hpp"
-#include <random>
 #include <limits>
 #include "game/chat/chat.hpp"
 
@@ -132,30 +131,17 @@ Network<Side::kClient>::StartServer()
   AlfAssert(false, "cannot start server on client");
 }
 
-static void
-NetworkInfoCommon(game::World* world)
-{
-  world->GetEntityManager()
-    .GetRegistry()
-    .view<PlayerConnection, PlayerData, Uuid>()
-    .each([](const PlayerConnection& player_connection,
-             const PlayerData& player_data,
-             const Uuid& uuid) {
-      DLOG_RAW("\tentity {}, conn {}, uuid {}\n"
-               "\t[{}]\n\n",
-               player_connection.entity_id,
-               player_connection.connection_id,
-               uuid.ToString(),
-               player_data.ToString());
-    });
-}
-
 template<>
 void
 Network<Side::kServer>::NetworkInfo([
   [maybe_unused]] const std::string_view message) const
 {
-  NetworkInfoCommon(world_);
+  world_->GetEntityManager().GetRegistry().view<PlayerData>().each(
+    [](const PlayerData& player_data) {
+      DLOG_RAW("\tConnection: {}\n\tPlayer: [{}]\n",
+               player_data.connection_id,
+               player_data);
+    });
 }
 
 template<>
@@ -163,7 +149,10 @@ void
 Network<Side::kClient>::NetworkInfo([
   [maybe_unused]] const std::string_view message) const
 {
-  NetworkInfoCommon(world_);
+  world_->GetEntityManager().GetRegistry().view<PlayerData>().each(
+    [](const PlayerData& player_data) {
+      DLOG_RAW("\tPlayer: [{}]\n", player_data);
+    });
 }
 
 template<>
@@ -174,22 +163,17 @@ Network<Side::kServer>::SendPlayerList(const ConnectionId connection_id) const
   packet_handler_.BuildPacketHeader(packet,
                                     PacketHeaderStaticTypes::kPlayerJoin);
 
-  world_->GetEntityManager()
-    .GetRegistry()
-    .view<PlayerConnection, PlayerData, Uuid>()
-    .each(
-      [&packet, connection_id, this](const PlayerConnection& player_connection,
-                                     const PlayerData& player_data,
-                                     const Uuid& uuid) {
-        if (connection_id != player_connection.connection_id) {
-          auto mw = packet.GetMemoryWriter();
-          mw->Write(player_data);
-          mw->Write(uuid);
-          mw.Finalize();
-          auto server = GetServer();
-          server->PacketUnicast(packet, SendStrategy::kReliable, connection_id);
-        }
-      });
+  world_->GetEntityManager().GetRegistry().view<PlayerData>().each(
+    [&](const PlayerData& player_data) {
+      if (connection_id != player_data.connection_id) {
+        packet.Clear();
+        auto mw = packet.GetMemoryWriter();
+        mw->Write(player_data);
+        mw.Finalize();
+        auto server = GetServer();
+        server->PacketUnicast(packet, SendStrategy::kReliable, connection_id);
+      }
+    });
 }
 
 template<>
@@ -210,29 +194,33 @@ Network<Side::kClient>::SetupPacketHandler()
   const auto SyncCb = [&](const Packet& packet) {
     packet_handler_.OnPacketSync(packet);
 
-    // we are connected, send a player join packet
-    Packet player_join_packet{};
-    packet_handler_.BuildPacketHeader(player_join_packet,
-                                      PacketHeaderStaticTypes::kPlayerJoin);
-    auto& my_player_data = PlayerDataStorage::Load();
-    Uuid uuid{ uuids::uuid_system_generator{}() };
+    // we are connected
+    {
+      // 1. Load our PlayerData
+      PlayerData my_player_data = PlayerDataStorage::Load();
+      my_player_data.connection_id = packet.GetFromConnection();
+      my_player_data.uuid.GenerateUuid();
 
-    // insert into our ECS system
-    auto uuid_ok =
-      player_create_system::UpdateUuid(world_->GetEntityManager().GetRegistry(),
-                                       packet.GetFromConnection(),
-                                       uuid);
-    auto player_data_ok = player_create_system::UpdatePlayerData(
-      world_->GetEntityManager().GetRegistry(), uuid, my_player_data);
-    AlfAssert(player_data_ok && uuid_ok,
-              "failed player_data_ok and/or uuid_ok");
+      // 2. Insert into ecs system
+      auto& registry = world_->GetEntityManager().GetRegistry();
+      const bool ok = system::Create(registry, my_player_data);
+      if (!ok) {
+        DLOG_ERROR("failed to create our PlayerData");
+        auto client = GetClient();
+        client->CloseConnection();
+        return;
+      }
 
-    auto mw = player_join_packet.GetMemoryWriter();
-    mw->Write(my_player_data);
-    mw->Write(uuid);
-    mw.Finalize();
-    auto client = GetClient();
-    client->PacketSend(player_join_packet, SendStrategy::kReliable);
+      // 3. Send kPlayerJoin packet
+      Packet player_join_packet{};
+      packet_handler_.BuildPacketHeader(player_join_packet,
+                                        PacketHeaderStaticTypes::kPlayerJoin);
+      auto mw = player_join_packet.GetMemoryWriter();
+      mw->Write(my_player_data);
+      mw.Finalize();
+      auto client = GetClient();
+      client->PacketSend(player_join_packet, SendStrategy::kReliable);
+    }
   };
   bool ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kSync, "sync", SyncCb);
@@ -255,41 +243,16 @@ Network<Side::kClient>::SetupPacketHandler()
   const auto PlayerJoinCb = [this](const Packet& packet) {
     auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
-    auto uuid = mr.Read<Uuid>();
-
-    // find a unique connection id
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_int_distribution<ConnectionId> dist(
-      std::numeric_limits<ConnectionId>::min(),
-      std::numeric_limits<ConnectionId>::max());
-    ConnectionId cid;
-    auto view =
-      world_->GetEntityManager().GetRegistry().view<PlayerConnection>();
-    for (;;) {
-      cid = dist(mt);
-      bool found = false;
-      for (auto entity : view) {
-        if (view.get(entity).connection_id == cid) {
-          found = true;
-          break;
-        }
-      }
-      if (!found)
-        break;
+    constexpr ConnectionId kUnusedConnectionId = 0;
+    player_data.connection_id = kUnusedConnectionId;
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    const bool ok = system::Create(registry, player_data);
+    if (!ok) {
+      DLOG_ERROR("Create on PlayerJoin failed, disconnecting us");
+      auto client = GetClient();
+      client->CloseConnection();
+      return;
     }
-
-    auto connection_ok = player_create_system::UpdateConnection(
-      world_->GetEntityManager().GetRegistry(),
-      cid,
-      ConnectionState::kConnected);
-    auto uuid_ok = player_create_system::UpdateUuid(
-      world_->GetEntityManager().GetRegistry(), cid, uuid);
-    auto player_data_ok = player_create_system::UpdatePlayerData(
-      world_->GetEntityManager().GetRegistry(), uuid, player_data);
-
-    AlfAssert(connection_ok && uuid_ok && player_data_ok,
-              "uuid_ok and/or player_data_ok and/or connection_ok failed");
 
     // display all connections
     DLOG_INFO("All active connections:");
@@ -303,27 +266,74 @@ Network<Side::kClient>::SetupPacketHandler()
   // ============================================================ //
 
   const auto PlayerLeaveCb = [this](const Packet& packet) {
-    auto& registry = world_->GetEntityManager().GetRegistry();
-    auto view = registry.view<Uuid>();
-
     auto mr = packet.GetMemoryReader();
     const auto uuid = mr.Read<Uuid>();
 
-    for (auto entity : view) {
-      if (view.get(entity) == uuid) {
-        auto player_data = registry.get<PlayerData>(entity);
-        DLOG_INFO("{} disconnected", player_data.name);
-        registry.destroy(entity);
-        break;
-      }
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    auto maybe_player_data =
+      system::ComponentFromUuid<PlayerData>(registry, uuid);
+
+    if (maybe_player_data) {
+      DLOG_INFO("[{}] disconnected", **maybe_player_data);
+      std::string_view _{};
+      NetworkInfo(_);
+    } else {
+      DLOG_WARNING("unknown connection disconnected");
     }
 
-    std::string_view _{};
-    NetworkInfo(_);
+    system::Delete<PlayerData>(registry, uuid);
   };
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kPlayerLeave, "player leave", PlayerLeaveCb);
   AlfAssert(ok, "could not add packet type player leave");
+
+  // ============================================================ //
+
+  const auto PlayerUpdateCb = [this](const Packet& packet) {
+    auto mr = packet.GetMemoryReader();
+    auto player_data = mr.Read<PlayerData>();
+
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    const bool ok = system::Replace(registry, player_data);
+    if (!ok) {
+      DLOG_WARNING("failed to replace PlayerData on PlayerUpdate, ignoring");
+      return;
+    }
+
+    // display all connections
+    DLOG_INFO("All active connections:");
+    std::string_view _{};
+    NetworkInfo(_);
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerUpdate, "player update", PlayerUpdateCb);
+  AlfAssert(ok, "could not add packet type player update");
+
+  // ============================================================ //
+
+  const auto PlayerUpdateRejectedCb = [this](const Packet& packet) {
+    auto mr = packet.GetMemoryReader();
+    auto player_data = mr.Read<PlayerData>();
+    player_data.connection_id = packet.GetFromConnection();
+
+    DLOG_INFO("player update rejected, replacing our player data with the"
+              " the servers version");
+
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    const bool ok = system::Replace(registry, player_data);
+    if (!ok) {
+      DLOG_ERROR("failed to replace PlayerData on PlayerUpdateRejected, "
+                 "disconnecting us");
+      auto client = GetClient();
+      client->CloseConnection();
+      return;
+    }
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerUpdateRejected,
+    "player update rejected",
+    PlayerUpdateRejectedCb);
+  AlfAssert(ok, "could not add packet type player update rejected");
 }
 
 // ============================================================ //
@@ -335,7 +345,7 @@ void
 Network<Side::kServer>::SetupPacketHandler()
 {
   const auto SyncCb = [](const Packet&) {
-    DLOG_INFO("got sync packet, but server does not handle sync packets");
+    DLOG_WARNING("got sync packet, but server does not handle sync packets");
   };
   bool ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kSync, "sync", SyncCb);
@@ -343,13 +353,20 @@ Network<Side::kServer>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto ChatCb = [this](const Packet& packet) {
+  const auto ChatCb = [&](const Packet& packet) {
     auto mr = packet.GetMemoryReader();
     auto msg = mr.Read<game::ChatMessage>();
     if (world_->GetChat().ValidateMessage(msg)) {
-      PacketBroadcast(packet);
+      world_->GetChat().FillFromTo(msg);
+
+      Packet new_packet{};
+      new_packet.SetHeader(*packet.GetHeader());
+      auto mw = new_packet.GetMemoryWriter();
+      mw->Write(msg);
+      mw.Finalize();
+      PacketBroadcast(new_packet);
     } else {
-      DLOG_WARNING("client {} attempted to send invalid packet",
+      DLOG_WARNING("[{}] attempted to send invalid chat message",
                    packet.GetFromConnection());
     }
   };
@@ -359,28 +376,39 @@ Network<Side::kServer>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto PlayerJoinCb = [this](const Packet& packet) {
-    DLOG_INFO("player join {}", packet.GetFromConnection());
+  const auto PlayerJoinCb = [&](const Packet& packet) {
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    auto server = GetServer();
+
+    // Read the PlayerData
     auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
-    auto uuid = mr.Read<Uuid>();
+    player_data.connection_id = packet.GetFromConnection();
 
-    auto uuid_ok =
-      player_create_system::UpdateUuid(world_->GetEntityManager().GetRegistry(),
-                                       packet.GetFromConnection(),
-                                       uuid);
-    auto player_data_ok = player_create_system::UpdatePlayerData(
-      world_->GetEntityManager().GetRegistry(), uuid, player_data);
+    // Does the player exist
+    auto maybe_player_data =
+      system::PlayerDataFromConnectionId(registry, packet.GetFromConnection());
 
-    auto server = GetServer();
-    if (player_data_ok && uuid_ok) {
+    // Do we have the same Uuid, but from another connection?
+    if (maybe_player_data && player_data != **maybe_player_data) {
+      DLOG_WARNING("player [{}] tried to update someone else's PlayerData",
+                   **maybe_player_data);
+      // TODO could the existing player_data be wrong in this case?
+      // Maybe disconnect both, or something.. See if player_data connection
+      // is actually active?
+      server->DisconnectConnection(packet.GetFromConnection());
+    } else {
+      DLOG_INFO("player join [{}]", player_data);
+      const bool ok = system::Create(registry, player_data);
+      if (!ok) {
+        DLOG_WARNING("failed to create PlayerData, disconnecting the "
+                     "connection {}",
+                     packet.GetFromConnection());
+        server->DisconnectConnection(packet.GetFromConnection());
+      }
       server->PacketBroadcastExclude(
         packet, SendStrategy::kReliable, packet.GetFromConnection());
       SendPlayerList(packet.GetFromConnection());
-    } else {
-      DLOG_WARNING("failed to update client {}, disconnecting them.",
-                   packet.GetFromConnection());
-      server->DisconnectConnection(packet.GetFromConnection());
     }
   };
   ok = packet_handler_.AddStaticPacketType(
@@ -390,11 +418,95 @@ Network<Side::kServer>::SetupPacketHandler()
   // ============================================================ //
 
   const auto PlayerLeaveCb = [](const Packet&) {
-    DLOG_WARNING("Got player leave packet on server");
+    DLOG_WARNING("Got player leave packet on server, but server does not "
+                 "handle those");
+    // TODO if a player disconnects while "in combat", have an instance of the
+    // player be left inside, to avoid player cheesing combat mechanics
+    // by disconnecting.
   };
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kPlayerLeave, "player leave", PlayerLeaveCb);
   AlfAssert(ok, "could not add packet type player leave");
+
+  // ============================================================ //
+
+  const auto PlayerUpdateCb = [this](const Packet& packet) {
+    auto mr = packet.GetMemoryReader();
+    auto player_data = mr.Read<PlayerData>();
+    player_data.connection_id = packet.GetFromConnection();
+    auto& registry = world_->GetEntityManager().GetRegistry();
+
+    // TODO tmp function
+    const auto CanPlayerUpdate = [](const PlayerData& player_data) {
+      return player_data.name != "dumheter";
+    };
+
+    bool legal = true;
+    if (const auto maybe_pd = system::PlayerDataFromConnectionId(
+          registry, player_data.connection_id);
+        maybe_pd) {
+      if (**maybe_pd == player_data) {
+
+        const bool accept = CanPlayerUpdate(player_data);
+        if (accept) {
+          const bool replace_ok = system::Replace(registry, player_data);
+          if (!replace_ok) {
+            DLOG_WARNING("failed to replace PlayerData for [{}], ignoring",
+                         **maybe_pd);
+          } else {
+            DLOG_VERBOSE("rejected PlayerUpdate");
+            PacketBroadcastExclude(packet, player_data.connection_id);
+          }
+        } else /* !accept */ {
+
+          // Reject the PlayerUpdate
+          Packet reject_packet{};
+          packet_handler_.BuildPacketHeader(
+            reject_packet, PacketHeaderStaticTypes::kPlayerUpdateRejected);
+          auto mw = reject_packet.GetMemoryWriter();
+          mw->Write(**maybe_pd);
+          mw.Finalize();
+          auto server = GetServer();
+          server->PacketUnicast(
+            reject_packet, SendStrategy::kReliable, packet.GetFromConnection());
+        }
+
+      } else {
+        DLOG_WARNING("Player [{}] attempted to update someone else's Player"
+                     "Data [{}], disconnecting.",
+                     **maybe_pd,
+                     player_data);
+        legal = false;
+      }
+    } else {
+      DLOG_WARNING("Connection {} sent an invalid PlayerUpdate packet,"
+                   " disconnecting.",
+                   player_data.connection_id);
+      legal = false;
+    }
+
+    if (!legal) {
+      auto server = GetServer();
+      server->DisconnectConnection(player_data.connection_id);
+    }
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerUpdate, "player update", PlayerUpdateCb);
+  AlfAssert(ok, "could not add packet type player update");
+
+  // ============================================================ //
+
+  const auto PlayerUpdateRejectedCb = [this](const Packet& packet) {
+    DLOG_WARNING("got a PlayerUpdateRejected packet, but client should "
+                 "not send those, disconnecting the client");
+    auto server = GetServer();
+    server->DisconnectConnection(packet.GetFromConnection());
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerUpdateRejected,
+    "player update rejected",
+    PlayerUpdateRejectedCb);
+  AlfAssert(ok, "could not add packet type player update rejected");
 }
 
 template<>
@@ -439,10 +551,13 @@ template<>
 void
 Network<Side::kServer>::Broadcast(const std::string_view message) const
 {
-  auto server = GetServer();
-  Packet packet{ message.data(), message.size() };
-  packet_handler_.BuildPacketHeader(packet, PacketHeaderStaticTypes::kChat);
-  server->PacketBroadcast(packet, SendStrategy::kReliable);
+  game::ChatMessage msg{};
+  msg.type = game::ChatType::kServer;
+  msg.msg = String(message.data());
+  world_->GetChat().FillFromTo(msg);
+  if (!world_->GetChat().SendMessage(msg)) {
+    DLOG_WARNING("failed to broadcast a server chat message");
+  }
 }
 
 template<>
@@ -467,44 +582,88 @@ Network<Side::kClient>::GetConnectionState() const
 }
 
 template<>
-u32
-Network<Side::kServer>::GetOurEntity() const
+std::optional<u32>
+Network<Side::kServer>::GetOurPlayerEntity() const
 {
   AlfAssert(false, "cannot get our entity on server");
-  return 0;
+  return std::nullopt;
 }
 
 template<>
-u32
-Network<Side::kClient>::GetOurEntity() const
+std::optional<u32>
+Network<Side::kClient>::GetOurPlayerEntity() const
 {
   auto& registry = world_->GetEntityManager().GetRegistry();
-  auto view = registry.view<PlayerConnection>();
-  auto client = GetClient();
-  for (auto entity : view) {
+  const auto view = registry.view<PlayerData>();
+  const auto client = GetClient();
+  for (const auto entity : view) {
     if (view.get(entity).connection_id == client->GetConnectionId()) {
       return entity;
     }
   }
-  AlfAssert(false, "failed to find our entity");
-  return 0;
+  return std::nullopt;
 }
 
 template<>
-Uuid
-Network<Side::kServer>::GetOurUuid() const
+std::optional<const PlayerData*>
+Network<Side::kServer>::GetOurPlayerData() const
 {
-  AlfAssert(false, "cannot get our uuid on server");
-  return Uuid{};
+  AlfAssert(false, "cannot get our PlayerData on server");
+  return std::nullopt;
 }
 
 template<>
-Uuid
-Network<Side::kClient>::GetOurUuid() const
+std::optional<const PlayerData*>
+Network<Side::kClient>::GetOurPlayerData() const
 {
-  u32 entity = GetOurEntity();
   auto& registry = world_->GetEntityManager().GetRegistry();
-  return registry.get<Uuid>(entity);
+  auto client = GetClient();
+  auto res =
+    system::PlayerDataFromConnectionId(registry, client->GetConnectionId());
+  if (!res && client->GetConnectionState() == ConnectionState::kConnected &&
+      system::CountEntities<PlayerData>(registry) > 0) {
+    AlfAssert(
+      false,
+      "Attempted to get our PlayerData by connection_id, but it was "
+      "not found. This is likely caused by forgetting to set connection_id "
+      "before calling system::Replace().");
+  }
+  return res;
+}
+
+template<>
+std::optional<SteamNetworkingQuickConnectionStatus>
+Network<Side::kServer>::GetConnectionStatus(
+  const ConnectionId connection_id) const
+{
+  auto server = GetServer();
+  return server->GetConnectionStatus(connection_id);
+}
+
+template<>
+std::optional<SteamNetworkingQuickConnectionStatus>
+Network<Side::kClient>::GetConnectionStatus([
+  [maybe_unused]] const ConnectionId connection_id) const
+{
+  AlfAssert(false,
+            "cannot call GetConnectionStatus(connection_id) from client");
+  return std::nullopt;
+}
+
+template<>
+std::optional<SteamNetworkingQuickConnectionStatus>
+Network<Side::kServer>::GetConnectionStatus() const
+{
+  AlfAssert(false, "cannot call GetConnectionStatus() from server");
+  return std::nullopt;
+}
+
+template<>
+std::optional<SteamNetworkingQuickConnectionStatus>
+Network<Side::kClient>::GetConnectionStatus() const
+{
+  auto client = GetClient();
+  return client->GetConnectionStatus();
 }
 
 // ============================================================ //

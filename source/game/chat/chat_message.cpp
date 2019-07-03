@@ -8,7 +8,9 @@ ChatMessage::ToBytes(alflib::RawMemoryWriter& mw) const
   mw.Write(static_cast<u8>(type));
   mw.Write(uuid_from);
   mw.Write(uuid_to);
-  return mw.Write(msg);
+  mw.Write(msg);
+  mw.Write(from);
+  return mw.Write(to);
 }
 
 ChatMessage
@@ -19,6 +21,8 @@ ChatMessage::FromBytes(alflib::RawMemoryReader& mr)
   msg.uuid_from = mr.Read<Uuid>();
   msg.uuid_to = mr.Read<Uuid>();
   msg.msg = mr.Read<String>();
+  msg.from = mr.Read<String>();
+  msg.to = mr.Read<String>();
   return msg;
 }
 }

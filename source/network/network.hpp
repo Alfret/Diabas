@@ -8,12 +8,14 @@
 #include "network/client.hpp"
 #include "network/common.hpp"
 #include "network/server.hpp"
+#include "network/packet_handler.hpp"
 #include <alflib/core/assert.hpp>
 #include <dlog.hpp>
 #include <functional>
 #include "network/connection_state.hpp"
 #include "core/macros.hpp"
-#include "game/ecs/components/uuid_component.hpp"
+#include "core/uuid.hpp"
+#include "game/ecs/components/player_data_component.hpp"
 
 // ========================================================================== //
 // Forward Declarations
@@ -39,6 +41,9 @@ public:
   Network(game::World* world);
 
   ~Network();
+
+  Network(const Network& other) = delete;
+  Network& operator=(const Network& other) = delete;
 
   // ============================================================ //
   // Contants
@@ -77,13 +82,27 @@ public:
   void StartServer();
 
   /**
-   * Server: always returns kConnected
+   * Server always returns kConnected
    */
   ConnectionState GetConnectionState() const;
 
-  u32 GetOurEntity() const;
+  std::optional<u32> GetOurPlayerEntity() const;
 
-  Uuid GetOurUuid() const;
+  std::optional<const PlayerData*> GetOurPlayerData() const;
+
+  /**
+   * Server only
+   */
+  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus(
+    const ConnectionId connection_id) const;
+
+  /**
+   * Client only
+   */
+  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus()
+    const;
+
+  PacketHandler& GetPacketHandler() { return packet_handler_; }
 
   // ============================================================ //
   // TMP
@@ -91,8 +110,6 @@ public:
   void NetworkInfo(const std::string_view message) const;
 
   void Broadcast(const std::string_view message) const;
-
-  PacketHandler& GetPacketHandler() { return packet_handler_; }
 
   // ============================================================ //
   // Private Methods
@@ -148,10 +165,10 @@ Network<side>::Network(game::World* world)
   }
   SetupPacketHandler();
   if constexpr (side == Side::kServer) {
-    base_ = new Server(&packet_handler_, world);
+    base_ = new Server(world);
     StartServer();
   } else {
-    base_ = new Client(&packet_handler_, world);
+    base_ = new Client(world);
   }
 }
 

@@ -27,6 +27,7 @@ export default class CoreMod extends Mod {
       "dirt", this.tileDirt,
       "grass", this.tileGrass,
       "rock", this.tileRock);
+
   }
 
   /** Called by the engine to let the modification do any custom world

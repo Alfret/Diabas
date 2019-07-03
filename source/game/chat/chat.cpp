@@ -1,13 +1,15 @@
 #include "chat.hpp"
 #include <alflib/core/assert.hpp>
 #include "game/world.hpp"
-#include "game/ecs/components/uuid_component.hpp"
+#include "core/uuid.hpp"
 #include "game/ecs/components/player_data_component.hpp"
+#include "game/ecs/systems/generic_system.hpp"
 #include "network/side.hpp"
 
 namespace dib::game {
 
-Chat::Chat(World* world) : world_(world) {};
+Chat::Chat(World* world)
+  : world_(world){};
 
 bool
 Chat::SendMessage(ChatMessage msg) const
@@ -68,7 +70,8 @@ Chat::ValidateMessage(const ChatMessage& msg) const
         return false;
       }
 
-      if (network.GetOurUuid() != msg.uuid_from) {
+      if (network.GetOurPlayerData() &&
+          (*network.GetOurPlayerData())->uuid != msg.uuid_from) {
         DLOG_WARNING("attemted to sent a message that was not from us");
         return false;
       }
@@ -94,27 +97,39 @@ Chat::ValidateMessage(const ChatMessage& msg) const
 }
 
 void
+Chat::FillFromTo(ChatMessage& msg) const
+{
+  if constexpr (kSide == Side::kServer) {
+    auto& registry = world_->GetEntityManager().GetRegistry();
+
+    if (msg.type == game::ChatType::kSay ||
+        msg.type == game::ChatType::kWhisper) {
+      auto maybe_pd =
+        system::ComponentFromUuid<PlayerData>(registry, msg.uuid_from);
+      if (maybe_pd) {
+        msg.from = (*maybe_pd)->name;
+      }
+      // TODO handle whisper
+    } else if (msg.type == game::ChatType::kServer) {
+      msg.from = "SERVER";
+    } else if (msg.type == game::ChatType::kEvent) {
+      // TODO change this
+      msg.from = "EVENT";
+    }
+  } else {
+    AlfAssert(false, "cannot use FillFromTo from client side");
+  }
+}
+
+void
 Chat::Debug()
 {
   debug_ = "";
-  auto& registry = world_->GetEntityManager().GetRegistry();
   for (auto message : messages_) {
-    if (message.type == ChatType::kSay || message.type == ChatType::kWhisper) {
-      auto view = registry.view<Uuid, PlayerData>();
-      bool found = false;
-      for (auto entity : view) {
-        if (view.get<Uuid>(entity) == message.uuid_from) {
-          found = true;
-          debug_ += view.get<PlayerData>(entity).name;
-        }
-      }
-    } else if (message.type == ChatType::kServer) {
-      debug_ += "SERVER";
+    if (message.from.GetSize() > 0) {
+      debug_ += message.from + ": ";
     }
-
-    debug_ += ": ";
-    debug_ += message.msg;
-    debug_ += "\n\n";
+    debug_ += message.msg + "\n\n";
   }
 }
 
