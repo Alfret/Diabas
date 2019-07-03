@@ -36,17 +36,10 @@ ToGLTextureFormat(alflib::Image::Format format)
 namespace dib::graphics {
 
 Texture::Texture(const String& debugName)
+  : mDebugName(debugName)
 {
   // Create texture
   glGenTextures(1, &mId);
-
-  // Set name
-  if (debugName.GetLength() > 0) {
-    glObjectLabel(GL_TEXTURE,
-                  mId,
-                  static_cast<GLsizei>(debugName.GetSize()),
-                  debugName.GetUTF8());
-  }
 }
 
 // -------------------------------------------------------------------------- //
@@ -105,6 +98,14 @@ Texture::LoadFromImage(const alflib::Image& image, bool generateMipmaps)
     glBindTexture(GL_TEXTURE_2D, mId);
     glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
+  }
+
+  // Set name
+  if (mDebugName.GetLength() > 0) {
+    glObjectLabel(GL_TEXTURE,
+                  mId,
+                  static_cast<GLsizei>(mDebugName.GetSize()),
+                  mDebugName.GetUTF8());
   }
 }
 

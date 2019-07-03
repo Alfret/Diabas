@@ -20,17 +20,30 @@ namespace dib::graphics {
 class Renderer
 {
 private:
-  /** Sprite batcher **/
+  /** Clear color **/
+  Color mClearColor;
+
+  /** Sprite batch **/
   SpriteBatch mSpriteBatch;
 
 public:
+  /** Construct renderer **/
   Renderer();
 
-  /** Clear the color buffer to a color **/
-  void Clear(alflib::Color color);
+  /** Begin a new frame **/
+  void NewFrame();
 
   /** Returns the sprite batch **/
   SpriteBatch& GetSpriteBatch() { return mSpriteBatch; }
+
+  /** Returns the number of draw calls made since new frame **/
+  u32 GetDrawCallCount() { return mSpriteBatch.GetDrawCallCount(); }
+
+  /** Returns the number of sprites drawn since new frame **/
+  u32 GetDrawSpriteCount() const { return mSpriteBatch.GetDrawSpriteCount(); }
+
+  /** Set the color to clear back buffers to on new frame **/
+  void SetClearColor(Color color) { mClearColor = color; }
 };
 
 }

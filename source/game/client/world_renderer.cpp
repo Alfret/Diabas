@@ -1,17 +1,29 @@
 #include "game/client/world_renderer.hpp"
 
 // ========================================================================== //
+//
+// ========================================================================== //
+
+#include "graphics/renderer.hpp"
+#include "graphics/camera.hpp"
+#include "game/client/game_client.hpp"
+#include "game/constants.hpp"
+
+// ========================================================================== //
 // TerrainRenderer Implementation
 // ========================================================================== //
 
 namespace dib::game {
 
 void
-WorldRenderer::RenderWorld(graphics::Renderer& renderer,
-                           TileAtlas& tileAtlas,
-                           World& world,
-                           const graphics::Camera& camera)
+RenderWorldTerrain(graphics::Renderer& renderer,
+                   const graphics::Camera& camera,
+                   GameClient& gameClient)
 {
+  // Retrieve objects
+  ClientCache& cache = gameClient.GetCache();
+  TileRegistry& tileRegistry = gameClient.GetTileRegistry();
+  World& world = gameClient.GetWorld();
   Terrain& terrain = world.GetTerrain();
 
   // Retrieve batch and begin
@@ -20,46 +32,45 @@ WorldRenderer::RenderWorld(graphics::Renderer& renderer,
 
   // Calculate first tile in camera
   const Vector3F& cameraPos = camera.GetPosition();
-  u32 minX = std::floor(camera.GetPosition().x / game::TileManager::TILE_SIZE);
+  u32 minX = std::floor(camera.GetPosition().x / TILE_SIZE);
   if (minX < 0) {
     minX = 0;
   }
-  u32 minY = std::floor(camera.GetPosition().y / game::TileManager::TILE_SIZE);
+  u32 minY = std::floor(camera.GetPosition().y / TILE_SIZE);
   if (minY < 0) {
     minY = 0;
   }
 
   // Calculate number of tiles in camera
-  u32 countX = std::ceil(camera.GetWidth() / game::TileManager::TILE_SIZE);
+  u32 countX = std::ceil(camera.GetWidth() / TILE_SIZE);
   if (countX + minX > terrain.GetWidth()) {
     countX = terrain.GetWidth() - minX;
   }
-  u32 countY = std::ceil(camera.GetHeight() / game::TileManager::TILE_SIZE);
+  u32 countY = std::ceil(camera.GetHeight() / TILE_SIZE);
   if (countY + minY > terrain.GetHeight()) {
     countY = terrain.GetHeight() - minY;
   }
 
   // Render each tile
-  for (u32 y = minY; y < minY + countY + 1; y++) {
-    for (u32 x = minX; x < minX + countX + 1; x++) {
-      Vector3F position =
-        Vector3F(x * game::TileManager::TILE_SIZE - cameraPos.x,
-                 y * game::TileManager::TILE_SIZE - cameraPos.y,
-                 0.5f);
+  for (u32 y = minY; y < minY + countY + 2; y++) {
+    for (u32 x = minX; x < minX + countX + 2; x++) {
+
+      WorldPos worldPosition{ x, y };
+      TileRegistry::TileID tileId = terrain.GetTileID(worldPosition);
+      Tile* tile = tileRegistry.GetTile(tileId);
+      u32 resourceIndex = tile->GetResourceIndex(world, worldPosition);
+
+      Vector3F renderPosition = Vector3F(
+        x * TILE_SIZE - cameraPos.x, y * TILE_SIZE - cameraPos.y, 0.5f);
       alflib::Color tint = alflib::Color::WHITE;
-      std::shared_ptr<game::Tile> tile =
-        terrain.GetTile(x, y, Terrain::LAYER_FOREGROUND);
-      const game::ResourcePath& resourcePath =
-        tile->GetResourcePath(world, x, y);
       Vector2F texMin, texMax;
-      tileAtlas.GetTextureCoordinates(resourcePath, texMin, texMax);
-      spriteBatch.Submit(
-        tileAtlas.GetTexture(),
-        position,
-        Vector2F(TileManager::TILE_SIZE, TileManager::TILE_SIZE),
-        tint,
-        texMin,
-        texMax);
+      cache.GetTextureCoordinatesForTile(tileId, resourceIndex, texMin, texMax);
+      spriteBatch.Submit(cache.GetTileAtlasTexture(),
+                         renderPosition,
+                         Vector2F(TILE_SIZE, TILE_SIZE),
+                         tint,
+                         texMin,
+                         texMax);
     }
   }
 

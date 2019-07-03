@@ -18,7 +18,7 @@ IndexBuffer::IndexBuffer(u32 count,
 
   // Set debug name
   if (debugName.GetLength() > 0) {
-    glObjectLabel(GL_PROGRAM,
+    glObjectLabel(GL_BUFFER,
                   mId,
                   static_cast<GLsizei>(debugName.GetSize()),
                   debugName.GetUTF8());

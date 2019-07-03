@@ -6,13 +6,10 @@ export default class FarmingMod extends Mod {
   }
 
   init() {
-    this.tileCrate = new Tile(this, "res/crate.tga");
-  }
+    this.tileCrate = new Tile(this, "res/crate.tga", "crate");
+    this.tileGhostDirt = new Tile(this, "res/ghost_dirt.tga", "ghost_dirt");
 
-  onRegisterTiles(tileManager) {
-    dlog.verbose("FarmingMod::onRegisterTiles()");
-
-    tileManager.registerTile("crate", this.tileCrate);
+    this.registerTiles("crate", this.tileCrate, "ghost_dirt", this.tileGhostDirt);
   }
 
 }

@@ -27,11 +27,17 @@ private:
 public:
   /** Create resource by specifying the mod it belongs to and the
    * mod-directory-relative path to the resource **/
-  ResourcePath(const String& modId, const Path& resourcePath);
+  ResourcePath(String modId, Path resourcePath);
 
   /** Create a resource by specifying the path relative to the game
    * directory **/
-  explicit ResourcePath(const Path& resourcePath);
+  explicit ResourcePath(Path resourcePath);
+
+  /** Returns the id of the mod that the resource belongs to **/
+  const String& GetModId() const { return mModID; }
+
+  /** Returns the resource path relative to the mod **/
+  const Path& GetModPath() const { return mResourcePath; }
 
   /** Returns the path to the resource relative to the game directory **/
   const Path& GetPath() const;

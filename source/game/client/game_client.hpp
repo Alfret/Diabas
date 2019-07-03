@@ -7,8 +7,7 @@
 #include "app/client/app_client.hpp"
 #include "game/world.hpp"
 #include "game/mods/loader.hpp"
-#include "game/tile/tile_manager.hpp"
-#include "game/client/tile_atlas.hpp"
+#include "game/client/client_cache.hpp"
 #include "graphics/camera.hpp"
 #include "graphics/renderer.hpp"
 #include "script/env.hpp"
@@ -23,11 +22,12 @@ namespace dib::game {
 class GameClient : public app::AppClient
 {
 private:
+  /** Tile registry **/
+  TileRegistry mTileRegistry;
+  /** Item registry **/
+  ItemRegistry mItemRegistry;
   /** Game world **/
   World mWorld;
-
-  /** Tile atlas **/
-  TileAtlas mTileAtlas;
 
   /** Script environment **/
   script::Environment mScriptEnvironment;
@@ -39,6 +39,9 @@ private:
   /** Camera **/
   graphics::Camera mCamera;
 
+  /** Client resource cache **/
+  ClientCache mClientCache;
+
 public:
   /** Construct game client **/
   explicit GameClient(const AppClient::Descriptor& descriptor);
@@ -49,17 +52,19 @@ public:
   /** Render client **/
   void Render() override;
 
+  void OnWindowResize(u32 width, u32 height) override;
+
+  /** Returns the tile registry **/
+  TileRegistry& GetTileRegistry() { return mTileRegistry; }
+
+  /** Returns the tile registry **/
+  const TileRegistry& GetTileRegistry() const { return mTileRegistry; }
+
   /** Returns the world **/
   World& GetWorld() { return mWorld; }
 
   /** Returns the world **/
   const World& GetWorld() const { return mWorld; }
-
-  /** Returns the tile atlas **/
-  TileAtlas& GetTileAtlas() { return mTileAtlas; }
-
-  /** Returns the tile atlas **/
-  const TileAtlas& GetTileAtlas() const { return mTileAtlas; }
 
   /** Returns the script environment **/
   script::Environment& GetScriptEnvironment() { return mScriptEnvironment; }
@@ -76,11 +81,23 @@ public:
   /** Returns the mod loader **/
   const ModLoader& GetModLoader() const { return mModLoader; }
 
+  /** Returns the renderer **/
+  graphics::Renderer& GetRenderer() { return mRenderer; }
+
+  /** Returns the renderer **/
+  const graphics::Renderer& GetRenderer() const { return mRenderer; }
+
   /** Returns the camera **/
   graphics::Camera& GetCamera() { return mCamera; }
 
   /** Returns the camera **/
   const graphics::Camera& GetCamera() const { return mCamera; }
+
+  /** Returns the client cache **/
+  ClientCache& GetCache() { return mClientCache; }
+
+  /** Returns the client cache **/
+  const ClientCache& GetCache() const { return mClientCache; }
 
 private:
   /** Update the game camera **/

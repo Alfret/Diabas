@@ -27,7 +27,7 @@ DIB_FORWARD_DECLARE_CLASS(Sprite);
 class SpriteBatch
 {
 public:
-  static constexpr u32 MAX_SPRITES = 10000;
+  static constexpr u32 MAX_SPRITES = 100000;
   static constexpr u32 MAX_VERTICES = MAX_SPRITES * 4;
   static constexpr u32 MAX_INDICES = MAX_SPRITES * 6;
 
@@ -68,12 +68,20 @@ private:
   /** Current camera **/
   const Camera* mCamera = nullptr;
 
+  /** Number of draw calls done this frame **/
+  u32 mDrawCallCount = 0;
+  /** Number of sprites drawn this frame **/
+  u32 mDrawSpriteCount = 0;
+
 public:
   /** Construct **/
   SpriteBatch();
 
   /** Destruct **/
   ~SpriteBatch();
+
+  /** Called by the renderer to signal new frame **/
+  void NewFrame();
 
   void Begin(const Camera* camera);
 
@@ -92,6 +100,12 @@ public:
               alflib::Color color = alflib::Color::WHITE,
               Vector2F texMin = Vector2F(0.0f, 0.0f),
               Vector2F texMax = Vector2F(1.0f, 1.0f));
+
+  /** Returns the number of draw calls made since new frame **/
+  u32 GetDrawCallCount() const { return mDrawCallCount; }
+
+  /** Returns the number of sprites drawn since new frame **/
+  u32 GetDrawSpriteCount() const { return mDrawSpriteCount; }
 
 private:
   /** Setup VBO and IBO **/

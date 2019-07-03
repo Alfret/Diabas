@@ -117,6 +117,9 @@ public:
 
   /** Reload shaders **/
   static void Reload();
+
+  /** Unload all shaders **/
+  static void UnloadAll();
 };
 
 }

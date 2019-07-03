@@ -4,6 +4,7 @@
 // Headers
 // ========================================================================== //
 
+#include "game/constants.hpp"
 #include "app/client/imgui/imgui.h"
 #include "game/client/world_renderer.hpp"
 #include "game/client/debug_ui.hpp"
@@ -16,13 +17,14 @@ namespace dib::game {
 
 GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
   : AppClient(descriptor)
+  , mWorld(mTileRegistry)
   , mModLoader(mScriptEnvironment, Path{ "./mods" })
   , mCamera(GetWidth(), GetHeight())
 {
-  mModLoader.Init(mWorld);
-  mModLoader.RegisterTiles(mWorld.GetTileManager());
-  mTileAtlas.Build(mWorld.GetTileManager());
-  mWorld.GetTerrain().Generate();
+  mModLoader.Init(mItemRegistry, mTileRegistry, mWorld);
+
+  mClientCache.BuildTileAtlas(mTileRegistry);
+  mClientCache.BuildItemAtlas(mItemRegistry);
 }
 
 // -------------------------------------------------------------------------- //
@@ -36,9 +38,11 @@ GameClient::Update(f64 delta)
 
   // ImGui
   if (ImGui::Begin("Diabas - Debug")) {
+    ShowStatisticsDebug(*this, delta);
     ShowScriptDebug(*this);
     ShowModDebug(*this);
     ShowTileDebug(*this);
+    ShowItemDebug(*this);
     ShowNetworkDebug(*this);
   }
   ImGui::End();
@@ -52,9 +56,17 @@ GameClient::Update(f64 delta)
 void
 GameClient::Render()
 {
-  mRenderer.Clear(alflib::Color::CORNFLOWER_BLUE);
+  mRenderer.NewFrame();
 
-  WorldRenderer::RenderWorld(mRenderer, mTileAtlas, mWorld, mCamera);
+  RenderWorldTerrain(mRenderer, mCamera, *this);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+GameClient::OnWindowResize(u32 width, u32 height)
+{
+  mCamera.Resize(width, height);
 }
 
 // -------------------------------------------------------------------------- //
@@ -80,12 +92,10 @@ GameClient::UpdateCamera(f32 delta)
   mCamera.Move(cameraMove);
 
   Vector3F minPos = Vector3F(0.0f, 0.0f, 0.0f);
-  Vector3F maxPos =
-    Vector3F(mWorld.GetTerrain().GetWidth() * game::TileManager::TILE_SIZE -
-               mCamera.GetWidth(),
-             mWorld.GetTerrain().GetHeight() * game::TileManager::TILE_SIZE -
-               mCamera.GetHeight(),
-             1.0f);
+  Vector3F maxPos = Vector3F(
+    mWorld.GetTerrain().GetWidth() * game::TILE_SIZE - mCamera.GetWidth(),
+    mWorld.GetTerrain().GetHeight() * game::TILE_SIZE - mCamera.GetHeight(),
+    1.0f);
   mCamera.ClampPosition(minPos, maxPos);
 }
 

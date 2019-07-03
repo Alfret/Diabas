@@ -4,11 +4,10 @@
 // Headers
 // ========================================================================== //
 
+#include "game/world.hpp"
+#include "game/mods/script/expose_world.hpp"
 #include "script/expose/expose_network.hpp"
 #include "script/util.hpp"
-#include "game/world.hpp"
-#include "game/tile/tile_manager.hpp"
-#include "game/mods/script/script_tile.hpp"
 
 // ========================================================================== //
 // Functions
@@ -225,12 +224,18 @@ ModScript::Load(const Path& path, const String& className)
 // -------------------------------------------------------------------------- //
 
 Result
-ModScript::Init(game::World& world)
+ModScript::Init(ItemRegistry& itemRegistry,
+                TileRegistry& tileRegistry,
+                World& world)
 {
   DIB_ASSERT(!mInitialized, "Mod scripts can only be initialized once");
 
-  // Store the world in the script
-  JsValueRef worldObject = script::CreateExternalObject(&world);
+  // Store objects in script
+  JsValueRef itemRegistryObject = script::CreateExternalObject(&itemRegistry);
+  script::SetProperty(mInstance, "itemRegistry", itemRegistryObject);
+  JsValueRef tileRegistryObject = script::CreateExternalObject(&tileRegistry);
+  script::SetProperty(mInstance, "tileRegistry", tileRegistryObject);
+  JsValueRef worldObject = CreateScriptWorldObject(&world);
   script::SetProperty(mInstance, "world", worldObject);
 
   // Common functions
@@ -254,26 +259,15 @@ ModScript::Init(game::World& world)
     return Result::kScriptError;
   }
 
-  mInitialized = true;
-  return Result::kSuccess;
-}
-
-// -------------------------------------------------------------------------- //
-
-Result
-ModScript::RegisterTiles(TileManager& tileManager)
-{
-  // Create an object for the tile manager
-  JsValueRef tileManagerObject = CreateTileManagerScriptObject(tileManager);
-
-  // Call the 'onRegisterTiles' function once
-  JsValueRef output;
-  JsValueRef method = script::GetProperty(mInstance, "onRegisterTiles");
-  JsErrorCode error =
-    script::CallMethod(method, { mInstance, tileManagerObject }, output);
+  // TODO(Filip Björklund): Split into phases correctly
+  method = script::GetProperty(mInstance, "generateWorld");
+  error = script::CallMethod(
+    method, { mInstance, worldObject, script::CreateUndefined() }, output);
   if (script::HandleException(error)) {
     return Result::kScriptError;
   }
+
+  mInitialized = true;
   return Result::kSuccess;
 }
 

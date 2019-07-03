@@ -1,89 +1,109 @@
 #include "game/terrain.hpp"
 
 // ========================================================================== //
+// Headers
+// ========================================================================== //
+
+#include <random>
+
+#include "game/world.hpp"
+
+// ========================================================================== //
 // Terrain Implementation
 // ========================================================================== //
 
 namespace dib::game {
 
-Terrain::Terrain(World& world, TileManager& tileManager, u32 width, u32 height)
-  : mWorld(world)
-  , mTileManager(tileManager)
+Terrain::Terrain(const TileRegistry& tileRegistry, u32 width, u32 height)
+  : mTileRegistry(tileRegistry)
   , mWidth(width)
   , mHeight(height)
 {
-  mTerrainLayers[0] = new Tile::ID[mWidth * mHeight];
-  memset(mTerrainLayers[0], 0, sizeof(Tile::ID) * mWidth * mHeight);
+  // Initialize
+  InitTerrain();
+}
 
-  mTerrainLayers[1] = new Tile::ID[mWidth * mHeight];
-  memset(mTerrainLayers[1], 0, sizeof(Tile::ID) * mWidth * mHeight);
+// -------------------------------------------------------------------------- //
 
-  mTerrainLayers[2] = new Tile::ID[mWidth * mHeight];
-  memset(mTerrainLayers[2], 0, sizeof(Tile::ID) * mWidth * mHeight);
+Terrain::Terrain(const TileRegistry& tileRegistry, Terrain::Size size)
+  : mTileRegistry(tileRegistry)
+{
+  // Determine size
+  switch (size) {
+    case Size::kSmall: {
+      mWidth = 4200;
+      mHeight = 1200;
+      break;
+    }
+    case Size::kLarge: {
+      mWidth = 8400;
+      mHeight = 2400;
+      break;
+    }
+    case Size::kHuge: {
+      mWidth = 16800;
+      mHeight = 4800;
+      break;
+    }
+    case Size::kNormal:
+    default: {
+      mWidth = 6400;
+      mHeight = 1800;
+      break;
+    }
+  }
+
+  // Initialize
+  InitTerrain();
+}
+
+// -------------------------------------------------------------------------- //
+
+Tile*
+Terrain::GetTile(WorldPos pos) const
+{
+  return mTileRegistry.GetTile(GetTileID(pos));
+}
+
+// -------------------------------------------------------------------------- //
+
+TileRegistry::TileID
+Terrain::GetTileID(WorldPos pos) const
+{
+  return *(mLayerTile + mWidth * pos.Y() + pos.X());
 }
 
 // -------------------------------------------------------------------------- //
 
 void
-Terrain::Generate()
+Terrain::SetTile(WorldPos pos, Tile* tile)
 {
-  std::shared_ptr<Tile> tileAir = mTileManager.GetTile("builtin$air");
-  std::shared_ptr<Tile> tileGrass = mTileManager.GetTile("core$grass");
-  std::shared_ptr<Tile> tileDirt = mTileManager.GetTile("core$dirt");
+  SetTileID(pos, mTileRegistry.GetTileID(tile));
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::SetTileID(WorldPos pos, TileRegistry::TileID id)
+{
+  *(mLayerTile + mWidth * pos.Y() + pos.X()) = id;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::InitTerrain()
+{
+  mLayerTile = new TileRegistry::TileID[mWidth * mHeight];
+  mLayerWall = new TileRegistry::WallID[mWidth * mHeight];
+  mLayerWiring = new TileRegistry::WireID[mWidth * mHeight];
+  mLayerMetadata = new u8[mWidth * mHeight];
 
   for (u32 y = 0; y < mHeight; y++) {
     for (u32 x = 0; x < mWidth; x++) {
-
-      if (y > 10) {
-        SetTile(tileAir, x, y, LAYER_FOREGROUND);
-      } else if (y == 10) {
-        SetTile(tileGrass, x, y, LAYER_FOREGROUND);
-      } else {
-        SetTile(tileDirt, x, y, LAYER_FOREGROUND);
-      }
+      SetTileID(WorldPos{ x, y }, 2);
     }
   }
 }
 
-// -------------------------------------------------------------------------- //
-
-std::shared_ptr<Tile>
-Terrain::GetTile(u32 x, u32 y, u32 layer)
-{
-  Tile::ID id = *GetTerrainTileOffset(x, y, layer);
-  return mTileManager.GetTile(id);
-}
-
-// -------------------------------------------------------------------------- //
-
-void
-Terrain::SetTile(const std::shared_ptr<Tile>& tile, u32 x, u32 y, u32 layer)
-{
-  *GetTerrainTileOffset(x, y, layer) = tile->GetID();
-}
-
-// -------------------------------------------------------------------------- //
-
-void
-Terrain::PickTile(const graphics::Camera& camera,
-                  f64 mouseX,
-                  f64 mouseY,
-                  u32& tileX,
-                  u32& tileY)
-{
-  tileX =
-    std::floor((camera.GetPosition().x + mouseX) / TileManager::TILE_SIZE);
-  tileX = alflib::Clamp(tileX, 0u, mWidth);
-  tileY =
-    std::floor((camera.GetPosition().y + mouseY) / TileManager::TILE_SIZE);
-  tileY = alflib::Clamp(tileY, 0u, mHeight);
-}
-
-// -------------------------------------------------------------------------- //
-
-Tile::ID*
-Terrain::GetTerrainTileOffset(u32 x, u32 y, u32 layer)
-{
-  return mTerrainLayers[layer] + (y * mWidth) + x;
-}
 }

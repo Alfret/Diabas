@@ -2,6 +2,7 @@
 
 #include <alflib/file/path.hpp>
 #include <alflib/core/string.hpp>
+#include <alflib/graphics/color.hpp>
 #include <cstdint>
 #include <string>
 #include <glm/vec2.hpp>
@@ -29,8 +30,13 @@ using Path = alflib::Path;
 using String = alflib::String;
 
 using Vector2F = glm::vec2;
+using Vector2I = glm::ivec2;
 using Vector3F = glm::vec3;
+using Vector3I = glm::ivec3;
 using Vector4F = glm::vec4;
+using Vector4I = glm::ivec4;
 using Matrix4F = glm::mat4;
+
+using Color = alflib::Color;
 
 }

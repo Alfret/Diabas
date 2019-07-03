@@ -142,6 +142,26 @@ GetBool(JsValueRef value)
 
 // -------------------------------------------------------------------------- //
 
+s32
+GetS32(JsValueRef value)
+{
+  f64 output;
+  JsNumberToDouble(value, &output);
+  return s32(output);
+}
+
+// -------------------------------------------------------------------------- //
+
+u32
+GetU32(JsValueRef value)
+{
+  f64 output;
+  JsNumberToDouble(value, &output);
+  return u32(output);
+}
+
+// -------------------------------------------------------------------------- //
+
 f32
 GetF32(JsValueRef value)
 {

@@ -4,16 +4,18 @@
 // Headers
 // ========================================================================== //
 
-#include "script/env.hpp"
+#include "game/item/item_registry.hpp"
 
 // ========================================================================== //
-// Functions
+// ItemStack Declaration
 // ========================================================================== //
 
 namespace dib::game {
 
-/** Expose the base mod **/
-void
-ExposeModBase(script::Environment& environment);
+class ItemStack
+{
+private:
+  ItemRegistry::ItemID
+};
 
 }

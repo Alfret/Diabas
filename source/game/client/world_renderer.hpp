@@ -4,25 +4,24 @@
 // Headers
 // ========================================================================== //
 
-#include "game/world.hpp"
-#include "game/client/tile_atlas.hpp"
-#include "graphics/renderer.hpp"
+#include "core/macros.hpp"
 
 // ========================================================================== //
-// TerrainRenderer Declaration
+// Functions
 // ========================================================================== //
+
+namespace dib::graphics {
+DIB_FORWARD_DECLARE_CLASS(Renderer);
+DIB_FORWARD_DECLARE_CLASS(Camera);
+}
 
 namespace dib::game {
 
-/** World renderer **/
-class WorldRenderer
-{
-public:
-  /** Render terrain **/
-  static void RenderWorld(graphics::Renderer& renderer,
-                          TileAtlas& tileAtlas,
-                          World& world,
-                          const graphics::Camera& camera);
-};
+DIB_FORWARD_DECLARE_CLASS(GameClient);
+
+void
+RenderWorldTerrain(graphics::Renderer& renderer,
+                   const graphics::Camera& camera,
+                   GameClient& gameClient);
 
 }
