@@ -96,6 +96,10 @@ AppClientSetImGuiStyle(ImGuiStyle& style)
 
 namespace dib::app {
 
+MICROPROFILE_DEFINE(MAIN, "MAIN", "Main", MP_IVORY2);
+
+// -------------------------------------------------------------------------- //
+
 AppClient::AppClient(const AppClient::Descriptor& descriptor)
   : mTitle(descriptor.title)
   , mWidth(descriptor.width)
@@ -137,12 +141,22 @@ AppClient::AppClient(const AppClient::Descriptor& descriptor)
   // Initialize ImGui
   ImGui_ImplGlfwGL3_Init(mWindow, false);
   AppClientSetImGuiStyle(ImGui::GetStyle());
+
+  // Microprofile setup
+  MicroProfileOnThreadCreate("Main");
+  MicroProfileSetEnableAllGroups(true);
+  MicroProfileSetForceMetaCounters(true);
+#if MICROPROFILE_ENABLED
+  MicroProfileGpuInitGL();
+#endif
 }
 
 // -------------------------------------------------------------------------- //
 
 AppClient::~AppClient()
 {
+  MicroProfileShutdown();
+
   graphics::ShaderManager::UnloadAll();
 
   ImGui_ImplGlfwGL3_Shutdown();
@@ -163,6 +177,8 @@ AppClient::Run()
   f64 timeLast = sw.fnow_s();
   mRunning = true;
   while (mRunning) {
+    MICROPROFILE_SCOPE(MAIN);
+
     // Update time variables
     const f64 timeCurrent = sw.fnow_s();
     const f64 timeDelta = timeCurrent - timeLast;
@@ -185,6 +201,8 @@ AppClient::Run()
     Render();
     ImGui::Render();
     glfwSwapBuffers(mWindow);
+
+    MicroProfileFlip(nullptr);
   }
 }
 

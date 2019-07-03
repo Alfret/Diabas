@@ -6,6 +6,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <microprofile/microprofile.h>
 
 #include "app/app.hpp"
 #include "app/key.hpp"

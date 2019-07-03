@@ -207,6 +207,10 @@ add_subdirectory(thirdparty/stduuid)
 # tessil robin hood map / set
 include_directories(SYSTEM thirdparty/robin-map/include)
 
+# Microprofile
+include_directories(SYSTEM thirdparty)
+aux_source_directory(thirdparty/microprofile COMMON_SOURCE)
+
 # Thidparty
 include_directories(SYSTEM thirdparty)
 aux_source_directory(thirdparty/glad CLIENT_SOURCE)
@@ -242,6 +246,11 @@ else ()
 endif ()
 
 target_compile_definitions(server PRIVATE DIB_IS_SERVER)
+
+# Target specific preprocessor definitions
+target_compile_definitions(server PUBLIC MICROPROFILE_GPU_TIMERS=0)
+target_compile_definitions(${PROJECT_NAME} PUBLIC MICROPROFILE_GPU_TIMERS_GL)
+
 
 # Link libraries
 if (WIN32)

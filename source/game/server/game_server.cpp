@@ -8,9 +8,10 @@ namespace dib::game {
 
 GameServer::GameServer(const AppServer::Descriptor& descriptor)
   : AppServer(descriptor)
+  , mWorld(mTileRegistry)
   , mModLoader(mScriptEnvironment, Path{ "./mods" })
 {
-  mModLoader.Init(mWorld);
+  mModLoader.Init(mItemRegistry, mTileRegistry, mWorld);
 
   RegisterCommands();
 }
