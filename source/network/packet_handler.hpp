@@ -57,6 +57,26 @@ enum class PacketHeaderStaticTypes : std::size_t
    */
   kPlayerUpdateRejected,
 
+  /**
+   * An item was created, or its state was changed.
+   */
+  kItemUpdate,
+
+  /**
+   * A npc was created, or its state was changed.
+   */
+  kNpcUpdate,
+
+  /**
+   * A projectile was created, or its state was changed.
+   */
+  kProjectileUpdate,
+
+  /**
+   * A tile was created, or its state was changed.
+   */
+  kTileUpdate,
+
   // ============================================================ //
   // Must be last, used to count number of elements in the enum
   /**
@@ -78,7 +98,7 @@ using PacketHandlerCallback = std::function<void(const Packet&)>;
  * Describes a packet type and how to handle it.
  * PacketHeaderType is stored separately, as key in a map.
  */
-struct PacketMeta
+struct PacketTypeMeta
 {
   // stored as key in map
   /* PacketHeaderType type; */
@@ -91,9 +111,9 @@ struct PacketMeta
 };
 
 /**
- * Like PacketMeta but without callback, used when serializing the data.
+ * Like PacketTypeMeta but without callback, used when serializing the data.
  */
-struct PacketMetaSerializable
+struct PacketTypeMetaSerializable
 {
   PacketHeaderType type;
   String name;
@@ -104,9 +124,9 @@ struct PacketMetaSerializable
     return mr.Write(name);
   }
 
-  static PacketMetaSerializable FromBytes(alflib::RawMemoryReader& mr)
+  static PacketTypeMetaSerializable FromBytes(alflib::RawMemoryReader& mr)
   {
-    PacketMetaSerializable p{};
+    PacketTypeMetaSerializable p{};
     p.type = mr.Read<decltype(type)>();
     p.name = mr.Read<decltype(name)>();
     return p;
@@ -156,11 +176,11 @@ public:
   {
     kSuccess = 0,
 
-    // we have fewer packet_meta's than other
-    kMissingPacketMeta,
+    // we have fewer packet type's than other
+    kMissingPacketType,
 
-    // we have more packet_meta's than other
-    kExtraPacketMeta,
+    // we have more packet type's than other
+    kExtraPacketType,
 
     // some packet_meta's have same hash, but different names.
     kNameMissmatch
@@ -168,7 +188,24 @@ public:
 
   String SyncResultToString(const SyncResult result);
 
-  SyncResult Sync(const std::vector<PacketMetaSerializable>& correct);
+  /**
+   * From a correct set of PacketType's, check our PacketTypes's and
+   * correct them if possible.
+   *
+   * Correcting a PacketType means that the same PacketType name in our
+   * list of PacketTypes, must have thier id match the one in correct's
+   * list of PacketTypes.
+   *
+   * Example
+   *   Before Sync:
+   *     Our     PlayerTypes = ["chat": 10, "player update": 20]
+   *     Correct PlayerTypes = ["chat": 12, "player update": 22]
+   *
+   *   After Sync:
+   *     Our     PlayerTypes = ["chat": 12, "player update": 22]
+   *     Correct PlayerTypes = ["chat": 12, "player update": 22]
+   */
+  SyncResult Sync(const std::vector<PacketTypeMetaSerializable>& correct);
 
   // ============================================================ //
 
@@ -216,7 +253,11 @@ public:
   // Misc
   // ============================================================ //
 public:
-  std::vector<PacketMetaSerializable> Serialize() const;
+  /**
+   * Serialize all our packet_type_meta's. The output from this can be used
+   * as input in Sync.
+   */
+  std::vector<PacketTypeMetaSerializable> Serialize() const;
 
   /**
    * Search for the packet type with the given name, among the packet types
@@ -224,22 +265,32 @@ public:
    */
   std::optional<PacketHeaderType> FindDynamicType(const String& name) const;
 
-  auto begin() { return packet_metas_.begin(); }
+  auto begin() { return packet_type_metas_.begin(); }
 
-  auto end() { return packet_metas_.end(); }
+  auto end() { return packet_type_metas_.end(); }
 
-  std::size_t GetSize() const { return packet_metas_.size(); }
+  std::size_t GetSize() const { return packet_type_metas_.size(); }
 
-  PacketMeta& operator[](const PacketHeaderType& i) { return packet_metas_[i]; }
+  PacketTypeMeta& operator[](const PacketHeaderType& i) { return packet_type_metas_[i]; }
 
   std::optional<const String*> GetPacketType(const Packet& packet) const;
+
+  /**
+   * Print all our packet types.
+   */
+  void PrintPacketTypes() const;
+
+  /**
+   * Return a string representation of our packet types.
+   */
+  std::string PacketTypesToString() const;
 
   // ============================================================ //
   // Member Variables
   // ============================================================ //
 
 private:
-  std::unordered_map<PacketHeaderType, PacketMeta> packet_metas_;
+  std::unordered_map<PacketHeaderType, PacketTypeMeta> packet_type_metas_;
 
   /**
    * The PacketHeaderStaticTypes points to an index in this array.

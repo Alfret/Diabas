@@ -13,6 +13,8 @@
 
 namespace dib::app {
 
+MICROPROFILE_DEFINE(MAIN, "MAIN", "Main", MP_IVORY2);
+
 AppServer::AppServer(const AppServer::Descriptor& descriptor)
   : mTargetUps(descriptor.targetUps)
 {
@@ -40,6 +42,8 @@ AppServer::Run()
   f64 timeLast = sw.fnow_s();
   mRunning = true;
   while (mRunning) {
+    MICROPROFILE_SCOPE(MAIN);
+
     // Update time variables
     const f64 timeCurrent = sw.fnow_s();
     const f64 timeDelta = timeCurrent - timeLast;

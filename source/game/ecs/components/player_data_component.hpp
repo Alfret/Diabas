@@ -10,13 +10,15 @@
 
 namespace dib {
 
-/**
- * Note: connection_id will not be serialized
- */
+
 struct PlayerData
 {
   Uuid uuid;
+  // Note: connection_id will not be serialized
   ConnectionId connection_id;
+  u16 ping;
+  u8 con_quality_local;
+  u8 con_quality_remote;
 
   String name;
   u64 xp;
@@ -37,6 +39,9 @@ struct PlayerData
   bool ToBytes(alflib::RawMemoryWriter& mw) const
   {
     mw.Write(uuid);
+    mw.Write(ping);
+    mw.Write(con_quality_local);
+    mw.Write(con_quality_remote);
     mw.Write(name);
     mw.Write(xp);
     mw.Write(player_class);
@@ -50,6 +55,9 @@ struct PlayerData
   {
     PlayerData data{};
     data.uuid = mr.Read<decltype(uuid)>();
+    data.ping = mr.Read<decltype(ping)>();
+    data.con_quality_local = mr.Read<decltype(con_quality_local)>();
+    data.con_quality_remote = mr.Read<decltype(con_quality_remote)>();
     data.name = mr.Read<decltype(name)>();
     data.xp = mr.Read<decltype(xp)>();
     data.player_class = mr.Read<decltype(player_class)>();

@@ -4,6 +4,7 @@
 #include "game/ecs/components/player_data_component.hpp"
 #include "game/ecs/systems/player_system.hpp"
 #include "game/ecs/systems/generic_system.hpp"
+#include <microprofile/microprofile.h>
 
 namespace dib {
 
@@ -22,6 +23,7 @@ Client::~Client()
 void
 Client::Poll(bool& got_packet, Packet& packet_out)
 {
+  MICROPROFILE_SCOPEI("client", "poll", MP_YELLOW);
   PollSocketStateChanges();
   got_packet = PollIncomingPackets(packet_out);
 }
@@ -71,12 +73,16 @@ Client::GetConnectionStatus() const
 void
 Client::PollSocketStateChanges()
 {
+  MICROPROFILE_SCOPEI("client", "poll socket state changes", MP_YELLOW);
+
   socket_interface_->RunCallbacks(this);
 }
 
 bool
 Client::PollIncomingPackets(Packet& packet_out)
 {
+  MICROPROFILE_SCOPEI("client", "poll incoming packets", MP_YELLOW);
+
   ISteamNetworkingMessage* msg = nullptr;
   const int msg_count =
     socket_interface_->ReceiveMessagesOnConnection(connection_, &msg, 1);

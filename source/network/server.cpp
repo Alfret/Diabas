@@ -4,6 +4,7 @@
 #include "game/ecs/components/player_data_component.hpp"
 #include "game/ecs/systems/player_system.hpp"
 #include "game/ecs/systems/generic_system.hpp"
+#include <microprofile/microprofile.h>
 
 namespace dib {
 
@@ -23,6 +24,7 @@ Server::~Server()
 void
 Server::Poll(bool& got_packet, Packet& packet_out)
 {
+  MICROPROFILE_SCOPEI("server", "poll", MP_YELLOW);
   PollSocketStateChanges();
   got_packet = PollIncomingPackets(packet_out);
 }
@@ -90,12 +92,16 @@ Server::GetConnectionStatus(const ConnectionId connection_id) const
 void
 Server::PollSocketStateChanges()
 {
+  MICROPROFILE_SCOPEI("server", "poll socket state changes", MP_YELLOW);
+
   socket_interface_->RunCallbacks(this);
 }
 
 bool
 Server::PollIncomingPackets(Packet& packet_out)
 {
+  MICROPROFILE_SCOPEI("server", "poll incoming packets", MP_YELLOW);
+
   ISteamNetworkingMessage* msg = nullptr;
   const int msg_count =
     socket_interface_->ReceiveMessagesOnListenSocket(socket_, &msg, 1);
@@ -140,15 +146,10 @@ Server::OnSteamNetConnectionStatusChanged(
       break;
     }
 
-    case k_ESteamNetworkingConnectionState_ClosedByPeer:
-    case k_ESteamNetworkingConnectionState_ProblemDetectedLocally: {
-      if (status->m_info.m_eState ==
-          k_ESteamNetworkingConnectionState_ClosedByPeer) {
-        DLOG_INFO("Closed by peer.");
-      } else {
-        DLOG_WARNING("Problem detected locally.");
-      }
-
+    case k_ESteamNetworkingConnectionState_ProblemDetectedLocally:
+      DLOG_WARNING("Problem detected locally.");
+      [[fallthrough]];
+    case k_ESteamNetworkingConnectionState_ClosedByPeer: {
       if (status->m_eOldState == k_ESteamNetworkingConnectionState_Connected) {
         DLOG_INFO("Connection {}, [{}], disconnected with reason [{}], [{}].",
                   status->m_hConn,
@@ -212,12 +213,14 @@ Server::DisconnectConnection(const HSteamNetConnection connection)
 {
   if (auto it = connections_.find(connection); it != connections_.end()) {
     CloseConnection(connection);
+    connections_.erase(it);
 
     // remove from ecs system
     auto& registry = world_->GetEntityManager().GetRegistry();
-    auto maybe_player_data = system::PlayerDataFromConnectionId(registry, *it);
+    auto maybe_player_data = system::PlayerDataFromConnectionId(registry, connection);
     if (maybe_player_data) {
-      system::Delete<PlayerData>(registry, (*maybe_player_data)->uuid);
+      DLOG_INFO("Disconnected [{}]", **maybe_player_data);
+
       Packet packet{};
       auto& packet_handler = world_->GetNetwork().GetPacketHandler();
       packet_handler.BuildPacketHeader(packet,
@@ -226,12 +229,12 @@ Server::DisconnectConnection(const HSteamNetConnection connection)
       mw->Write((*maybe_player_data)->uuid);
       mw.Finalize();
       PacketBroadcast(packet, SendStrategy::kReliable);
-      DLOG_INFO("Disconnected [{}]", **maybe_player_data);
-    } else {
-      DLOG_INFO("Disconnected connection [{}], (not a player).", *it);
-    }
 
-    connections_.erase(it);
+      // Delete last since we are using the data to print
+      system::Delete<PlayerData>(registry, (*maybe_player_data)->uuid);
+    } else {
+      DLOG_INFO("Disconnected connection [{}], (not a player).", connection);
+    }
   }
 }
 }
