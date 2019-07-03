@@ -78,13 +78,13 @@ Terrain::GetTileID(WorldPos pos) const
 void
 Terrain::SetTile(WorldPos pos, Tile* tile)
 {
-  SetTileID(pos, mTileRegistry.GetTileID(tile));
+  SetTile(pos, mTileRegistry.GetTileID(tile));
 }
 
 // -------------------------------------------------------------------------- //
 
 void
-Terrain::SetTileID(WorldPos pos, TileRegistry::TileID id)
+Terrain::SetTile(WorldPos pos, TileRegistry::TileID id)
 {
   *(mLayerTile + mWidth * pos.Y() + pos.X()) = id;
 }
@@ -101,7 +101,7 @@ Terrain::InitTerrain()
 
   for (u32 y = 0; y < mHeight; y++) {
     for (u32 x = 0; x < mWidth; x++) {
-      SetTileID(WorldPos{ x, y }, 2);
+      SetTile(WorldPos{ x, y }, 2);
     }
   }
 }

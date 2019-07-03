@@ -4,14 +4,16 @@
 // Headers
 // ========================================================================== //
 
+#include <dutil/stopwatch.hpp>
+
 #include "core/memory.hpp"
 #include "app/client/imgui/imgui.h"
 #include "game/client/game_client.hpp"
 #include "game/client/player_data_storage.hpp"
+#include "game/client/world_renderer.hpp"
 #include "game/tile/tile_registry.hpp"
-#include "script/util.hpp"
 #include "game/ecs/systems/generic_system.hpp"
-#include <dutil/stopwatch.hpp>
+#include "script/util.hpp"
 
 // ========================================================================== //
 // DebugUI Implementation
@@ -139,21 +141,47 @@ ShowTileDebug(GameClient& gameClient)
 
       // List subresources
       ImGui::Text("Sub-resource count: %zu",
-                  gameClient.GetCache().GetSubResources(tileId).size());
+                  gameClient.GetCache().GetTileSubResources(tileId).size());
 
       ImGui::TreePop();
     }
 
     // Display tile by ID
     if (ImGui::TreeNode("By ID")) {
-      static s32 id = 0;
-      ImGui::InputInt("ID", &id);
-      id = alflib::Clamp(id, 0, s32(tileRegistry.GetTiles().size() - 1));
-      Tile* tile = tileRegistry.GetTile(id);
-      ImGui::Text("Mod ID: %s", tile->GetResourcePath().GetModId().GetUTF8());
-      ImGui::Text("Resource: \"%s\"",
-                  tile->GetResourcePath().GetPath().GetPathString().GetUTF8());
+      static s32 indices[2] = { 0, 0 };
+      ImGui::SliderInt("Index",
+                       &indices[0],
+                       0,
+                       gameClient.GetTileRegistry().GetTiles().size() - 1);
+      u32 maxSubResource =
+        gameClient.GetCache().GetTileSubResourceCount(indices[0]) - 1;
+      indices[1] = alflib::Clamp(indices[1], 0, s32(maxSubResource));
+      ImGui::SliderInt("Sub-resource", &indices[1], 0, maxSubResource);
 
+      Vector2F texMin, texMax;
+      gameClient.GetCache().GetTextureCoordinatesForTile(
+        indices[0], indices[1], texMin, texMax);
+      const auto& atlasTexture = gameClient.GetCache().GetTileAtlasTexture();
+      Vector2F size((texMax.x - texMin.x) * atlasTexture->GetWidth() * 10,
+                    (texMax.y - texMin.y) * atlasTexture->GetHeight() * 10);
+      ImGui::Image(reinterpret_cast<ImTextureID>(atlasTexture->GetID()),
+                   ImVec2(size.x, size.y),
+                   ImVec2(texMin.x, texMin.y),
+                   ImVec2(texMax.x, texMax.y),
+                   ImVec4(1, 1, 1, 1),
+                   ImVec4(0, 0, 0, 1));
+
+      static bool placeTile;
+      ImGui::Checkbox("Place tile", &placeTile);
+      if (placeTile && !ImGui::IsMouseHoveringAnyWindow() &&
+          gameClient.IsMouseDown(MouseButton::kMouseButtonLeft)) {
+        f64 mouseX, mouseY;
+        gameClient.GetMousePosition(mouseX, mouseY);
+        WorldPos pos = PickWorldPosition(gameClient.GetWorld(),
+                                         gameClient.GetCamera(),
+                                         Vector2F(mouseX, mouseY));
+        gameClient.GetWorld().GetTerrain().SetTile(pos, indices[0]);
+      }
       ImGui::TreePop();
     }
 
@@ -201,6 +229,34 @@ void
 ShowItemDebug(GameClient& gameClient)
 {
   if (ImGui::CollapsingHeader("Items")) {
+    // Display by id
+    if (ImGui::TreeNode("By ID")) {
+      static s32 indices[2] = { 0, 0 };
+      ImGui::SliderInt("Index",
+                       &indices[0],
+                       0,
+                       gameClient.GetItemRegistry().GetItems().size() - 1);
+      u32 maxSubResource =
+        gameClient.GetCache().GetItemSubResourceCount(indices[0]) - 1;
+      indices[1] = alflib::Clamp(indices[1], 0, s32(maxSubResource));
+      ImGui::SliderInt("Sub-resource", &indices[1], 0, maxSubResource);
+
+      Vector2F texMin, texMax;
+      gameClient.GetCache().GetTextureCoordinatesForItem(
+        indices[0], indices[1], texMin, texMax);
+      const auto& atlasTexture = gameClient.GetCache().GetItemAtlasTexture();
+      Vector2F size((texMax.x - texMin.x) * atlasTexture->GetWidth() * 10,
+                    (texMax.y - texMin.y) * atlasTexture->GetHeight() * 10);
+      ImGui::Image(reinterpret_cast<ImTextureID>(atlasTexture->GetID()),
+                   ImVec2(size.x, size.y),
+                   ImVec2(texMin.x, texMin.y),
+                   ImVec2(texMax.x, texMax.y),
+                   ImVec4(1, 1, 1, 1),
+                   ImVec4(0, 0, 0, 1));
+
+      ImGui::TreePop();
+    }
+
     // Display item atlas
     if (ImGui::TreeNode("Item atlas")) {
 
@@ -234,8 +290,6 @@ ShowNetworkDebug(GameClient& gameClient)
   World& world = gameClient.GetWorld();
   Network<Side::kClient>& network = world.GetNetwork();
   auto& chat = world.GetChat();
-
-  ImGui::ShowTestWindow();
 
   if (ImGui::CollapsingHeader("Network")) {
 

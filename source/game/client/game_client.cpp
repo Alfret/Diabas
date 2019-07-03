@@ -18,6 +18,7 @@ namespace dib::game {
 GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
   : AppClient(descriptor)
   , mWorld(mTileRegistry)
+  , mCoreContent(mItemRegistry, mTileRegistry)
   , mModLoader(mScriptEnvironment, Path{ "./mods" })
   , mCamera(GetWidth(), GetHeight())
 {
@@ -25,6 +26,8 @@ GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
 
   mClientCache.BuildTileAtlas(mTileRegistry);
   mClientCache.BuildItemAtlas(mItemRegistry);
+
+  mCoreContent.GenerateWorld(mWorld);
 }
 
 // -------------------------------------------------------------------------- //
@@ -35,6 +38,8 @@ GameClient::Update(f64 delta)
   if (IsKeyDown(Key::kKeyEscape)) {
     Exit();
   }
+
+  // ImGui::ShowTestWindow();
 
   // ImGui
   if (ImGui::Begin("Diabas - Debug")) {

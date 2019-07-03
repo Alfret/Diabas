@@ -28,21 +28,12 @@ TileRegistry::TileRegistry()
     new Tile(ResourcePath{ Path{ "./res/tiles/missing.tga" } }, "missing");
   RegisterTile(CreateRegistryKey(BUILTIN_MOD_NAME, "missing"),
                mBuiltin.tileMissing);
-
-  // Register air tile
-  mBuiltin.tileAir =
-    new Tile(ResourcePath{ Path{ "./res/tiles/air.tga" } }, "air");
-  mBuiltin.tileAir->SetOpacity(0.0f)
-    ->SetCollisionType(Tile::CollisionType::kNone)
-    ->SetIsDestructible(false);
-  RegisterTile(CreateRegistryKey(BUILTIN_MOD_NAME, "air"), mBuiltin.tileAir);
 }
 
 // -------------------------------------------------------------------------- //
 
 TileRegistry::~TileRegistry()
 {
-  delete mBuiltin.tileAir;
   delete mBuiltin.tileMissing;
   delete mBuiltin.tileInvalid;
 }

@@ -60,7 +60,10 @@ public:
   void BuildItemAtlas(const ItemRegistry& itemRegistry);
 
   /** Returns the list of sub-resources for a tile ID **/
-  const std::vector<AtlasRegion>& GetSubResources(TileRegistry::TileID id);
+  const std::vector<AtlasRegion>& GetTileSubResources(TileRegistry::TileID id);
+
+  /** Returns the number of item sub-resources for an item ID **/
+  u32 GetTileSubResourceCount(TileRegistry::TileID id);
 
   /** Retrieves the texture coordinates for a tile ID with a given sub-resource
    * index **/
@@ -77,6 +80,9 @@ public:
 
   /** Returns the list of sub-resources for an item ID **/
   const std::vector<AtlasRegion>& GetItemSubResources(ItemRegistry::ItemID id);
+
+  /** Returns the number of item sub-resources for an item ID **/
+  u32 GetItemSubResourceCount(ItemRegistry::ItemID id);
 
   /** Retrieves the texture coordinates for an item ID with a given sub-resource
    * index **/

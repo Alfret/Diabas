@@ -74,6 +74,9 @@ Texture::Bind(u32 slot)
 void
 Texture::LoadFromImage(const alflib::Image& image, bool generateMipmaps)
 {
+  mWidth = image.GetWidth();
+  mHeight = image.GetHeight();
+
   Bind(0);
 
   // Set sampler parameters

@@ -81,7 +81,7 @@ public:
   void SetTile(WorldPos pos, Tile* tile);
 
   /** Sets the tile at the specified location in the world given its ID **/
-  void SetTileID(WorldPos pos, TileRegistry::TileID id);
+  void SetTile(WorldPos pos, TileRegistry::TileID id);
 
   /** Returns the width of the terrain in number of tiles. Zero (0) is left **/
   u32 GetWidth() const { return mWidth; };
