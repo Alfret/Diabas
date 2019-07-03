@@ -149,6 +149,7 @@ ShowNetworkDebug(GameClient& gameClient)
   World& world = gameClient.GetWorld();
   Network<Side::kClient>& network = world.GetNetwork();
   auto& chat = world.GetChat();
+  static dutil::Stopwatch sw{};
 
   ImGui::ShowTestWindow();
 
@@ -175,6 +176,21 @@ ShowNetworkDebug(GameClient& gameClient)
     }
 
     ImGui::Spacing();
+
+    // ============================================================ //
+    // Packet Handler
+    // ============================================================ //
+
+    if (ImGui::TreeNode("packet handler")) {
+      static std::string packet_types =
+        network.GetPacketHandler().PacketTypesToString();
+      if (sw.now_ms() > 3000) {
+        packet_types = network.GetPacketHandler().PacketTypesToString();
+      }
+      ImGui::TextUnformatted(packet_types.c_str());
+
+      ImGui::TreePop();
+    }
 
     // ============================================================ //
     // Info
@@ -207,7 +223,6 @@ ShowNetworkDebug(GameClient& gameClient)
             arr[0] = value;
           };
 
-        static dutil::Stopwatch sw{};
         if (sw.now_ms() > 1000) {
           sw.Start();
           ShiftInsertArray(ping, kCount, status->m_nPing);
