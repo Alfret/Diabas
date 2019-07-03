@@ -427,8 +427,12 @@ ShowNetworkDebug(GameClient& gameClient)
       static char8 buf[buflen] = "Rully";
       if (world.GetNetwork().GetConnectionState() ==
           ConnectionState::kConnected) {
-        ImGui::InputText("New Player Name", buf, buflen);
-        if (ImGui::Button("Set Name") && buf[0] != 0) {
+
+        if (ImGui::InputText("New Player Name",
+                             buf,
+                             buflen,
+                             ImGuiInputTextFlags_EnterReturnsTrue) &&
+            buf[0] != 0) {
           // set our new name
           PlayerData player_data = **world.GetNetwork().GetOurPlayerData();
           player_data.name = String(buf);
@@ -449,6 +453,8 @@ ShowNetworkDebug(GameClient& gameClient)
             mw.Finalize();
             world.GetNetwork().PacketBroadcast(packet);
           }
+
+          ImGui::SetKeyboardFocusHere(-1);
         }
       }
 
@@ -458,8 +464,11 @@ ShowNetworkDebug(GameClient& gameClient)
           ConnectionState::kConnected) {
         constexpr std::size_t textlen = 128;
         static char8 text[textlen] = "";
-        ImGui::InputText("Chat Message", text, textlen);
-        if (ImGui::Button("Send Chat Message") && text[0] != 0) {
+        if (ImGui::InputText("Chat Message",
+                             text,
+                             textlen,
+                             ImGuiInputTextFlags_EnterReturnsTrue) &&
+            text[0] != 0) {
           game::ChatMessage msg{};
           msg.msg = String(text);
           msg.type = game::ChatType::kSay;
@@ -468,6 +477,8 @@ ShowNetworkDebug(GameClient& gameClient)
             DLOG_WARNING("failed to send chat message");
           }
           text[0] = '\0';
+
+          ImGui::SetKeyboardFocusHere(-1);
         }
       }
 

@@ -14,6 +14,7 @@
 #include <limits>
 #include "game/chat/chat.hpp"
 #include <dutil/misc.hpp>
+#include <microprofile/microprofile.h>
 
 namespace dib {
 
@@ -725,6 +726,8 @@ template<>
 void
 Network<Side::kClient>::Update()
 {
+  MICROPROFILE_SCOPEI("network", "update", MP_YELLOW);
+
   // update network
   static bool got_update;
   auto client = GetClient();
@@ -744,6 +747,8 @@ template<>
 void
 Network<Side::kServer>::Update()
 {
+  MICROPROFILE_SCOPEI("network", "update", MP_YELLOW);
+
   // update network
   static bool got_update;
   auto server = GetServer();
