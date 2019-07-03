@@ -209,7 +209,6 @@ ShowItemDebug(GameClient& gameClient)
       ImGui::Checkbox("Uniform size", &uniformAtlasSize);
       ImGui::SliderInt("Width", &atlasSize[0], 64, 2048);
       ImGui::SliderInt("Height", &atlasSize[1], 64, 2048);
-      atlasSize[0] += ImGui::GetScrollY() * 10;
       if (uniformAtlasSize) {
         atlasSize[1] = atlasSize[0];
       }
