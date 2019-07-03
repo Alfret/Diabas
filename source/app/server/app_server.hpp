@@ -35,7 +35,7 @@ public:
   explicit AppServer(const Descriptor& descriptor);
 
   /** Destruct **/
-  ~AppServer() override = default;
+  ~AppServer() override;
 
   /** Run server application **/
   void Run() override;
