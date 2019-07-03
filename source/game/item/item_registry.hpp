@@ -70,7 +70,7 @@ public:
   /** Returns the item registry map **/
   const tsl::robin_map<String, ItemID> GetRegistryMap() const;
 
-private:
+public:
   /** Create registry key **/
   static String CreateRegistryKey(const String& modId, const String& key);
 };

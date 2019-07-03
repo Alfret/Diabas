@@ -23,6 +23,11 @@ private:
   /** Debug name **/
   String mDebugName;
 
+  /** Width **/
+  u32 mWidth = 0;
+  /** Height **/
+  u32 mHeight = 0;
+
 public:
   /** Construct texture **/
   explicit Texture(const String& debugName = "");
@@ -38,6 +43,12 @@ public:
 
   /** Returns the texture id **/
   GLuint GetID() const { return mId; }
+
+  /** Returns the width **/
+  u32 GetWidth() const { return mWidth; }
+
+  /** Returns the height **/
+  u32 GetHeight() const { return mHeight; }
 
 private:
   /** Load data from image **/

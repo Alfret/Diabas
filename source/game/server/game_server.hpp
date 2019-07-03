@@ -9,6 +9,7 @@
 #include "game/mods/loader.hpp"
 #include "game/server/cli_input.hpp"
 #include "game/item/item_registry.hpp"
+#include "game/gameplay/core_content.hpp"
 #include "script/env.hpp"
 
 // ========================================================================== //
@@ -27,6 +28,9 @@ private:
   ItemRegistry mItemRegistry;
   /** Game world **/
   World mWorld;
+
+  /** Content **/
+  CoreContent mCoreContent;
 
   /** Script environment **/
   script::Environment mScriptEnvironment;

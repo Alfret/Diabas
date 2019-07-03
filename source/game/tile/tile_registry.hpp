@@ -47,8 +47,6 @@ private:
     Tile* tileInvalid = nullptr;
     /** Missing tile **/
     Tile* tileMissing = nullptr;
-    /** Air tile **/
-    Tile* tileAir = nullptr;
   } mBuiltin;
 
 public:
@@ -91,7 +89,7 @@ public:
     return mTileRegistryMap;
   }
 
-private:
+public:
   /** Create a registry key from the name of a mod and the mod-specific key **/
   static String CreateRegistryKey(const String& mod, const String& key);
 };

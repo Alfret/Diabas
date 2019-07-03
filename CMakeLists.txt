@@ -51,6 +51,7 @@ set(COMMON_SOURCE
   source/game/ecs/systems/generic_system.hpp
   source/game/ecs/systems/npc_system.cpp
   source/game/ecs/systems/npc_system.hpp
+  source/game/gameplay/core_content.cpp
   source/game/resource.cpp
   source/game/resource.hpp
   source/game/terrain.cpp

@@ -52,6 +52,7 @@ RenderWorldTerrain(graphics::Renderer& renderer,
   }
 
   // Render each tile
+  // TODO(Filip Björklund): Implement zooming
   for (u32 y = minY; y < minY + countY + 2; y++) {
     for (u32 x = minX; x < minX + countX + 2; x++) {
 
@@ -76,6 +77,20 @@ RenderWorldTerrain(graphics::Renderer& renderer,
 
   // Done rendering
   spriteBatch.End();
+}
+
+// -------------------------------------------------------------------------- //
+
+WorldPos
+PickWorldPosition(const World& world,
+                  const graphics::Camera& camera,
+                  Vector2F mousePos)
+{
+  // TODO(Filip Björklund): Implement support for zoom
+  WorldPos pos{ u32(mousePos.x / TILE_SIZE), u32(mousePos.y / TILE_SIZE) };
+  pos.X() = alflib::Clamp(pos.X(), 0u, world.GetTerrain().GetWidth());
+  pos.Y() = alflib::Clamp(pos.Y(), 0u, world.GetTerrain().GetHeight());
+  return pos;
 }
 
 }

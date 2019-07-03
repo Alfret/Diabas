@@ -20,12 +20,17 @@ public:
   /** Construct tile entity at position **/
   TileEntity(WorldPos pos);
 
+  /** Base destructor **/
+  virtual ~TileEntity() = default;
+
   /** Called to update the tile entity **/
   virtual void Update(){};
 
-  virtual void OnLoad(){};
+  /** Called when the tile entity should be loaded from a value-store **/
+  virtual void OnLoad(ValueStore& valueStore){};
 
-  virtual void OnStore(){};
+  /** Called when the tile entity should be saved to a value-store **/
+  virtual void OnStore(ValueStore& valueStore){};
 };
 
 }
