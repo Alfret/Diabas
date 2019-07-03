@@ -1,23 +1,29 @@
 #include "game/resource.hpp"
 
 // ========================================================================== //
+// Headers
+// ========================================================================== //
+
+#include "game/constants.hpp"
+
+// ========================================================================== //
 // ResourcePath
 // ========================================================================== //
 
 namespace dib::game {
 
-ResourcePath::ResourcePath(const String& modId, const Path& resourcePath)
-  : mModID(modId)
-  , mResourcePath(resourcePath)
+ResourcePath::ResourcePath(String modId, Path resourcePath)
+  : mModID(std::move(modId))
+  , mResourcePath(std::move(resourcePath))
 {
   mPath = Path{ "./mods" }.Join(mModID).Join(mResourcePath);
 }
 
 // -------------------------------------------------------------------------- //
 
-ResourcePath::ResourcePath(const Path& resourcePath)
-  : mModID("builtin")
-  , mResourcePath(resourcePath)
+ResourcePath::ResourcePath(Path resourcePath)
+  : mModID(BUILTIN_MOD_NAME)
+  , mResourcePath(std::move(resourcePath))
 {
   mPath = mResourcePath;
 }

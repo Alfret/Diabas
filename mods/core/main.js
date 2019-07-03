@@ -1,42 +1,53 @@
-import {my_add} from './util.js';
-
 export default class CoreMod extends Mod {
 
+  /** Called when mod is instantiated. Not all information and functions
+   * are available to the mod in this function, as the game engine has
+   * not yet injected that. */
   constructor() {
     super();
     dlog.verbose("CoreMod::constructor()");
   }
 
+  /** Called to let the mod do all initialization. At this point all the
+   * fields of the mod has been initialized and can be used in operations.
+   * Some of these are 'name' and 'id'.
+   *
+   * At this point all 'Tile' objects that the mod is adding MUST be
+   * registered.
+   *
+   * At this point all 'Item' objects that the mod is adding MUST be
+   * registered.
+   */
   init() {
-    this.tileDirt = new Tile(this, "res/dirt.tga");
-    this.tileGrass = new Tile(this, "res/grass_top.tga");
-    this.tileGrassTopLeft = new Tile(this, "res/grass_top_left.tga");
-    this.tileGrassTopRight = new Tile(this, "res/grass_top_right.tga");
-    this.tileGrassTopLeftRight = new Tile(this, "res/grass_top_left_right.tga");
-    this.tileRock = new Tile(this, "res/rock.tga");
-    this.tileFurnace = new Tile(this, "res/furnace.tga");
-    this.tileFlowerDaisyBlue = new Tile(this, "res/flower_daisy_blue.tga");
-    this.tileFlowerDaisyPurple = new Tile(this, "res/flower_daisy_purple.tga");
-    this.tileFlowerDaisyWhite = new Tile(this, "res/flower_daisy_white.tga");
-    this.tileSunflowerYellow = new Tile(this, "res/sunflower_yellow.tga");
-    this.tileSlime = new Tile(this, "res/slime.tga");
+    this.tileDirt = new Tile(this, "res/dirt.tga", "dirt");
+    this.tileGrass = new Tile(this, "res/grass_top.tga", "grass");
+    this.tileRock = new Tile(this, "res/rock.tga", "rock");
+
+    this.registerTiles(
+      "dirt", this.tileDirt,
+      "grass", this.tileGrass,
+      "rock", this.tileRock);
+
   }
 
-  onRegisterTiles(tileManager) {
-    dlog.verbose("CoreMod::onRegisterTiles()");
+  /** Called by the engine to let the modification do any custom world
+   * generation. The world to apply the generation to and the phase
+   * that is currently run, is available in the arguments.
+   *
+   * The phase can be used to control when different parts of the
+   * world should be generated.
+   *
+   * Phases include:
+   * - Initial: Initial bulk generation of the game world. Here the
+   *   different layers and biome-specific blocks should be generated.
+   * - Ore: During this phase ores and gems should be generated.
+   * - Structure: During this phase structures should be generated.
+   * - Chest/Loot: During this phase any chest and other types of
+   *   dungeon loot should be generated.
+   */
+  generateWorld(world, phase) {
 
-    tileManager.registerTile("dirt", this.tileDirt);
-    tileManager.registerTile("grass", this.tileGrass);
-    tileManager.registerTile("grass top left", this.tileGrassTopLeft);
-    tileManager.registerTile("grass top right", this.tileGrassTopRight);
-    tileManager.registerTile("grass top left right", this.tileGrassTopLeftRight);
-    tileManager.registerTile("rock", this.tileRock);
-    tileManager.registerTile("furnace", this.tileFurnace);
-    tileManager.registerTile("flower daisy blue", this.tileFlowerDaisyBlue);
-    tileManager.registerTile("flower daisy purple", this.tileFlowerDaisyPurple);
-    tileManager.registerTile("flower daisy white", this.tileFlowerDaisyWhite);
-    tileManager.registerTile("sunflower yellow", this.tileSunflowerYellow);
-    tileManager.registerTile("slime", this.tileSlime);
   }
+
 
 }

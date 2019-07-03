@@ -6,11 +6,11 @@ struct TagVisitor
 {
   u8 operator()(const u64)
   {
-    return static_cast<u8>(ValueStore::VariantTag::ku64);
+    return static_cast<u8>(ValueStore::VariantTag::kU64);
   }
   u8 operator()(const f64)
   {
-    return static_cast<u8>(ValueStore::VariantTag::kf64);
+    return static_cast<u8>(ValueStore::VariantTag::kF64);
   }
   u8 operator()(const String&)
   {
@@ -49,12 +49,12 @@ ValueStore::ToBytes(alflib::RawMemoryWriter& mw) const
     const u8 tag = VariantToTag(item.second);
     mw.Write(tag);
     switch (static_cast<VariantTag>(tag)) {
-      case VariantTag::ku64:
-        ok = mw.Write(std::get<static_cast<u8>(VariantTag::ku64)>(item.second));
+      case VariantTag::kU64:
+        ok = mw.Write(std::get<static_cast<u8>(VariantTag::kU64)>(item.second));
         break;
 
-      case VariantTag::kf64:
-        ok = mw.Write(std::get<static_cast<u8>(VariantTag::kf64)>(item.second));
+      case VariantTag::kF64:
+        ok = mw.Write(std::get<static_cast<u8>(VariantTag::kF64)>(item.second));
         break;
 
       case VariantTag::kString:
@@ -78,11 +78,11 @@ ValueStore::FromBytes(alflib::RawMemoryReader& mr)
     const auto tag = static_cast<VariantTag>(mr.Read<u8>());
 
     switch (tag) {
-      case VariantTag::ku64:
+      case VariantTag::kU64:
         ok = vstore.Store(std::move(key), mr.Read<u64>());
         break;
 
-      case VariantTag::kf64:
+      case VariantTag::kF64:
         ok = vstore.Store(std::move(key), mr.Read<f64>());
         break;
 

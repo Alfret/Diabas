@@ -6,6 +6,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <microprofile/microprofile.h>
 
 #include "app/app.hpp"
 #include "app/key.hpp"
@@ -30,6 +31,9 @@ public:
     u32 width;
     /** Height of window **/
     u32 height;
+
+    /** Whether to enable V-sync **/
+    bool enableVSync;
   };
 
 private:

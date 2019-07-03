@@ -36,6 +36,7 @@ set(COMMON_SOURCE
   source/audio/audio_manager.hpp
   source/core/hash.cpp
   source/core/hash.hpp
+  source/core/memory.cpp
   source/core/value_store.cpp
   source/core/value_store.hpp
   source/game/chat/chat.cpp
@@ -56,13 +57,17 @@ set(COMMON_SOURCE
   source/game/terrain.hpp
   source/game/world.cpp
   source/game/world.hpp
+  source/game/item/item.cpp
+  source/game/item/item_registry.cpp
+  source/game/item/item_stack.cpp
   source/game/tile/tile.cpp
-  source/game/tile/tile_manager.cpp
-  source/game/tile/tile_manager.hpp
-  source/game/tile/tile.hpp
-  source/game/mods/script/mod_base.cpp
+  source/game/tile/tile_entity.cpp
+  source/game/tile/tile_registry.cpp
+  source/game/mods/script/expose_item.cpp
+  source/game/mods/script/expose_mod.cpp
+  source/game/mods/script/expose_tile.cpp
+  source/game/mods/script/expose_world.cpp
   source/game/mods/script/mod_script.cpp
-  source/game/mods/script/script_tile.cpp
   source/game/mods/loader.cpp
   source/game/mods/loader.hpp
   source/game/mods/mod.cpp
@@ -111,10 +116,10 @@ set(CLIENT_SOURCE
   source/app/client/imgui/imgui_draw.cpp
   source/app/client/imgui/imgui_demo.cpp
   source/app/client/imgui/imgui_impl_glfw_gl3.cpp
-  source/game/client/game_client.cpp
+  source/game/client/client_cache.cpp
   source/game/client/debug_ui.cpp
+  source/game/client/game_client.cpp
   source/game/client/world_renderer.cpp
-  source/game/client/tile_atlas.cpp
   source/graphics/camera.cpp
   source/graphics/index_buffer.cpp
   source/graphics/renderer.cpp
@@ -202,6 +207,10 @@ add_subdirectory(thirdparty/stduuid)
 # tessil robin hood map / set
 include_directories(SYSTEM thirdparty/robin-map/include)
 
+# Microprofile
+include_directories(SYSTEM thirdparty)
+aux_source_directory(thirdparty/microprofile COMMON_SOURCE)
+
 # Thidparty
 include_directories(SYSTEM thirdparty)
 aux_source_directory(thirdparty/glad CLIENT_SOURCE)
@@ -237,6 +246,11 @@ else ()
 endif ()
 
 target_compile_definitions(server PRIVATE DIB_IS_SERVER)
+
+# Target specific preprocessor definitions
+target_compile_definitions(server PUBLIC MICROPROFILE_GPU_TIMERS=0)
+target_compile_definitions(${PROJECT_NAME} PUBLIC MICROPROFILE_GPU_TIMERS_GL)
+
 
 # Link libraries
 if (WIN32)

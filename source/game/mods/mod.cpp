@@ -1,16 +1,21 @@
 #include "game/mods/mod.hpp"
 
-#include <dlog.hpp>
+// ========================================================================== //
+// Headers
+// ========================================================================== //
+
 #include <cpptoml.h>
-#include "script/util.hpp"
+#include <dlog.hpp>
+
 #include "core/assert.hpp"
 #include "game/world.hpp"
-
-namespace dib::game {
+#include "script/util.hpp"
 
 // ========================================================================== //
 // Mod Implementation
 // ========================================================================== //
+
+namespace dib::game {
 
 Mod::Mod(script::Environment& scriptEnvironment)
   : mMainScript(scriptEnvironment)
@@ -34,17 +39,9 @@ Mod::Load(const alflib::File& modDirectory)
 // -------------------------------------------------------------------------- //
 
 void
-Mod::Init(game::World& world)
+Mod::Init(ItemRegistry& itemRegistry, TileRegistry& tileRegistry, World& world)
 {
-  mMainScript.Init(world);
-}
-
-// -------------------------------------------------------------------------- //
-
-Result
-Mod::RegisterTiles(TileManager& tileManager)
-{
-  return mMainScript.RegisterTiles(tileManager);
+  mMainScript.Init(itemRegistry, tileRegistry, world);
 }
 
 // -------------------------------------------------------------------------- //

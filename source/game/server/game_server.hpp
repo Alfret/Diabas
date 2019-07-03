@@ -6,9 +6,9 @@
 
 #include "app/server/app_server.hpp"
 #include "game/world.hpp"
-#include "game/tile/tile_manager.hpp"
 #include "game/mods/loader.hpp"
 #include "game/server/cli_input.hpp"
+#include "game/item/item_registry.hpp"
 #include "script/env.hpp"
 
 // ========================================================================== //
@@ -21,6 +21,10 @@ namespace dib::game {
 class GameServer : public app::AppServer
 {
 private:
+  /** Tile registry **/
+  TileRegistry mTileRegistry;
+  /** Item registry **/
+  ItemRegistry mItemRegistry;
   /** Game world **/
   World mWorld;
 

@@ -11,6 +11,7 @@
 #include "core/macros.hpp"
 #include "app/client/imgui/imgui.h"
 #include "app/client/imgui/imgui_impl_glfw_gl3.h"
+#include "graphics/shader.hpp"
 
 // ========================================================================== //
 // Private Functions
@@ -95,6 +96,10 @@ AppClientSetImGuiStyle(ImGuiStyle& style)
 
 namespace dib::app {
 
+MICROPROFILE_DEFINE(MAIN, "MAIN", "Main", MP_IVORY2);
+
+// -------------------------------------------------------------------------- //
+
 AppClient::AppClient(const AppClient::Descriptor& descriptor)
   : mTitle(descriptor.title)
   , mWidth(descriptor.width)
@@ -130,15 +135,30 @@ AppClient::AppClient(const AppClient::Descriptor& descriptor)
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback((GLDEBUGPROC)AppClient::DebugCallbackGL, this);
 
+  // Set VSync
+  glfwSwapInterval(descriptor.enableVSync ? 1 : 0);
+
   // Initialize ImGui
   ImGui_ImplGlfwGL3_Init(mWindow, false);
   AppClientSetImGuiStyle(ImGui::GetStyle());
+
+  // Microprofile setup
+  MicroProfileOnThreadCreate("Main");
+  MicroProfileSetEnableAllGroups(true);
+  MicroProfileSetForceMetaCounters(true);
+#if MICROPROFILE_ENABLED
+  MicroProfileGpuInitGL();
+#endif
 }
 
 // -------------------------------------------------------------------------- //
 
 AppClient::~AppClient()
 {
+  MicroProfileShutdown();
+
+  graphics::ShaderManager::UnloadAll();
+
   ImGui_ImplGlfwGL3_Shutdown();
   glfwDestroyWindow(mWindow);
   glfwTerminate();
@@ -157,6 +177,8 @@ AppClient::Run()
   f64 timeLast = sw.fnow_s();
   mRunning = true;
   while (mRunning) {
+    MICROPROFILE_SCOPE(MAIN);
+
     // Update time variables
     const f64 timeCurrent = sw.fnow_s();
     const f64 timeDelta = timeCurrent - timeLast;
@@ -179,6 +201,8 @@ AppClient::Run()
     Render();
     ImGui::Render();
     glfwSwapBuffers(mWindow);
+
+    MicroProfileFlip(nullptr);
   }
 }
 
@@ -355,7 +379,7 @@ AppClient::ResizeCallback(GLFWwindow* window, int width, int height)
     app->mWidth = _width;
     app->mHeight = _height;
     if (_width && _height) {
-      glViewport(0, 0, width, height);
+      glViewport(0, 0, _width, _height);
     }
     app->OnWindowResize(_width, _height);
   }

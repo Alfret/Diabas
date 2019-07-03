@@ -6,12 +6,14 @@
 // ========================================================================== //
 
 #include <string_view>
+
 #include "core/assert.hpp"
 #include "network/network.hpp"
 #include "network/side.hpp"
 #include "game/ecs/entity_manager.hpp"
 #include "game/terrain.hpp"
 #include "game/chat/chat.hpp"
+#include "game/tile/tile_registry.hpp"
 
 // ========================================================================== //
 // World Declaration
@@ -22,8 +24,12 @@ namespace dib::game {
 /** Class representing the game world **/
 class World
 {
+private:
+  /** Tile registry **/
+  const TileRegistry& mTileRegistry;
+
 public:
-  World();
+  World(const TileRegistry& tileRegistry);
 
   void Update();
 
@@ -33,21 +39,18 @@ public:
 
   Network<kSide>& GetNetwork() { return network_; }
 
-  TileManager& GetTileManager() { return mTileManager; }
-
-  const TileManager& GetTileManager() const { return mTileManager; }
-
+  /** Returns the terrain of the world **/
   Terrain& GetTerrain() { return mTerrain; }
 
+  /** Returns the terrain of the world **/
   const Terrain& GetTerrain() const { return mTerrain; }
 
+  /** Returns the entity manager **/
   dib::EntityManager& GetEntityManager();
 
   game::Chat& GetChat() { return chat_; }
 
 private:
-  /** Tile manager **/
-  TileManager mTileManager;
   /** Terrain **/
   Terrain mTerrain;
 
