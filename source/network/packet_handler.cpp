@@ -2,6 +2,7 @@
 #include "core/hash.hpp"
 #include <alflib/core/assert.hpp>
 #include <dlog.hpp>
+#include <microprofile/microprofile.h>
 
 namespace dib {
 
@@ -12,6 +13,7 @@ PacketHandler::~PacketHandler() = default;
 bool
 PacketHandler::HandlePacket(const Packet& packet) const
 {
+  MICROPROFILE_SCOPEI("packet handler", "handle packet", MP_YELLOW);
   bool could_handle = false;
 
   const PacketHeader* header = packet.GetHeader();

@@ -1,4 +1,5 @@
 #include "app/server/app_server.hpp"
+#include <microprofile/microprofile.h>
 
 // ========================================================================== //
 // Headers
@@ -14,7 +15,17 @@ namespace dib::app {
 
 AppServer::AppServer(const AppServer::Descriptor& descriptor)
   : mTargetUps(descriptor.targetUps)
-{}
+{
+  // Microprofile setup
+  MicroProfileOnThreadCreate("Main");
+  MicroProfileSetEnableAllGroups(true);
+  MicroProfileSetForceMetaCounters(true);
+}
+
+AppServer::~AppServer()
+{
+  MicroProfileShutdown();
+}
 
 // -------------------------------------------------------------------------- //
 
@@ -36,6 +47,8 @@ AppServer::Run()
 
     // Update
     Update(timeDelta);
+
+    MicroProfileFlip(nullptr);
   }
 }
 
