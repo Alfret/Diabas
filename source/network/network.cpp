@@ -138,7 +138,38 @@ Network<Side::kClient>::StartServer()
 }
 
 template<>
-std::optional<const PlayerData*>
+std::optional<u32>
+Network<Side::kServer>::GetOurPlayerEntity() const
+{
+  AlfAssert(false, "cannot get our player entity on server");
+  return std::nullopt;
+}
+
+template<>
+std::optional<u32>
+Network<Side::kClient>::GetOurPlayerEntity() const
+{
+  auto client = GetClient();
+  return client->GetOurPlayerEntity();
+}
+
+template <>
+void
+Network<Side::kServer>::SetOurPlayerEntity(const std::optional<u32>)
+{
+  AlfAssert(false, "cannot set our player entity on server");
+}
+
+template<>
+void
+Network<Side::kClient>::SetOurPlayerEntity(const std::optional<u32> maybe_entity)
+{
+  auto client = GetClient();
+  client->SetOurPlayerEntity(maybe_entity);
+}
+
+template<>
+std::optional<PlayerData*>
 Network<Side::kServer>::GetOurPlayerData() const
 {
   AlfAssert(false, "cannot get our PlayerData on server");
@@ -146,22 +177,15 @@ Network<Side::kServer>::GetOurPlayerData() const
 }
 
 template<>
-std::optional<const PlayerData*>
+std::optional<PlayerData*>
 Network<Side::kClient>::GetOurPlayerData() const
 {
   auto& registry = world_->GetEntityManager().GetRegistry();
-  auto client = GetClient();
-  auto res =
-    system::PlayerDataFromConnectionId(registry, client->GetConnectionId());
-  if (!res && client->GetConnectionState() == ConnectionState::kConnected &&
-      system::CountEntities<PlayerData>(registry) > 0) {
-    AlfAssert(
-      false,
-      "Attempted to get our PlayerData by connection_id, but it was "
-      "not found. This is likely caused by forgetting to set connection_id "
-      "before calling system::Replace().");
+  if (const auto maybe_entity = GetOurPlayerEntity(); maybe_entity) {
+    PlayerData* pd = &registry.get<PlayerData>(*maybe_entity);
+    return pd;
   }
-  return res;
+  return std::nullopt;
 }
 
 template<>
@@ -266,7 +290,6 @@ Network<Side::kClient>::SetupPacketHandler()
     {
       // 1. Load our PlayerData
       PlayerData my_player_data = PlayerDataStorage::Load();
-      my_player_data.connection_id = packet.GetFromConnection();
       my_player_data.uuid.GenerateUuid();
 
       // 2. Insert into ecs system
@@ -279,14 +302,21 @@ Network<Side::kClient>::SetupPacketHandler()
         return;
       }
 
-      // 3. Send kPlayerJoin packet
+      // 3. Set our player entity
+      auto client = GetClient();
+      const auto maybe_entity =
+        system::EntityFromUuid<PlayerData>(registry, my_player_data.uuid);
+      AlfAssert(maybe_entity,
+                "could not find the newly created PlayerData entity");
+      client->SetOurPlayerEntity(maybe_entity);
+
+      // 4. Send kPlayerJoin packet
       Packet player_join_packet{};
       packet_handler_.BuildPacketHeader(player_join_packet,
                                         PacketHeaderStaticTypes::kPlayerJoin);
       auto mw = player_join_packet.GetMemoryWriter();
       mw->Write(my_player_data);
       mw.Finalize();
-      auto client = GetClient();
       client->PacketSend(player_join_packet, SendStrategy::kReliable);
     }
   };
@@ -311,8 +341,6 @@ Network<Side::kClient>::SetupPacketHandler()
   const auto PlayerJoinCb = [this](const Packet& packet) {
     auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
-    constexpr ConnectionId kUnusedConnectionId = 0;
-    player_data.connection_id = kUnusedConnectionId;
     auto& registry = world_->GetEntityManager().GetRegistry();
     const bool ok = system::Create(registry, player_data);
     if (!ok) {
@@ -382,7 +410,6 @@ Network<Side::kClient>::SetupPacketHandler()
   const auto PlayerUpdateRejectedCb = [this](const Packet& packet) {
     auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
-    player_data.connection_id = packet.GetFromConnection();
 
     DLOG_INFO("player update rejected, replacing our player data with the"
               " the servers version");
@@ -796,29 +823,6 @@ Network<Side::kClient>::GetConnectionState() const
 {
   auto client = GetClient();
   return client->GetConnectionState();
-}
-
-template<>
-std::optional<u32>
-Network<Side::kServer>::GetOurPlayerEntity() const
-{
-  AlfAssert(false, "cannot get our entity on server");
-  return std::nullopt;
-}
-
-template<>
-std::optional<u32>
-Network<Side::kClient>::GetOurPlayerEntity() const
-{
-  auto& registry = world_->GetEntityManager().GetRegistry();
-  const auto view = registry.view<PlayerData>();
-  const auto client = GetClient();
-  for (const auto entity : view) {
-    if (view.get(entity).connection_id == client->GetConnectionId()) {
-      return entity;
-    }
-  }
-  return std::nullopt;
 }
 
 // ============================================================ //
