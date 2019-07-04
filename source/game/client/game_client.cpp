@@ -5,7 +5,7 @@
 // ========================================================================== //
 
 #include "game/constants.hpp"
-#include "app/client/imgui/imgui.h"
+#include <imgui/imgui.h>
 #include "game/client/world_renderer.hpp"
 #include "game/client/debug_ui.hpp"
 

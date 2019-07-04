@@ -113,10 +113,10 @@ set(TEST_SOURCE
 
 set(CLIENT_SOURCE
   source/app/client/app_client.cpp
-  source/app/client/imgui/imgui.cpp
-  source/app/client/imgui/imgui_draw.cpp
-  source/app/client/imgui/imgui_demo.cpp
-  source/app/client/imgui/imgui_impl_glfw_gl3.cpp
+  thirdparty/imgui/imgui.cpp
+  thirdparty/imgui/imgui_draw.cpp
+  thirdparty/imgui/imgui_demo.cpp
+  thirdparty/imgui/imgui_impl_glfw_gl3.cpp
   source/game/client/client_cache.cpp
   source/game/client/debug_ui.cpp
   source/game/client/game_client.cpp

@@ -9,8 +9,8 @@
 
 #include "core/assert.hpp"
 #include "core/macros.hpp"
-#include "app/client/imgui/imgui.h"
-#include "app/client/imgui/imgui_impl_glfw_gl3.h"
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw_gl3.h>
 #include "graphics/shader.hpp"
 
 // ========================================================================== //

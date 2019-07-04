@@ -7,7 +7,7 @@
 #include <dutil/stopwatch.hpp>
 
 #include "core/memory.hpp"
-#include "app/client/imgui/imgui.h"
+#include <imgui/imgui.h>
 #include "game/client/game_client.hpp"
 #include "game/client/player_data_storage.hpp"
 #include "game/client/world_renderer.hpp"
