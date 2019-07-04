@@ -71,6 +71,11 @@ CoreContent::SetupTiles(TileRegistry& tileRegistry)
     new Tile(ResourcePath{ Path{ "./res/tiles/grass.tga" } }, "grass");
   tileRegistry.RegisterTile(MOD_ID, "grass", mTileGrass);
 
+  // Tile: Chair
+  mTileChair =
+    new Tile(ResourcePath{ Path{ "./res/tiles/chair_left.tga" } }, "chair");
+  tileRegistry.RegisterTile(MOD_ID, "chair", mTileChair);
+
   // Tile: Rock
   mTileRock = new Tile(ResourcePath{ Path{ "./res/tiles/rock.tga" } }, "rock");
   tileRegistry.RegisterTile(MOD_ID, "rock", mTileRock);

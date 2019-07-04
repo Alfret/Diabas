@@ -32,6 +32,9 @@ private:
   /** Rock tile **/
   Tile* mTileRock = nullptr;
 
+  /** Chair tile **/
+  Tile* mTileChair = nullptr;
+
   /** Apple item **/
   Item* mItemApple = nullptr;
 

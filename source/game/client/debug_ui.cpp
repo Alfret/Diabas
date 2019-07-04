@@ -32,6 +32,16 @@ ShowStatisticsDebug(GameClient& gameClient, f32 delta)
     ImGui::BulletText("Sprites drawn: %i",
                       gameClient.GetRenderer().GetDrawSpriteCount());
 
+    static u32 maxFps = 0;
+    if (u32(1.0f / delta) > maxFps) {
+      maxFps = u32(1.0f / delta);
+    }
+    ImGui::BulletText("Max fps: %i", maxFps);
+    ImGui::SameLine();
+    if (ImGui::Button("Reset")) {
+      maxFps = 0;
+    }
+
     f64 vmUsage, residentSet;
     core::GetVirtualMemoryUsage(vmUsage, residentSet);
     ImGui::BulletText("Memory usage (MB): %f", residentSet / 1000.0);
