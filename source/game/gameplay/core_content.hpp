@@ -6,6 +6,7 @@
 
 #include "game/item/item_registry.hpp"
 #include "game/tile/tile_registry.hpp"
+#include "game/gameplay/tile/tile_chair.hpp"
 #include "game/world.hpp"
 
 // ========================================================================== //
@@ -33,22 +34,35 @@ private:
   Tile* mTileRock = nullptr;
 
   /** Chair tile **/
-  Tile* mTileChair = nullptr;
+  TileChair* mTileChair = nullptr;
 
   /** Apple item **/
   Item* mItemApple = nullptr;
 
 public:
-  /** Construct core content **/
-  CoreContent(ItemRegistry& itemRegistry, TileRegistry& tileRegistry);
-
   /** Destruct core content **/
   ~CoreContent();
 
+public:
+  /** Returns the singleton instance **/
+  static CoreContent& GetInstance();
+
+  /** Setup items and tiles **/
+  static void Setup(ItemRegistry& itemRegistry, TileRegistry& tileRegistry);
+
   /** Generate the base world **/
-  void GenerateWorld(World& world);
+  static void GenerateWorld(World& world);
+
+  /** Returns the air tile **/
+  static Tile* GetTileAir() { return GetInstance().mTileAir; }
+
+  /** Returns the chair tile **/
+  static TileChair* GetTileChair() { return GetInstance().mTileChair; }
 
 private:
+  /** Construct core content **/
+  CoreContent() = default;
+
   /** Setup core items **/
   void SetupItems(ItemRegistry& itemRegistry);
 

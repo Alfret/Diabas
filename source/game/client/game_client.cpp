@@ -18,16 +18,16 @@ namespace dib::game {
 GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
   : AppClient(descriptor)
   , mWorld(mTileRegistry)
-  , mCoreContent(mItemRegistry, mTileRegistry)
   , mModLoader(mScriptEnvironment, Path{ "./mods" })
   , mCamera(GetWidth(), GetHeight())
 {
   mModLoader.Init(mItemRegistry, mTileRegistry, mWorld);
+  CoreContent::Setup(mItemRegistry, mTileRegistry);
 
   mClientCache.BuildTileAtlas(mTileRegistry);
   mClientCache.BuildItemAtlas(mItemRegistry);
 
-  mCoreContent.GenerateWorld(mWorld);
+  CoreContent::GenerateWorld(mWorld);
 }
 
 // -------------------------------------------------------------------------- //

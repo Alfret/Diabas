@@ -181,17 +181,32 @@ ShowTileDebug(GameClient& gameClient)
                    ImVec4(1, 1, 1, 1),
                    ImVec4(0, 0, 0, 1));
 
-      static bool placeTile;
-      ImGui::Checkbox("Place tile", &placeTile);
-      if (placeTile && !ImGui::IsMouseHoveringAnyWindow() &&
+      // Tile placement/removal
+      static s32 buttonIndex = 0;
+      ImGui::RadioButton("Select", &buttonIndex, 0);
+      ImGui::SameLine();
+      ImGui::RadioButton("Place", &buttonIndex, 1);
+      ImGui::SameLine();
+      ImGui::RadioButton("Remove", &buttonIndex, 2);
+
+      if (!ImGui::IsMouseHoveringAnyWindow() &&
           gameClient.IsMouseDown(MouseButton::kMouseButtonLeft)) {
+        // Retrieve world position
         f64 mouseX, mouseY;
         gameClient.GetMousePosition(mouseX, mouseY);
         WorldPos pos = PickWorldPosition(gameClient.GetWorld(),
                                          gameClient.GetCamera(),
                                          Vector2F(mouseX, mouseY));
-        gameClient.GetWorld().GetTerrain().SetTile(pos, indices[0]);
+
+        // Handle different modes
+        if (buttonIndex == 1) {
+          gameClient.GetWorld().GetTerrain().SetTile(pos, indices[0]);
+        } else if (buttonIndex == 2) {
+          gameClient.GetWorld().GetTerrain().RemoveTile(
+            pos, CoreContent::GetTileAir());
+        }
       }
+
       ImGui::TreePop();
     }
 

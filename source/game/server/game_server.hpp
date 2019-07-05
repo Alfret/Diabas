@@ -29,9 +29,6 @@ private:
   /** Game world **/
   World mWorld;
 
-  /** Content **/
-  CoreContent mCoreContent;
-
   /** Script environment **/
   script::Environment mScriptEnvironment;
   /** Mod loader **/
