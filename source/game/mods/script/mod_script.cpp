@@ -9,6 +9,8 @@
 #include "script/expose/expose_network.hpp"
 #include "script/util.hpp"
 
+#include <dutil/stopwatch.hpp>
+
 // ========================================================================== //
 // Functions
 // ========================================================================== //
@@ -222,6 +224,20 @@ ModScript::Load(const Path& path, const String& className)
 }
 
 // -------------------------------------------------------------------------- //
+
+static bool*
+Primes(int max)
+{
+  bool* primes = (bool*)malloc(sizeof(bool) * (max + 1));
+  memset(primes, true, sizeof(bool) * (max + 1));
+  for (int p = 2; p * p <= max; p++) {
+    if (primes[p]) {
+      for (int i = p * p; i <= max; i += p)
+        primes[i] = false;
+    }
+  }
+  return primes;
+}
 
 Result
 ModScript::Init(ItemRegistry& itemRegistry,

@@ -40,7 +40,7 @@ export default class FarmingMod extends Mod {
    *   dungeon loot should be generated.
    */
   generateWorld(world, phase) {
-
+    
   }
 
 }

@@ -59,6 +59,8 @@ set(COMMON_SOURCE
   source/game/terrain.hpp
   source/game/world.cpp
   source/game/world.hpp
+  source/game/entity/entity.cpp
+  source/game/entity/entity_registry.cpp
   source/game/item/item.cpp
   source/game/item/item_registry.cpp
   source/game/item/item_stack.cpp
