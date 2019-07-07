@@ -201,7 +201,8 @@ PacketHandler::Sync(const std::vector<PacketTypeMetaSerializable>& correct)
       AlfAssert(packet_type_metas_it != packet_type_metas_.end(),
                 "could not find"
                 " packet type, but previous code guarantees it");
-      insert_vec.push_back({ missing_type.type, { packet_type_metas_it->second } });
+      insert_vec.push_back(
+        { missing_type.type, { packet_type_metas_it->second } });
       packet_type_metas_.erase(packet_type_metas_it);
 
       dyn_it->second = missing_type.type;
@@ -226,7 +227,8 @@ PacketHandler::Sync(const std::vector<PacketTypeMetaSerializable>& correct)
                 "could not find"
                 " packet type, but previous code guarantees it");
 
-      insert_vec.push_back({ missing_type.type, { packet_type_metas_it->second } });
+      insert_vec.push_back(
+        { missing_type.type, { packet_type_metas_it->second } });
       packet_type_metas_.erase(packet_type_metas_it);
 
       static_types_[i] = missing_type.type;
@@ -357,7 +359,8 @@ PacketHandler::PrintPacketTypes() const
   DLOG_RAW("\n*** Registered packet types, {}.\n", packet_type_metas_.size());
   DLOG_RAW("{:<15}{}\n", "ID", "PACKET TYPE NAME");
   for (const auto packet_type_meta : packet_type_metas_) {
-    DLOG_RAW("#{:<14}{}\n", packet_type_meta.first, packet_type_meta.second.name);
+    DLOG_RAW(
+      "#{:<14}{}\n", packet_type_meta.first, packet_type_meta.second.name);
   }
   DLOG_RAW("\n");
 }

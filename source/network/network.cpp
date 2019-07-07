@@ -153,7 +153,7 @@ Network<Side::kClient>::GetOurPlayerEntity() const
   return client->GetOurPlayerEntity();
 }
 
-template <>
+template<>
 void
 Network<Side::kServer>::SetOurPlayerEntity(const std::optional<u32>)
 {
@@ -162,7 +162,8 @@ Network<Side::kServer>::SetOurPlayerEntity(const std::optional<u32>)
 
 template<>
 void
-Network<Side::kClient>::SetOurPlayerEntity(const std::optional<u32> maybe_entity)
+Network<Side::kClient>::SetOurPlayerEntity(
+  const std::optional<u32> maybe_entity)
 {
   auto client = GetClient();
   client->SetOurPlayerEntity(maybe_entity);
@@ -439,14 +440,12 @@ Network<Side::kClient>::SetupPacketHandler()
 
     if (!system::Replace(registry, item_data)) {
       if (!system::Create(registry, item_data)) {
-          AlfAssert(false, "could not replace, or create ItemData");
+        AlfAssert(false, "could not replace, or create ItemData");
       }
     }
   };
   ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kItemUpdate,
-    "item update",
-    ItemUpdateCb);
+    PacketHeaderStaticTypes::kItemUpdate, "item update", ItemUpdateCb);
   AlfAssert(ok, "could not add packet type item update");
 
   // ============================================================ //
@@ -480,7 +479,9 @@ Network<Side::kClient>::SetupPacketHandler()
     }
   };
   ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kProjectileUpdate, "projectile update", ProjectileUpdateCb);
+    PacketHeaderStaticTypes::kProjectileUpdate,
+    "projectile update",
+    ProjectileUpdateCb);
   AlfAssert(ok, "could not add packet type projectile update");
 
   // ============================================================ //
@@ -626,16 +627,16 @@ Network<Side::kServer>::SetupPacketHandler()
               player_data.ping = static_cast<u16>(con_status->m_nPing);
               player_data.con_quality_local = static_cast<u8>(
                 std::lroundf(dutil::Map(con_status->m_flConnectionQualityLocal,
-                                      -1.0f,
-                                      1.0f,
-                                      0.0f,
-                                      255.0f)));
+                                        -1.0f,
+                                        1.0f,
+                                        0.0f,
+                                        255.0f)));
               player_data.con_quality_remote = static_cast<u8>(
                 std::lroundf(dutil::Map(con_status->m_flConnectionQualityRemote,
-                                      -1.0f,
-                                      1.0f,
-                                      0.0f,
-                                      255.0f)));
+                                        -1.0f,
+                                        1.0f,
+                                        0.0f,
+                                        255.0f)));
             } else {
               DLOG_WARNING("failed to get connection status");
             }
@@ -707,9 +708,8 @@ Network<Side::kServer>::SetupPacketHandler()
     auto server = GetServer();
     server->DisconnectConnection(packet.GetFromConnection());
   };
-  ok = packet_handler_.AddStaticPacketType(PacketHeaderStaticTypes::kItemUpdate,
-                                           "item update",
-                                           ItemUpdateCb);
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kItemUpdate, "item update", ItemUpdateCb);
   AlfAssert(ok, "could not add packet type item update");
 
   // ============================================================ //
@@ -733,7 +733,9 @@ Network<Side::kServer>::SetupPacketHandler()
     server->DisconnectConnection(packet.GetFromConnection());
   };
   ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kProjectileUpdate, "projectile update", ProjectileUpdateCb);
+    PacketHeaderStaticTypes::kProjectileUpdate,
+    "projectile update",
+    ProjectileUpdateCb);
   AlfAssert(ok, "could not add packet type projectile update");
 
   // ============================================================ //

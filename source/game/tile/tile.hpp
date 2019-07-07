@@ -11,6 +11,7 @@
 #include "game/world_pos.hpp"
 #include "game/resource.hpp"
 #include "game/item/tool.hpp"
+#include "game/physics/collision.hpp"
 
 // ========================================================================== //
 // Tile Declaration
@@ -51,19 +52,6 @@ DIB_FORWARD_DECLARE_CLASS(World);
  * **/
 class Tile
 {
-public:
-  /** Enumeration of collision types. This determines how entities collide with
-   * the tile **/
-  enum class CollisionType
-  {
-    /** Full collision **/
-    kFull,
-    /** No collision **/
-    kNone,
-    /** Stairs collision **/
-    kStairs,
-    /** Custom collision. 'Tile::GetAABB()' is called to determine collision **/
-  };
 
 protected:
   /** Path to the resource **/
@@ -143,7 +131,8 @@ public:
 
   /** Returns the collision type of the tile at the specified location in the
    * world **/
-  [[nodiscard]] virtual CollisionType GetCollision(World& world, WorldPos pos);
+  [[nodiscard]] virtual CollisionType GetCollision(const World& world,
+                                                   WorldPos pos) const;
 
   /** Sets the collision type of the tile **/
   virtual Tile* SetCollisionType(CollisionType collisionType);

@@ -12,6 +12,7 @@
 #include "graphics/camera.hpp"
 #include "graphics/renderer.hpp"
 #include "script/env.hpp"
+#include "game/client/player.hpp"
 
 // ========================================================================== //
 // Client Declaration
@@ -45,6 +46,8 @@ private:
 
   /** Client resource cache **/
   ClientCache mClientCache;
+
+  Player mPlayer{};
 
 public:
   /** Construct game client **/

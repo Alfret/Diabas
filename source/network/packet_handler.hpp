@@ -271,7 +271,10 @@ public:
 
   std::size_t GetSize() const { return packet_type_metas_.size(); }
 
-  PacketTypeMeta& operator[](const PacketHeaderType& i) { return packet_type_metas_[i]; }
+  PacketTypeMeta& operator[](const PacketHeaderType& i)
+  {
+    return packet_type_metas_[i];
+  }
 
   std::optional<const String*> GetPacketType(const Packet& packet) const;
 

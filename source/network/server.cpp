@@ -217,7 +217,8 @@ Server::DisconnectConnection(const HSteamNetConnection connection)
 
     // remove from ecs system
     auto& registry = world_->GetEntityManager().GetRegistry();
-    auto maybe_player_data = system::PlayerDataFromConnectionId(registry, connection);
+    auto maybe_player_data =
+      system::PlayerDataFromConnectionId(registry, connection);
     if (maybe_player_data) {
       DLOG_INFO("Disconnected [{}]", **maybe_player_data);
 

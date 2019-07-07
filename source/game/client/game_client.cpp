@@ -39,7 +39,7 @@ GameClient::Update(f64 delta)
     Exit();
   }
 
-  // ImGui::ShowTestWindow();
+  ImGui::ShowTestWindow();
 
   // ImGui
   if (ImGui::Begin("Diabas - Debug")) {
@@ -49,10 +49,12 @@ GameClient::Update(f64 delta)
     ShowTileDebug(*this);
     ShowItemDebug(*this);
     ShowNetworkDebug(*this);
+    ShowPlayerDebug(*this);
   }
   ImGui::End();
 
   UpdateCamera(delta);
+  mPlayer.Update(*this, delta);
   mWorld.Update();
 }
 

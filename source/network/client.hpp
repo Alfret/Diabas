@@ -53,7 +53,10 @@ public:
 
   std::optional<u32> GetOurPlayerEntity() const { return our_player_entity_; }
 
-  void SetOurPlayerEntity(const std::optional<u32> maybe_entity) { our_player_entity_ = maybe_entity; }
+  void SetOurPlayerEntity(const std::optional<u32> maybe_entity)
+  {
+    our_player_entity_ = maybe_entity;
+  }
 
 private:
   void PollSocketStateChanges();

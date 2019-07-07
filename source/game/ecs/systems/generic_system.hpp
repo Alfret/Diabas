@@ -87,11 +87,11 @@ Replace(entt::registry& registry, const PlayerData& player_data)
     if (player_data == current_pd) {
       // Server must also case about the connection_id field.
       if constexpr (kSide == Side::kServer) {
-      AlfAssert(
-        player_data.connection_id == current_pd.connection_id,
-        "Attempting to update PlayerData, but connection_id is not matching. "
-        "It is likely it was not set (and you have to set it manually).");
-        }
+        AlfAssert(
+          player_data.connection_id == current_pd.connection_id,
+          "Attempting to update PlayerData, but connection_id is not matching. "
+          "It is likely it was not set (and you have to set it manually).");
+      }
       found = true;
       entity = e;
       break;

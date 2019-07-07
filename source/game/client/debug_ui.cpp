@@ -321,15 +321,17 @@ ShowNetworkDebug(GameClient& gameClient)
     // ============================================================ //
 
     if (ImGui::TreeNode("player list")) {
-      std::string player_list = dlog::Format("{:<5} {:<20} {:<4} {:<4}\n", "Ping", "Name", "CQLc", "CQRm");
-      auto& registry =
-          world.GetEntityManager().GetRegistry();
+      std::string player_list = dlog::Format(
+        "{:<5} {:<20} {:<4} {:<4}\n", "Ping", "Name", "CQLc", "CQRm");
+      auto& registry = world.GetEntityManager().GetRegistry();
       const auto view = registry.view<PlayerData>();
       for (const auto entity : view) {
         const auto pd = view.get(entity);
-        player_list +=
-            dlog::Format("{:<5} {:<20} {:.1f}  {:.1f}\n", pd.ping, pd.name,
-                         pd.con_quality_local/255.0f, pd.con_quality_remote/255.0f);
+        player_list += dlog::Format("{:<5} {:<20} {:.1f}  {:.1f}\n",
+                                    pd.ping,
+                                    pd.name,
+                                    pd.con_quality_local / 255.0f,
+                                    pd.con_quality_remote / 255.0f);
       }
 
       ImGui::TextUnformatted(player_list.c_str());
@@ -544,6 +546,58 @@ ShowNetworkDebug(GameClient& gameClient)
                                   ImGuiInputTextFlags_ReadOnly);
 
       ImGui::TreePop();
+    }
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ShowPlayerDebug(GameClient& gameClient)
+{
+  World& world = gameClient.GetWorld();
+  Network<Side::kClient>& network = world.GetNetwork();
+
+  if (ImGui::CollapsingHeader("Player")) {
+    auto maybe_player_data = network.GetOurPlayerData();
+    if (maybe_player_data) {
+      PlayerData* player_data = *maybe_player_data;
+      MoveableEntity* e = &player_data->moveable_entity;
+      std::string info = dlog::Format(
+        "1 tile is {:.3f} meter\n1 pixel is {:.3f} meter\n"
+        "meter: ({:<6.1f}, {:<6.1f})\npixels: ({:<6.1f}, {:<6.1f})\n"
+        "tiles: ({:<6}, {:<6})\nh velocity: {}\nh acc: {}\nv velocity: {}\n"
+        "v acc: {}\nfriction: {}\nwidth,height: {},{}\nh acc mod:{}",
+        game::kTileInMeters,
+        game::kPixelInMeter,
+        e->position.x,
+        e->position.y,
+        MeterToPixel(e->position.x),
+        MeterToPixel(e->position.y),
+        MeterToTile(e->position.x),
+        MeterToTile(e->position.y),
+        e->horizontal_velocity,
+        e->horizontal_acceleration,
+        e->vertical_velocity,
+        e->vertical_acceleration,
+        e->friction_modifier,
+        e->width,
+        e->height,
+        e->horizontal_acceleration_modifier);
+
+      ImGui::TextUnformatted(info.c_str());
+
+      ImGui::SliderFloat("friction", &e->friction_modifier, 0.0f, 1.0f, "%.2f");
+      ImGui::SliderFloat("h acc mod",
+                         &e->horizontal_acceleration_modifier,
+                         0.0f,
+                         100.0f,
+                         "%.2f");
+
+      ImGui::InputFloat("x position (meter)",
+                        &player_data->moveable_entity.position.x);
+      ImGui::InputFloat("y position (meter)",
+                        &player_data->moveable_entity.position.y);
     }
   }
 }

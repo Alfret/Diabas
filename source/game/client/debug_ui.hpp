@@ -49,4 +49,6 @@ ShowItemDebug(GameClient& gameClient);
 void
 ShowNetworkDebug(GameClient& gameClient);
 
+void
+ShowPlayerDebug(GameClient& gameClient);
 }
