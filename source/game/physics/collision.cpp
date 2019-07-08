@@ -117,7 +117,8 @@ MovePointCollideable(const World& world, Position& point, const Position target)
 
       bool any_changed = false;
       Position last_point = point;
-      if (std::abs(target.x - point.x) > kCloseEnough) {
+      if ((dx < 0.0f && point.x + dy > target.x) /* left */ ||
+          (dx > 0.0f && point.x + dx < target.x)) /* right */  {
         any_changed = true;
         point.x += dx;
         if (PointColliding(world, point)) {
@@ -214,7 +215,7 @@ MoveEntity(const World& world,
       dutil::Clamp(static_cast<f32>(entity->position.x +
                                     entity->horizontal_velocity * delta),
                    0.0f,
-                   static_cast<f32>(terrain.GetWidth()));
+                   static_cast<f32>(terrain.GetWidth()-1));
 
     // check collision
     Position new_position = old_position;
@@ -226,21 +227,21 @@ MoveEntity(const World& world,
       entity->horizontal_acceleration = 0.0f;
       entity->horizontal_velocity = 0.0f;
 
-      // move such that entity doesnt collide
-      const WorldPos collide_tile = MeterPosToWorldPos(entity->position);
-      if (entity->position.x < old_position.x) {
-        // colliding tile to the left
-        entity->position.x = dutil::Clamp(
-          TileToMeter(collide_tile.X()) + kTileInMeters + entity->width / 2.0f,
-          0.0f,
-          static_cast<f32>(terrain.GetWidth()));
-      } else {
-        // colliding tile to the right
-        entity->position.x =
-          dutil::Clamp(TileToMeter(collide_tile.X()) - entity->width / 2.0f,
-                       0.0f,
-                       static_cast<f32>(terrain.GetWidth()));
-      }
+      // // move such that entity doesnt collide
+      // const WorldPos collide_tile = MeterPosToWorldPos(entity->position);
+      // if (entity->position.x < old_position.x) {
+      //   // colliding tile to the left
+      //   entity->position.x = dutil::Clamp(
+      //     TileToMeter(collide_tile.X()) + kTileInMeters + entity->width / 2.0f,
+      //     0.0f,
+      //     static_cast<f32>(terrain.GetWidth()));
+      // } else {
+      //   // colliding tile to the right
+      //   entity->position.x =
+      //     dutil::Clamp(TileToMeter(collide_tile.X()) - entity->width / 2.0f,
+      //                  0.0f,
+      //                  static_cast<f32>(terrain.GetWidth()));
+      // }
 
     } else if (on_ground) {
       // apply friction
@@ -271,7 +272,7 @@ MoveEntity(const World& world,
     entity->position.y = dutil::Clamp(
       static_cast<f32>(entity->position.y + entity->vertical_velocity * delta),
       0.0f,
-      static_cast<f32>(terrain.GetHeight()));
+      static_cast<f32>(terrain.GetHeight()-1));
 
     // check collision
     Position new_position = old_position;
