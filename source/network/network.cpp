@@ -16,6 +16,10 @@
 #include <dutil/misc.hpp>
 #include <microprofile/microprofile.h>
 
+#if !defined(DIB_IS_SERVER)
+#include "game/client/render_component.hpp"
+#endif
+
 namespace dib {
 
 template<>
@@ -310,6 +314,16 @@ Network<Side::kClient>::SetupPacketHandler()
       AlfAssert(maybe_entity,
                 "could not find the newly created PlayerData entity");
       client->SetOurPlayerEntity(maybe_entity);
+
+      // 3.1
+#if !defined(DIB_IS_SERVER)
+      auto texture = std::make_shared<graphics::Texture>("Wizard");
+      texture->Load(Path{ "./res/entity/wizard.tga" });
+      game::RenderComponent renderComponent{ texture };
+      system::Assign(world_->GetEntityManager().GetRegistry(),
+                     *maybe_entity,
+                     renderComponent);
+#endif
 
       // 4. Send kPlayerJoin packet
       Packet player_join_packet{};

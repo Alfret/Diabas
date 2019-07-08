@@ -42,6 +42,19 @@ Create(entt::registry& registry, const TComponent& component)
   return !found;
 }
 
+// -------------------------------------------------------------------------- //
+
+template<typename TComponent>
+void
+Assign(entt::registry& registry,
+       entt::registry::entity_type entity,
+       const TComponent& component)
+{
+  registry.assign<TComponent>(entity, component);
+}
+
+// -------------------------------------------------------------------------- //
+
 /**
  * Replace component from existing entity. Uses operator== to identify it.
  *

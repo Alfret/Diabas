@@ -7,6 +7,7 @@
 #include "game/constants.hpp"
 #include <imgui/imgui.h>
 #include "game/client/world_renderer.hpp"
+#include "game/client/entity_render.hpp"
 #include "game/client/debug_ui.hpp"
 
 // ========================================================================== //
@@ -65,6 +66,7 @@ GameClient::Render()
   mRenderer.NewFrame();
 
   RenderWorldTerrain(mRenderer, mCamera, *this);
+  RenderEntities(mRenderer, mCamera, mWorld.GetEntityManager());
 }
 
 // -------------------------------------------------------------------------- //
