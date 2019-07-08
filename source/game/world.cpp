@@ -4,7 +4,7 @@ namespace dib::game {
 
 World::World(const TileRegistry& tileRegistry)
   : mTileRegistry(tileRegistry)
-  , mTerrain(mTileRegistry, Terrain::Size::kLarge)
+  , mTerrain(mTileRegistry, *this, Terrain::Size::kLarge)
 {}
 
 // -------------------------------------------------------------------------- //

@@ -7,6 +7,7 @@
 #include "game/constants.hpp"
 #include <imgui/imgui.h>
 #include "game/client/world_renderer.hpp"
+#include "game/client/entity_render.hpp"
 #include "game/client/debug_ui.hpp"
 
 // ========================================================================== //
@@ -18,16 +19,15 @@ namespace dib::game {
 GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
   : AppClient(descriptor)
   , mWorld(mTileRegistry)
-  , mCoreContent(mItemRegistry, mTileRegistry)
-  , mModLoader(mScriptEnvironment, Path{ "./mods" })
+  , mModLoader(Path{ "./mods" })
   , mCamera(GetWidth(), GetHeight())
 {
-  mModLoader.Init(mItemRegistry, mTileRegistry, mWorld);
+  CoreContent::Setup(mItemRegistry, mTileRegistry);
 
   mClientCache.BuildTileAtlas(mTileRegistry);
   mClientCache.BuildItemAtlas(mItemRegistry);
 
-  mCoreContent.GenerateWorld(mWorld);
+  CoreContent::GenerateWorld(mWorld);
 }
 
 // -------------------------------------------------------------------------- //
@@ -66,6 +66,7 @@ GameClient::Render()
   mRenderer.NewFrame();
 
   RenderWorldTerrain(mRenderer, mCamera, *this);
+  RenderEntities(mRenderer, mCamera, mWorld.GetEntityManager());
 }
 
 // -------------------------------------------------------------------------- //

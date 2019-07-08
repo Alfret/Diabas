@@ -19,8 +19,62 @@ Tile::Tile(ResourcePath resourcePath, String translationKey)
 
 // -------------------------------------------------------------------------- //
 
+void
+Tile::OnPlaced([[maybe_unused]] World& world, [[maybe_unused]] WorldPos pos)
+{}
+
+// -------------------------------------------------------------------------- //
+
+void
+Tile::OnDestroyed([[maybe_unused]] World& world, [[maybe_unused]] WorldPos pos)
+{}
+
+// -------------------------------------------------------------------------- //
+
 bool
 Tile::OnActivated([[maybe_unused]] World& world, [[maybe_unused]] WorldPos pos)
+{
+  return false;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Tile::OnNeighbourChange([[maybe_unused]] World& world,
+                        [[maybe_unused]] WorldPos pos)
+{}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Tile::IsMultiTile([[maybe_unused]] World& world, [[maybe_unused]] WorldPos pos)
+{
+  return false;
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Tile::CanPlaceMultiTile([[maybe_unused]] World& world,
+                        [[maybe_unused]] WorldPos pos)
+{
+  return false;
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Tile::PlaceMultiTile([[maybe_unused]] World& world,
+                     [[maybe_unused]] WorldPos pos)
+{
+  return false;
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Tile::KillMultiTile([[maybe_unused]] World& world,
+                    [[maybe_unused]] WorldPos pos)
 {
   return false;
 }
@@ -185,7 +239,26 @@ Tile::SetIsDestructible(bool isDestructible)
 // -------------------------------------------------------------------------- //
 
 bool
-Tile::HasTileEntity(World& world, WorldPos pos)
+Tile::CanBeReplaced([[maybe_unused]] World& world,
+                    [[maybe_unused]] WorldPos pos)
+{
+  return mCanBeReplaced;
+}
+
+// -------------------------------------------------------------------------- //
+
+Tile*
+Tile::SetCanBeReplaced(bool canBeReplaced)
+{
+  mCanBeReplaced = canBeReplaced;
+  return this;
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Tile::HasTileEntity([[maybe_unused]] World& world,
+                    [[maybe_unused]] WorldPos pos)
 {
   return false;
 }
@@ -193,7 +266,8 @@ Tile::HasTileEntity(World& world, WorldPos pos)
 // -------------------------------------------------------------------------- //
 
 std::unique_ptr<TileEntity>
-Tile::CreateTileEntity(World& world, WorldPos pos)
+Tile::CreateTileEntity([[maybe_unused]] World& world,
+                       [[maybe_unused]] WorldPos pos)
 {
   return std::unique_ptr<TileEntity>(nullptr);
 }

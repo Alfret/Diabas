@@ -13,7 +13,6 @@
 #include "game/client/world_renderer.hpp"
 #include "game/tile/tile_registry.hpp"
 #include "game/ecs/systems/generic_system.hpp"
-#include "script/util.hpp"
 
 // ========================================================================== //
 // DebugUI Implementation
@@ -32,6 +31,16 @@ ShowStatisticsDebug(GameClient& gameClient, f32 delta)
     ImGui::BulletText("Sprites drawn: %i",
                       gameClient.GetRenderer().GetDrawSpriteCount());
 
+    static u32 maxFps = 0;
+    if (u32(1.0f / delta) > maxFps) {
+      maxFps = u32(1.0f / delta);
+    }
+    ImGui::BulletText("Max fps: %i", maxFps);
+    ImGui::SameLine();
+    if (ImGui::Button("Reset")) {
+      maxFps = 0;
+    }
+
     f64 vmUsage, residentSet;
     core::GetVirtualMemoryUsage(vmUsage, residentSet);
     ImGui::BulletText("Memory usage (MB): %f", residentSet / 1000.0);
@@ -43,6 +52,7 @@ ShowStatisticsDebug(GameClient& gameClient, f32 delta)
 void
 ShowScriptDebug(GameClient& gameClient)
 {
+  /*
   if (ImGui::CollapsingHeader("Script")) {
     static constexpr u32 bufferSize = 4096;
     static char inputBuffer[bufferSize];
@@ -78,6 +88,7 @@ ShowScriptDebug(GameClient& gameClient)
                               ImVec2(),
                               ImGuiInputTextFlags_ReadOnly);
   }
+   */
 }
 
 // -------------------------------------------------------------------------- //
@@ -85,6 +96,7 @@ ShowScriptDebug(GameClient& gameClient)
 void
 ShowModDebug(GameClient& gameClient)
 {
+  /*
   if (ImGui::CollapsingHeader("Mods")) {
     static s32 currentIndex = 0;
     std::vector<const char8*> names;
@@ -100,6 +112,7 @@ ShowModDebug(GameClient& gameClient)
       ImGui::Text("  %s", author.GetUTF8());
     }
   }
+   */
 }
 
 // -------------------------------------------------------------------------- //
@@ -171,17 +184,32 @@ ShowTileDebug(GameClient& gameClient)
                    ImVec4(1, 1, 1, 1),
                    ImVec4(0, 0, 0, 1));
 
-      static bool placeTile;
-      ImGui::Checkbox("Place tile", &placeTile);
-      if (placeTile && !ImGui::IsMouseHoveringAnyWindow() &&
+      // Tile placement/removal
+      static s32 buttonIndex = 0;
+      ImGui::RadioButton("Select", &buttonIndex, 0);
+      ImGui::SameLine();
+      ImGui::RadioButton("Place", &buttonIndex, 1);
+      ImGui::SameLine();
+      ImGui::RadioButton("Remove", &buttonIndex, 2);
+
+      if (!ImGui::IsMouseHoveringAnyWindow() &&
           gameClient.IsMouseDown(MouseButton::kMouseButtonLeft)) {
+        // Retrieve world position
         f64 mouseX, mouseY;
         gameClient.GetMousePosition(mouseX, mouseY);
         WorldPos pos = PickWorldPosition(gameClient.GetWorld(),
                                          gameClient.GetCamera(),
                                          Vector2F(mouseX, mouseY));
-        gameClient.GetWorld().GetTerrain().SetTile(pos, indices[0]);
+
+        // Handle different modes
+        if (buttonIndex == 1) {
+          gameClient.GetWorld().GetTerrain().SetTile(pos, indices[0]);
+        } else if (buttonIndex == 2) {
+          gameClient.GetWorld().GetTerrain().RemoveTile(
+            pos, CoreContent::GetTileAir());
+        }
       }
+
       ImGui::TreePop();
     }
 

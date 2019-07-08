@@ -4,16 +4,24 @@
 // Headers
 // ========================================================================== //
 
-#include "script/env.hpp"
+#include "core/types.hpp"
 
 // ========================================================================== //
-// Functions
+// Entity Declaration
 // ========================================================================== //
 
 namespace dib::game {
 
-/** Expose tile-related functionality to scripts **/
-void
-ExposeTile();
+/** Class that represents an entity in the world **/
+class Entity
+{
+private:
+public:
+  /** Base virtual destructor **/
+  virtual ~Entity() = default;
+
+  /** Called to update the entity **/
+  virtual void Update(f32 delta);
+};
 
 }

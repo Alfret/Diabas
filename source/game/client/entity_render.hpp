@@ -4,16 +4,19 @@
 // Headers
 // ========================================================================== //
 
-#include "script/env.hpp"
+#include "game/ecs/entity_manager.hpp"
+#include "graphics/renderer.hpp"
 
 // ========================================================================== //
 // Functions
 // ========================================================================== //
 
-namespace dib::script {
+namespace dib::game {
 
-/** Expose graphics objects **/
+/** Render all entities **/
 void
-ExposeGraphics(Environment& environment);
+RenderEntities(graphics::Renderer& renderer,
+               const graphics::Camera& camera,
+               EntityManager& entityManager);
 
 }
