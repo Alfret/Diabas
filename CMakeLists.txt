@@ -21,7 +21,7 @@ include_directories(SYSTEM
 if (WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 else ()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -rdynamic")
 endif ()
 
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDIB_DEBUG")
@@ -43,6 +43,8 @@ set(COMMON_SOURCE
   source/game/chat/chat.hpp
   source/game/chat/chat_message.cpp
   source/game/chat/chat_message.hpp
+  source/game/physics/collision.cpp
+  source/game/physics/collision.hpp
   source/game/ecs/entity_manager.cpp
   source/game/ecs/entity_manager.hpp
   source/game/ecs/components/player_data_component.hpp
@@ -52,34 +54,24 @@ set(COMMON_SOURCE
   source/game/ecs/systems/npc_system.cpp
   source/game/ecs/systems/npc_system.hpp
   source/game/gameplay/core_content.cpp
+  source/game/gameplay/tile/tile_chair.cpp
   source/game/resource.cpp
   source/game/resource.hpp
   source/game/terrain.cpp
   source/game/terrain.hpp
   source/game/world.cpp
   source/game/world.hpp
+  source/game/entity/entity.cpp
+  source/game/entity/entity_registry.cpp
   source/game/item/item.cpp
   source/game/item/item_registry.cpp
   source/game/item/item_stack.cpp
+  source/game/mod/mod.cpp
+  source/game/mod/mod_loader.cpp
+  source/game/mod/mono_context.cpp
   source/game/tile/tile.cpp
   source/game/tile/tile_entity.cpp
   source/game/tile/tile_registry.cpp
-  source/game/mods/script/expose_item.cpp
-  source/game/mods/script/expose_mod.cpp
-  source/game/mods/script/expose_tile.cpp
-  source/game/mods/script/expose_world.cpp
-  source/game/mods/script/mod_script.cpp
-  source/game/mods/loader.cpp
-  source/game/mods/loader.hpp
-  source/game/mods/mod.cpp
-  source/game/mods/mod.hpp
-  source/game/mods/result.cpp
-  source/game/mods/result.hpp
-  source/script/env.cpp
-  source/script/util.cpp
-  source/script/expose/expose_base.cpp
-  source/script/expose/expose_graphics.cpp
-  source/script/expose/expose_network.cpp
   source/network/network.cpp
   source/network/network.hpp
   source/network/server.cpp
@@ -113,14 +105,17 @@ set(TEST_SOURCE
 
 set(CLIENT_SOURCE
   source/app/client/app_client.cpp
-  source/app/client/imgui/imgui.cpp
-  source/app/client/imgui/imgui_draw.cpp
-  source/app/client/imgui/imgui_demo.cpp
-  source/app/client/imgui/imgui_impl_glfw_gl3.cpp
+  thirdparty/imgui/imgui.cpp
+  thirdparty/imgui/imgui_draw.cpp
+  thirdparty/imgui/imgui_demo.cpp
+  thirdparty/imgui/imgui_impl_glfw_gl3.cpp
   source/game/client/client_cache.cpp
   source/game/client/debug_ui.cpp
+  source/game/client/entity_render.cpp
   source/game/client/game_client.cpp
   source/game/client/world_renderer.cpp
+  source/game/client/player.cpp
+  source/game/client/player.hpp
   source/graphics/camera.cpp
   source/graphics/index_buffer.cpp
   source/graphics/renderer.cpp
@@ -143,11 +138,13 @@ set(SERVER_SOURCE
 ## Libraries
 ## ========================================================================== ##
 
-# ChakraCore
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  link_directories(${CMAKE_SOURCE_DIR}/lib/chakracore/lib/debug)
+# Mono
+if (WIN32)
+
 else ()
-  link_directories(${CMAKE_SOURCE_DIR}/lib/chakracore/lib/release)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(MONO REQUIRED mono-2)
+  include_directories(SYSTEM ${MONO_INCLUDE_DIRS})
 endif ()
 
 # TOML
@@ -238,8 +235,8 @@ else ()
   add_compile_definitions(IMGUI_DISABLE_TEST_WINDOWS)
 endif ()
 
-add_compile_definitions(DLOG_TIMESTAMP DLOG_DATESTAMP)
-#add_compile_definitions(DLOG_LOG_TO_FILE)
+add_compile_definitions(DLOG_TIMESTAMP DLOG_FILESTAMP)
+#add_compile_definitions(DLOG_LOG_TO_FILE DLOG_DATESTAMP)
 if (WIN32)
   add_compile_definitions(DIB_TARGET_WINDOWS)
 else ()
@@ -256,9 +253,9 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC MICROPROFILE_GPU_TIMERS_GL)
 # Link libraries
 if (WIN32)
   set(DIB_LIBS ws2_32 cpptoml dlog dutil glm gamenetworkingsockets
-    alflibcpp ChakraCore EnTT uuid)
+    alflibcpp EnTT uuid)
 else ()
-  set(DIB_LIBS pthread cpptoml dlog dutil glm GameNetworkingSockets alflibcpp ChakraCore dl m EnTT uuid)
+  set(DIB_LIBS pthread cpptoml dlog dutil glm GameNetworkingSockets alflibcpp dl m EnTT uuid ${MONO_LIBRARIES})
 endif ()
 
 # TODO(Filip Björklund): Remove GLFW as a dependency on the server

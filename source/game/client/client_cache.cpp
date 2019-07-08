@@ -85,6 +85,8 @@ ClientCache::BuildTileAtlas(const TileRegistry& tileRegistry)
   // Create atlas texture
   mTileAtlasTexture = std::make_shared<graphics::Texture>("TileAtlas");
   mTileAtlasTexture->Load(mTileAtlas.GetImage());
+  mInverseTileAtlasSize =
+    Vector2F(1.0f / mTileAtlas.GetWidth(), 1.0f / mTileAtlas.GetHeight());
 }
 
 // -------------------------------------------------------------------------- //
@@ -164,6 +166,8 @@ ClientCache::BuildItemAtlas(const ItemRegistry& itemRegistry)
   // Create atlas texture
   mItemAtlasTexture = std::make_shared<graphics::Texture>("ItemAtlas");
   mItemAtlasTexture->Load(mItemAtlas.GetImage());
+  mInverseItemAtlasSize =
+    Vector2F(1.0f / mItemAtlas.GetWidth(), 1.0f / mItemAtlas.GetHeight());
 }
 
 // -------------------------------------------------------------------------- //
@@ -191,10 +195,10 @@ ClientCache::GetTextureCoordinatesForTile(TileRegistry::TileID id,
                                           Vector2F& texMax)
 {
   AtlasRegion& region = mTileResources[id][resourceIndex];
-  texMin = Vector2F(f32(region.x) / mTileAtlas.GetWidth(),
-                    f32(region.y) / mTileAtlas.GetHeight());
-  texMax = Vector2F(f32(region.x + region.w) / mTileAtlas.GetWidth(),
-                    f32(region.y + region.h) / mTileAtlas.GetHeight());
+  texMin = Vector2F(f32(region.x) * mInverseTileAtlasSize.x,
+                    f32(region.y) * mInverseTileAtlasSize.y);
+  texMax = Vector2F(f32(region.x + region.w) * mInverseTileAtlasSize.x,
+                    f32(region.y + region.h) * mInverseTileAtlasSize.y);
 }
 
 // -------------------------------------------------------------------------- //
@@ -222,10 +226,10 @@ ClientCache::GetTextureCoordinatesForItem(ItemRegistry::ItemID id,
                                           Vector2F& texMax)
 {
   AtlasRegion& region = mItemResources[id][resourceIndex];
-  texMin = Vector2F(f32(region.x) / mItemAtlas.GetWidth(),
-                    f32(region.y) / mItemAtlas.GetHeight());
-  texMax = Vector2F(f32(region.x + region.w) / mItemAtlas.GetWidth(),
-                    f32(region.y + region.h) / mItemAtlas.GetHeight());
+  texMin = Vector2F(f32(region.x) * mInverseItemAtlasSize.x,
+                    f32(region.y) * mInverseItemAtlasSize.y);
+  texMax = Vector2F(f32(region.x + region.w) * mInverseItemAtlasSize.x,
+                    f32(region.y + region.h) * mInverseItemAtlasSize.y);
 }
 
 // -------------------------------------------------------------------------- //

@@ -7,13 +7,12 @@
 #include <dutil/stopwatch.hpp>
 
 #include "core/memory.hpp"
-#include "app/client/imgui/imgui.h"
+#include <imgui/imgui.h>
 #include "game/client/game_client.hpp"
 #include "game/client/player_data_storage.hpp"
 #include "game/client/world_renderer.hpp"
 #include "game/tile/tile_registry.hpp"
 #include "game/ecs/systems/generic_system.hpp"
-#include "script/util.hpp"
 
 // ========================================================================== //
 // DebugUI Implementation
@@ -32,6 +31,16 @@ ShowStatisticsDebug(GameClient& gameClient, f32 delta)
     ImGui::BulletText("Sprites drawn: %i",
                       gameClient.GetRenderer().GetDrawSpriteCount());
 
+    static u32 maxFps = 0;
+    if (u32(1.0f / delta) > maxFps) {
+      maxFps = u32(1.0f / delta);
+    }
+    ImGui::BulletText("Max fps: %i", maxFps);
+    ImGui::SameLine();
+    if (ImGui::Button("Reset")) {
+      maxFps = 0;
+    }
+
     f64 vmUsage, residentSet;
     core::GetVirtualMemoryUsage(vmUsage, residentSet);
     ImGui::BulletText("Memory usage (MB): %f", residentSet / 1000.0);
@@ -43,6 +52,7 @@ ShowStatisticsDebug(GameClient& gameClient, f32 delta)
 void
 ShowScriptDebug(GameClient& gameClient)
 {
+  /*
   if (ImGui::CollapsingHeader("Script")) {
     static constexpr u32 bufferSize = 4096;
     static char inputBuffer[bufferSize];
@@ -78,6 +88,7 @@ ShowScriptDebug(GameClient& gameClient)
                               ImVec2(),
                               ImGuiInputTextFlags_ReadOnly);
   }
+   */
 }
 
 // -------------------------------------------------------------------------- //
@@ -85,6 +96,7 @@ ShowScriptDebug(GameClient& gameClient)
 void
 ShowModDebug(GameClient& gameClient)
 {
+  /*
   if (ImGui::CollapsingHeader("Mods")) {
     static s32 currentIndex = 0;
     std::vector<const char8*> names;
@@ -100,6 +112,7 @@ ShowModDebug(GameClient& gameClient)
       ImGui::Text("  %s", author.GetUTF8());
     }
   }
+   */
 }
 
 // -------------------------------------------------------------------------- //
@@ -171,17 +184,32 @@ ShowTileDebug(GameClient& gameClient)
                    ImVec4(1, 1, 1, 1),
                    ImVec4(0, 0, 0, 1));
 
-      static bool placeTile;
-      ImGui::Checkbox("Place tile", &placeTile);
-      if (placeTile && !ImGui::IsMouseHoveringAnyWindow() &&
+      // Tile placement/removal
+      static s32 buttonIndex = 0;
+      ImGui::RadioButton("Select", &buttonIndex, 0);
+      ImGui::SameLine();
+      ImGui::RadioButton("Place", &buttonIndex, 1);
+      ImGui::SameLine();
+      ImGui::RadioButton("Remove", &buttonIndex, 2);
+
+      if (!ImGui::IsMouseHoveringAnyWindow() &&
           gameClient.IsMouseDown(MouseButton::kMouseButtonLeft)) {
+        // Retrieve world position
         f64 mouseX, mouseY;
         gameClient.GetMousePosition(mouseX, mouseY);
         WorldPos pos = PickWorldPosition(gameClient.GetWorld(),
                                          gameClient.GetCamera(),
                                          Vector2F(mouseX, mouseY));
-        gameClient.GetWorld().GetTerrain().SetTile(pos, indices[0]);
+
+        // Handle different modes
+        if (buttonIndex == 1) {
+          gameClient.GetWorld().GetTerrain().SetTile(pos, indices[0]);
+        } else if (buttonIndex == 2) {
+          gameClient.GetWorld().GetTerrain().RemoveTile(
+            pos, CoreContent::GetTileAir());
+        }
       }
+
       ImGui::TreePop();
     }
 
@@ -321,15 +349,17 @@ ShowNetworkDebug(GameClient& gameClient)
     // ============================================================ //
 
     if (ImGui::TreeNode("player list")) {
-      std::string player_list = dlog::Format("{:<5} {:<20} {:<4} {:<4}\n", "Ping", "Name", "CQLc", "CQRm");
-      auto& registry =
-          world.GetEntityManager().GetRegistry();
+      std::string player_list = dlog::Format(
+        "{:<5} {:<20} {:<4} {:<4}\n", "Ping", "Name", "CQLc", "CQRm");
+      auto& registry = world.GetEntityManager().GetRegistry();
       const auto view = registry.view<PlayerData>();
       for (const auto entity : view) {
         const auto pd = view.get(entity);
-        player_list +=
-            dlog::Format("{:<5} {:<20} {:.1f}  {:.1f}\n", pd.ping, pd.name,
-                         pd.con_quality_local/255.0f, pd.con_quality_remote/255.0f);
+        player_list += dlog::Format("{:<5} {:<20} {:.1f}  {:.1f}\n",
+                                    pd.ping,
+                                    pd.name,
+                                    pd.con_quality_local / 255.0f,
+                                    pd.con_quality_remote / 255.0f);
       }
 
       ImGui::TextUnformatted(player_list.c_str());
@@ -544,6 +574,58 @@ ShowNetworkDebug(GameClient& gameClient)
                                   ImGuiInputTextFlags_ReadOnly);
 
       ImGui::TreePop();
+    }
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ShowPlayerDebug(GameClient& gameClient)
+{
+  World& world = gameClient.GetWorld();
+  Network<Side::kClient>& network = world.GetNetwork();
+
+  if (ImGui::CollapsingHeader("Player")) {
+    auto maybe_player_data = network.GetOurPlayerData();
+    if (maybe_player_data) {
+      PlayerData* player_data = *maybe_player_data;
+      MoveableEntity* e = &player_data->moveable_entity;
+      std::string info = dlog::Format(
+        "1 tile is {:.3f} meter\n1 pixel is {:.3f} meter\n"
+        "meter: ({:<6.1f}, {:<6.1f})\npixels: ({:<6.1f}, {:<6.1f})\n"
+        "tiles: ({:<6}, {:<6})\nh velocity: {}\nh acc: {}\nv velocity: {}\n"
+        "v acc: {}\nfriction: {}\nwidth,height: {},{}\nh acc mod:{}",
+        game::kTileInMeters,
+        game::kPixelInMeter,
+        e->position.x,
+        e->position.y,
+        MeterToPixel(e->position.x),
+        MeterToPixel(e->position.y),
+        MeterToTile(e->position.x),
+        MeterToTile(e->position.y),
+        e->horizontal_velocity,
+        e->horizontal_acceleration,
+        e->vertical_velocity,
+        e->vertical_acceleration,
+        e->friction_modifier,
+        e->width,
+        e->height,
+        e->horizontal_acceleration_modifier);
+
+      ImGui::TextUnformatted(info.c_str());
+
+      ImGui::SliderFloat("friction", &e->friction_modifier, 0.0f, 1.0f, "%.2f");
+      ImGui::SliderFloat("h acc mod",
+                         &e->horizontal_acceleration_modifier,
+                         0.0f,
+                         100.0f,
+                         "%.2f");
+
+      ImGui::InputFloat("x position (meter)",
+                        &player_data->moveable_entity.position.x);
+      ImGui::InputFloat("y position (meter)",
+                        &player_data->moveable_entity.position.y);
     }
   }
 }

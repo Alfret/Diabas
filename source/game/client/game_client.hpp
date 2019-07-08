@@ -6,12 +6,12 @@
 
 #include "app/client/app_client.hpp"
 #include "game/world.hpp"
-#include "game/mods/loader.hpp"
 #include "game/client/client_cache.hpp"
+#include "game/client/player.hpp"
 #include "game/gameplay/core_content.hpp"
+#include "game/mod/mod_loader.hpp"
 #include "graphics/camera.hpp"
 #include "graphics/renderer.hpp"
-#include "script/env.hpp"
 
 // ========================================================================== //
 // Client Declaration
@@ -30,11 +30,6 @@ private:
   /** Game world **/
   World mWorld;
 
-  /** Content **/
-  CoreContent mCoreContent;
-
-  /** Script environment **/
-  script::Environment mScriptEnvironment;
   /** Mod loader **/
   game::ModLoader mModLoader;
 
@@ -45,6 +40,8 @@ private:
 
   /** Client resource cache **/
   ClientCache mClientCache;
+
+  Player mPlayer{};
 
 public:
   /** Construct game client **/
@@ -75,15 +72,6 @@ public:
 
   /** Returns the world **/
   const World& GetWorld() const { return mWorld; }
-
-  /** Returns the script environment **/
-  script::Environment& GetScriptEnvironment() { return mScriptEnvironment; }
-
-  /** Returns the script environment **/
-  const script::Environment& GetScriptEnvironment() const
-  {
-    return mScriptEnvironment;
-  }
 
   /** Returns the mod loader **/
   ModLoader& GetModLoader() { return mModLoader; }

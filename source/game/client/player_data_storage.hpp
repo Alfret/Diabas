@@ -11,11 +11,15 @@ public:
   {
     PlayerData data{};
     data.name = "Rully";
-    data.body = 3;
-    data.direction = 1;
-    data.player_class = 2;
-    data.speed = 1.37;
-    data.xp = 72117;
+    game::MoveableEntity e{};
+    e.friction_modifier = 0.7f;
+    e.height = game::kTileInMeters * 3;
+    e.width = game::kTileInMeters;
+    e.horizontal_acceleration_modifier = 10.0f;
+    e.horizontal_max_acceleration = 12.0f;
+    e.position.x = game::TileToMeter(800);
+    e.position.y = game::TileToMeter(20);
+    data.moveable_entity = e;
     return data;
   }
 

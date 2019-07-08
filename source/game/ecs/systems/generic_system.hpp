@@ -7,6 +7,7 @@
 #include "core/types.hpp"
 #include "core/uuid.hpp"
 #include "game/ecs/components/player_data_component.hpp"
+#include "network/side.hpp"
 
 namespace dib::system {
 
@@ -40,6 +41,19 @@ Create(entt::registry& registry, const TComponent& component)
 
   return !found;
 }
+
+// -------------------------------------------------------------------------- //
+
+template<typename TComponent>
+void
+Assign(entt::registry& registry,
+       entt::registry::entity_type entity,
+       const TComponent& component)
+{
+  registry.assign<TComponent>(entity, component);
+}
+
+// -------------------------------------------------------------------------- //
 
 /**
  * Replace component from existing entity. Uses operator== to identify it.
@@ -84,10 +98,13 @@ Replace(entt::registry& registry, const PlayerData& player_data)
   for (const u32 e : view) {
     const auto current_pd = view.get(e);
     if (player_data == current_pd) {
-      AlfAssert(
-        player_data.connection_id == current_pd.connection_id,
-        "Attempting to update PlayerData, but connection_id is not matching. "
-        "It is likely it was not set (and you have to set it manually).");
+      // Server must also case about the connection_id field.
+      if constexpr (kSide == Side::kServer) {
+        AlfAssert(
+          player_data.connection_id == current_pd.connection_id,
+          "Attempting to update PlayerData, but connection_id is not matching. "
+          "It is likely it was not set (and you have to set it manually).");
+      }
       found = true;
       entity = e;
       break;
@@ -131,6 +148,22 @@ DeleteEntitiesWithComponent(entt::registry& registry)
   for (const auto entity : registry.view<TComponent>()) {
     registry.destroy(entity);
   }
+}
+
+/**
+ * @tparam TComponent must have a uuid member.
+ */
+template<typename TComponent>
+std::optional<u32>
+EntityFromUuid(entt::registry& registry, const Uuid& uuid)
+{
+  const auto view = registry.view<TComponent>();
+  for (const auto entity : view) {
+    if (uuid == view.get(entity).uuid) {
+      return entity;
+    }
+  }
+  return std::nullopt;
 }
 
 /**

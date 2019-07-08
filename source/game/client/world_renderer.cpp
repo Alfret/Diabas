@@ -4,6 +4,8 @@
 //
 // ========================================================================== //
 
+#include <microprofile/microprofile.h>
+
 #include "graphics/renderer.hpp"
 #include "graphics/camera.hpp"
 #include "game/client/game_client.hpp"
@@ -20,6 +22,8 @@ RenderWorldTerrain(graphics::Renderer& renderer,
                    const graphics::Camera& camera,
                    GameClient& gameClient)
 {
+  MICROPROFILE_SCOPEI("WorldRenderer", "RenderTerrain", MP_SANDYBROWN);
+
   // Retrieve objects
   ClientCache& cache = gameClient.GetCache();
   TileRegistry& tileRegistry = gameClient.GetTileRegistry();
@@ -57,15 +61,14 @@ RenderWorldTerrain(graphics::Renderer& renderer,
     for (u32 x = minX; x < minX + countX + 2; x++) {
 
       WorldPos worldPosition{ x, y };
-      TileRegistry::TileID tileId = terrain.GetTileID(worldPosition);
-      Tile* tile = tileRegistry.GetTile(tileId);
-      u32 resourceIndex = tile->GetResourceIndex(world, worldPosition);
+      Terrain::Cell& terrainCell = terrain.GetCell(worldPosition);
 
       Vector3F renderPosition = Vector3F(
         x * TILE_SIZE - cameraPos.x, y * TILE_SIZE - cameraPos.y, 0.5f);
       alflib::Color tint = alflib::Color::WHITE;
       Vector2F texMin, texMax;
-      cache.GetTextureCoordinatesForTile(tileId, resourceIndex, texMin, texMax);
+      cache.GetTextureCoordinatesForTile(
+        terrainCell.tile, terrainCell.cachedTileSubResource, texMin, texMax);
       spriteBatch.Submit(cache.GetTileAtlasTexture(),
                          renderPosition,
                          Vector2F(TILE_SIZE, TILE_SIZE),

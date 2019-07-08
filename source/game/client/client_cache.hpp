@@ -40,6 +40,8 @@ private:
   std::vector<std::vector<AtlasRegion>> mTileResources;
   /** Tile atlas texture **/
   std::shared_ptr<graphics::Texture> mTileAtlasTexture;
+  /** Inverse Tile atlas size **/
+  Vector2F mInverseTileAtlasSize;
 
   /** Item atlas **/
   alflib::ImageAtlas<> mItemAtlas;
@@ -48,6 +50,8 @@ private:
   std::vector<std::vector<AtlasRegion>> mItemResources;
   /** Item atlas texture **/
   std::shared_ptr<graphics::Texture> mItemAtlasTexture;
+  /** Inverse Item atlas size **/
+  Vector2F mInverseItemAtlasSize;
 
 public:
   /** Construct a client cache **/

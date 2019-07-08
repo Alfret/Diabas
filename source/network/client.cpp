@@ -52,6 +52,9 @@ Client::CloseConnection()
   // clear all player entities
   auto& registry = world_->GetEntityManager().GetRegistry();
   system::DeleteEntitiesWithComponent<PlayerData>(registry);
+
+  // clear ourPlayerEntity
+  our_player_entity_ = std::nullopt;
 }
 
 SendResult

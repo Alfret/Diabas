@@ -6,11 +6,10 @@
 
 #include "app/server/app_server.hpp"
 #include "game/world.hpp"
-#include "game/mods/loader.hpp"
+#include "game/mod/mod_loader.hpp"
 #include "game/server/cli_input.hpp"
 #include "game/item/item_registry.hpp"
 #include "game/gameplay/core_content.hpp"
-#include "script/env.hpp"
 
 // ========================================================================== //
 // Client Declaration
@@ -29,11 +28,6 @@ private:
   /** Game world **/
   World mWorld;
 
-  /** Content **/
-  CoreContent mCoreContent;
-
-  /** Script environment **/
-  script::Environment mScriptEnvironment;
   /** Mod loader **/
   game::ModLoader mModLoader;
 
@@ -52,15 +46,6 @@ public:
 
   /** Returns the world **/
   const World& GetWorld() const { return mWorld; }
-
-  /** Returns the script environment **/
-  script::Environment& GetScriptEnvironment() { return mScriptEnvironment; }
-
-  /** Returns the script environment **/
-  const script::Environment& GetScriptEnvironment() const
-  {
-    return mScriptEnvironment;
-  }
 
   /** Returns the mod loader **/
   ModLoader& GetModLoader() { return mModLoader; }

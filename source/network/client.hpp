@@ -51,6 +51,13 @@ public:
   std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus()
     const;
 
+  std::optional<u32> GetOurPlayerEntity() const { return our_player_entity_; }
+
+  void SetOurPlayerEntity(const std::optional<u32> maybe_entity)
+  {
+    our_player_entity_ = maybe_entity;
+  }
+
 private:
   void PollSocketStateChanges();
 
@@ -66,6 +73,7 @@ private:
   ISteamNetworkingSockets* socket_interface_;
   ConnectionState connection_state_;
   game::World* world_;
+  std::optional<u32> our_player_entity_;
 };
 }
 #endif // CLIENT_HPP_

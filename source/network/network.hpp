@@ -72,13 +72,18 @@ public:
   void PacketBroadcastExclude(const Packet& packet,
                               const ConnectionId exclude_connection) const;
 
+  /**
+   * Client only
+   */
   void ConnectToServer(u32 ip, u16 port);
-
   void ConnectToServer(const String& addr);
   void ConnectToServer(const char8* addr);
 
   void Disconnect();
 
+  /**
+   * Server only
+   */
   void StartServer();
 
   /**
@@ -86,18 +91,24 @@ public:
    */
   ConnectionState GetConnectionState() const;
 
+  /**
+   * Client only
+   */
   std::optional<u32> GetOurPlayerEntity() const;
 
-  std::optional<const PlayerData*> GetOurPlayerData() const;
+  /**
+   * Client only
+   */
+  std::optional<PlayerData*> GetOurPlayerData() const;
 
   /**
-   * Server only
+   * Server only, (client always return std::nullopt)
    */
   std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus(
     const ConnectionId connection_id) const;
 
   /**
-   * Client only
+   * Client only, (server always returns std::nullopt)
    */
   std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus()
     const;
@@ -132,7 +143,7 @@ private:
 
   void SendPlayerList(const ConnectionId connection_id) const;
 
-  // void OnConnectionChange(Connection)
+  void SetOurPlayerEntity(const std::optional<u32> maybe_entity);
 
   // ============================================================ //
   // Member Variables

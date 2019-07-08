@@ -11,6 +11,7 @@
 #include "game/world_pos.hpp"
 #include "game/resource.hpp"
 #include "game/item/tool.hpp"
+#include "game/physics/collision.hpp"
 
 // ========================================================================== //
 // Tile Declaration
@@ -27,6 +28,19 @@ DIB_FORWARD_DECLARE_CLASS(World);
  * and how interactions with it work.
  *
  * Properties:
+ * - IsMultiTile: This property determines if the tile is actually a multi-tile
+ *   object where several tiles together make up the object in the world.
+ *   There are several function that together are used to make this work.
+ *
+ *   First there is a function to determine if the multi-tile can be placed at a
+ *   given position. The position is the origin of the multi-tile and the user
+ *   chooses where this is.
+ *
+ *   Then there is the function that kills a multi-tile object. The position
+ *   given to this function is not necessarily the origin of the multi-tile,
+ *   which means the user has to handle killing the multi-tile object from any
+ *   of its sub-tiles.
+ *
  * - IsLightEmitter: This property determines if the block is a light emitter.
  *   A light emitter emits light of a given strength and color. The strength and
  *   color are other properties of a tile
@@ -47,23 +61,13 @@ DIB_FORWARD_DECLARE_CLASS(World);
  *
  * - IsDestructible
  *
+ * - CanBeReplaced: This property determines if the tile can be replaced with
+ *   another tile without it first being removed.
+ *
  *
  * **/
 class Tile
 {
-public:
-  /** Enumeration of collision types. This determines how entities collide with
-   * the tile **/
-  enum class CollisionType
-  {
-    /** Full collision **/
-    kFull,
-    /** No collision **/
-    kNone,
-    /** Stairs collision **/
-    kStairs,
-    /** Custom collision. 'Tile::GetAABB()' is called to determine collision **/
-  };
 
 protected:
   /** Path to the resource **/
@@ -93,6 +97,8 @@ protected:
   ToolType mRequiredToolType = ToolType::kAll;
   /** Whether the tile is destructible **/
   bool mIsDestructible = true;
+  /** Whether the tile can be replaced **/
+  bool mCanBeReplaced = false;
 
 public:
   /** Construct a tile by specifying the path to the resource. This resource
@@ -105,9 +111,33 @@ public:
   /** Virtual destructor **/
   virtual ~Tile() = default;
 
+  /** Called when this tile has been placed in the world **/
+  virtual void OnPlaced(World& world, WorldPos pos);
+
+  /** Called just before a tile is destroyed **/
+  virtual void OnDestroyed(World& world, WorldPos pos);
+
   /** Called when block is activated (right-clicked on client). Returning true
    * means that the block handled the activation **/
   virtual bool OnActivated(World& world, WorldPos pos);
+
+  /** Called when one of the neighbouring eight (8) blocks has changed **/
+  virtual void OnNeighbourChange(World& world, WorldPos pos);
+
+  /** Returns whether or not the tile is a multi-tile object **/
+  virtual bool IsMultiTile(World& world, WorldPos pos);
+
+  /** Returns whether or not the multi-tile can be placed at the given position
+   * in the world **/
+  virtual bool CanPlaceMultiTile(World& world, WorldPos pos);
+
+  /** Place the block of the multi-tile structure. This returns false if the
+   * multi-tile cannot be placed at the specified position **/
+  virtual bool PlaceMultiTile(World& world, WorldPos pos);
+
+  /** Function that should kill a multi-tile object from one of it's sub-tiles.
+   * This sub-tile may not necessarily be the origin tile **/
+  virtual bool KillMultiTile(World& world, WorldPos pos);
 
   /** Returns whether or not the tile emits light. If this returns true then the
    * functions 'GetLightStrength' and 'GetLightColor' is also called to
@@ -143,7 +173,8 @@ public:
 
   /** Returns the collision type of the tile at the specified location in the
    * world **/
-  [[nodiscard]] virtual CollisionType GetCollision(World& world, WorldPos pos);
+  [[nodiscard]] virtual CollisionType GetCollision(const World& world,
+                                                   WorldPos pos) const;
 
   /** Sets the collision type of the tile **/
   virtual Tile* SetCollisionType(CollisionType collisionType);
@@ -171,6 +202,12 @@ public:
 
   /** Sets whether or not the tile can actually be destroyed **/
   virtual Tile* SetIsDestructible(bool isDestructible);
+
+  /** Returns whether or not the tile can be replaced **/
+  [[nodiscard]] virtual bool CanBeReplaced(World& world, WorldPos pos);
+
+  /** Sets whether or not the tile can be replaced **/
+  virtual Tile* SetCanBeReplaced(bool canBeReplaced);
 
   /** Returns whether or not this tile has a corresponding tile entity **/
   virtual bool HasTileEntity(World& world, WorldPos pos);

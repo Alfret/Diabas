@@ -23,6 +23,30 @@ public:
     , mY(y)
   {}
 
+  /** Left position **/
+  WorldPos Left() const { return WorldPos{ mX - 1, mY }; }
+
+  /** Right position **/
+  WorldPos Right() const { return WorldPos{ mX + 1, mY }; }
+
+  /** Top position **/
+  WorldPos Top() const { return WorldPos{ mX, mY + 1 }; }
+
+  /** Bottom position **/
+  WorldPos Bottom() const { return WorldPos{ mX, mY - 1 }; }
+
+  /** Top-left position **/
+  WorldPos TopLeft() const { return WorldPos{ mX - 1, mY + 1 }; }
+
+  /** Top-right position **/
+  WorldPos TopRight() const { return WorldPos{ mX + 1, mY + 1 }; }
+
+  /** Bottom-left position **/
+  WorldPos BottomLeft() const { return WorldPos{ mX - 1, mY - 1 }; }
+
+  /** Bottom-right position **/
+  WorldPos BottomRight() const { return WorldPos{ mX + 1, mY - 1 }; }
+
   /** Returns the X position **/
   u32& X() { return mX; }
 
