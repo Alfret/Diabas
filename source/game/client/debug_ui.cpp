@@ -13,7 +13,6 @@
 #include "game/client/world_renderer.hpp"
 #include "game/tile/tile_registry.hpp"
 #include "game/ecs/systems/generic_system.hpp"
-#include "script/util.hpp"
 
 // ========================================================================== //
 // DebugUI Implementation
@@ -53,6 +52,7 @@ ShowStatisticsDebug(GameClient& gameClient, f32 delta)
 void
 ShowScriptDebug(GameClient& gameClient)
 {
+  /*
   if (ImGui::CollapsingHeader("Script")) {
     static constexpr u32 bufferSize = 4096;
     static char inputBuffer[bufferSize];
@@ -88,6 +88,7 @@ ShowScriptDebug(GameClient& gameClient)
                               ImVec2(),
                               ImGuiInputTextFlags_ReadOnly);
   }
+   */
 }
 
 // -------------------------------------------------------------------------- //
@@ -95,6 +96,7 @@ ShowScriptDebug(GameClient& gameClient)
 void
 ShowModDebug(GameClient& gameClient)
 {
+  /*
   if (ImGui::CollapsingHeader("Mods")) {
     static s32 currentIndex = 0;
     std::vector<const char8*> names;
@@ -110,6 +112,7 @@ ShowModDebug(GameClient& gameClient)
       ImGui::Text("  %s", author.GetUTF8());
     }
   }
+   */
 }
 
 // -------------------------------------------------------------------------- //

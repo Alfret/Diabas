@@ -1,10 +1,10 @@
-#pragma once
+#include "game/client/entity_render.hpp"
 
 // ========================================================================== //
 // Headers
 // ========================================================================== //
 
-#include "script/env.hpp"
+#include "game/client/render_component.hpp"
 
 // ========================================================================== //
 // Functions
@@ -12,8 +12,13 @@
 
 namespace dib::game {
 
-/** Expose tile-related functionality to scripts **/
 void
-ExposeTile();
+RenderEntities(EntityManager& entityManager)
+{
+  auto view = entityManager.GetRegistry().view<RenderComponent>();
+  for (auto entity : view) {
+    RenderComponent& renderComponent = view.get(entity);
+  }
+}
 
 }

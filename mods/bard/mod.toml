@@ -1,0 +1,5 @@
+[info]
+name = "Bard"
+id = "bard"
+authors = ["Filip Björklund"]
+version = [0, 1, 0]
