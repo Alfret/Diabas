@@ -6,6 +6,7 @@
 
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/object.h>
+#include <vector>
 
 #include "core/types.hpp"
 
