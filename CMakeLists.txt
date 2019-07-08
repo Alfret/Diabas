@@ -43,6 +43,8 @@ set(COMMON_SOURCE
   source/game/chat/chat.hpp
   source/game/chat/chat_message.cpp
   source/game/chat/chat_message.hpp
+  source/game/physics/collision.cpp
+  source/game/physics/collision.hpp
   source/game/ecs/entity_manager.cpp
   source/game/ecs/entity_manager.hpp
   source/game/ecs/components/player_data_component.hpp
@@ -103,15 +105,17 @@ set(TEST_SOURCE
 
 set(CLIENT_SOURCE
   source/app/client/app_client.cpp
-  source/app/client/imgui/imgui.cpp
-  source/app/client/imgui/imgui_draw.cpp
-  source/app/client/imgui/imgui_demo.cpp
-  source/app/client/imgui/imgui_impl_glfw_gl3.cpp
+  thirdparty/imgui/imgui.cpp
+  thirdparty/imgui/imgui_draw.cpp
+  thirdparty/imgui/imgui_demo.cpp
+  thirdparty/imgui/imgui_impl_glfw_gl3.cpp
   source/game/client/client_cache.cpp
   source/game/client/debug_ui.cpp
   source/game/client/entity_render.cpp
   source/game/client/game_client.cpp
   source/game/client/world_renderer.cpp
+  source/game/client/player.cpp
+  source/game/client/player.hpp
   source/graphics/camera.cpp
   source/graphics/index_buffer.cpp
   source/graphics/renderer.cpp
@@ -231,8 +235,8 @@ else ()
   add_compile_definitions(IMGUI_DISABLE_TEST_WINDOWS)
 endif ()
 
-add_compile_definitions(DLOG_TIMESTAMP DLOG_DATESTAMP)
-#add_compile_definitions(DLOG_LOG_TO_FILE)
+add_compile_definitions(DLOG_TIMESTAMP DLOG_FILESTAMP)
+#add_compile_definitions(DLOG_LOG_TO_FILE DLOG_DATESTAMP)
 if (WIN32)
   add_compile_definitions(DIB_TARGET_WINDOWS)
 else ()

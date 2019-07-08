@@ -7,6 +7,7 @@
 #include "app/client/app_client.hpp"
 #include "game/world.hpp"
 #include "game/client/client_cache.hpp"
+#include "game/client/player.hpp"
 #include "game/gameplay/core_content.hpp"
 #include "game/mod/mod_loader.hpp"
 #include "graphics/camera.hpp"
@@ -39,6 +40,8 @@ private:
 
   /** Client resource cache **/
   ClientCache mClientCache;
+
+  Player mPlayer{};
 
 public:
   /** Construct game client **/

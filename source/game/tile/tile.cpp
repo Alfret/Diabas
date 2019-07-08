@@ -152,8 +152,9 @@ Tile::SetOpacity(f32 opacity)
 
 // -------------------------------------------------------------------------- //
 
-Tile::CollisionType
-Tile::GetCollision([[maybe_unused]] World& world, [[maybe_unused]] WorldPos pos)
+CollisionType
+Tile::GetCollision([[maybe_unused]] const World& world,
+                   [[maybe_unused]] WorldPos pos) const
 {
   return mCollisionType;
 }
@@ -161,7 +162,7 @@ Tile::GetCollision([[maybe_unused]] World& world, [[maybe_unused]] WorldPos pos)
 // -------------------------------------------------------------------------- //
 
 Tile*
-Tile::SetCollisionType(Tile::CollisionType collisionType)
+Tile::SetCollisionType(CollisionType collisionType)
 {
   mCollisionType = collisionType;
   return this;

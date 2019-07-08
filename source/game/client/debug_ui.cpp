@@ -7,7 +7,7 @@
 #include <dutil/stopwatch.hpp>
 
 #include "core/memory.hpp"
-#include "app/client/imgui/imgui.h"
+#include <imgui/imgui.h>
 #include "game/client/game_client.hpp"
 #include "game/client/player_data_storage.hpp"
 #include "game/client/world_renderer.hpp"
@@ -318,6 +318,7 @@ ShowNetworkDebug(GameClient& gameClient)
   World& world = gameClient.GetWorld();
   Network<Side::kClient>& network = world.GetNetwork();
   auto& chat = world.GetChat();
+  static dutil::Stopwatch sw{};
 
   if (ImGui::CollapsingHeader("Network")) {
 
@@ -342,6 +343,44 @@ ShowNetworkDebug(GameClient& gameClient)
     }
 
     ImGui::Spacing();
+
+    // ============================================================ //
+    // Player List
+    // ============================================================ //
+
+    if (ImGui::TreeNode("player list")) {
+      std::string player_list = dlog::Format(
+        "{:<5} {:<20} {:<4} {:<4}\n", "Ping", "Name", "CQLc", "CQRm");
+      auto& registry = world.GetEntityManager().GetRegistry();
+      const auto view = registry.view<PlayerData>();
+      for (const auto entity : view) {
+        const auto pd = view.get(entity);
+        player_list += dlog::Format("{:<5} {:<20} {:.1f}  {:.1f}\n",
+                                    pd.ping,
+                                    pd.name,
+                                    pd.con_quality_local / 255.0f,
+                                    pd.con_quality_remote / 255.0f);
+      }
+
+      ImGui::TextUnformatted(player_list.c_str());
+
+      ImGui::TreePop();
+    }
+
+    // ============================================================ //
+    // Packet Handler
+    // ============================================================ //
+
+    if (ImGui::TreeNode("packet handler")) {
+      static std::string packet_types =
+        network.GetPacketHandler().PacketTypesToString();
+      if (sw.now_ms() > 3000) {
+        packet_types = network.GetPacketHandler().PacketTypesToString();
+      }
+      ImGui::TextUnformatted(packet_types.c_str());
+
+      ImGui::TreePop();
+    }
 
     // ============================================================ //
     // Info
@@ -374,7 +413,6 @@ ShowNetworkDebug(GameClient& gameClient)
             arr[0] = value;
           };
 
-        static dutil::Stopwatch sw{};
         if (sw.now_ms() > 1000) {
           sw.Start();
           ShiftInsertArray(ping, kCount, status->m_nPing);
@@ -473,8 +511,12 @@ ShowNetworkDebug(GameClient& gameClient)
       static char8 buf[buflen] = "Rully";
       if (world.GetNetwork().GetConnectionState() ==
           ConnectionState::kConnected) {
-        ImGui::InputText("New Player Name", buf, buflen);
-        if (ImGui::Button("Set Name") && buf[0] != 0) {
+
+        if (ImGui::InputText("New Player Name",
+                             buf,
+                             buflen,
+                             ImGuiInputTextFlags_EnterReturnsTrue) &&
+            buf[0] != 0) {
           // set our new name
           PlayerData player_data = **world.GetNetwork().GetOurPlayerData();
           player_data.name = String(buf);
@@ -495,6 +537,8 @@ ShowNetworkDebug(GameClient& gameClient)
             mw.Finalize();
             world.GetNetwork().PacketBroadcast(packet);
           }
+
+          ImGui::SetKeyboardFocusHere(-1);
         }
       }
 
@@ -504,8 +548,11 @@ ShowNetworkDebug(GameClient& gameClient)
           ConnectionState::kConnected) {
         constexpr std::size_t textlen = 128;
         static char8 text[textlen] = "";
-        ImGui::InputText("Chat Message", text, textlen);
-        if (ImGui::Button("Send Chat Message") && text[0] != 0) {
+        if (ImGui::InputText("Chat Message",
+                             text,
+                             textlen,
+                             ImGuiInputTextFlags_EnterReturnsTrue) &&
+            text[0] != 0) {
           game::ChatMessage msg{};
           msg.msg = String(text);
           msg.type = game::ChatType::kSay;
@@ -514,6 +561,8 @@ ShowNetworkDebug(GameClient& gameClient)
             DLOG_WARNING("failed to send chat message");
           }
           text[0] = '\0';
+
+          ImGui::SetKeyboardFocusHere(-1);
         }
       }
 
@@ -525,6 +574,58 @@ ShowNetworkDebug(GameClient& gameClient)
                                   ImGuiInputTextFlags_ReadOnly);
 
       ImGui::TreePop();
+    }
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ShowPlayerDebug(GameClient& gameClient)
+{
+  World& world = gameClient.GetWorld();
+  Network<Side::kClient>& network = world.GetNetwork();
+
+  if (ImGui::CollapsingHeader("Player")) {
+    auto maybe_player_data = network.GetOurPlayerData();
+    if (maybe_player_data) {
+      PlayerData* player_data = *maybe_player_data;
+      MoveableEntity* e = &player_data->moveable_entity;
+      std::string info = dlog::Format(
+        "1 tile is {:.3f} meter\n1 pixel is {:.3f} meter\n"
+        "meter: ({:<6.1f}, {:<6.1f})\npixels: ({:<6.1f}, {:<6.1f})\n"
+        "tiles: ({:<6}, {:<6})\nh velocity: {}\nh acc: {}\nv velocity: {}\n"
+        "v acc: {}\nfriction: {}\nwidth,height: {},{}\nh acc mod:{}",
+        game::kTileInMeters,
+        game::kPixelInMeter,
+        e->position.x,
+        e->position.y,
+        MeterToPixel(e->position.x),
+        MeterToPixel(e->position.y),
+        MeterToTile(e->position.x),
+        MeterToTile(e->position.y),
+        e->horizontal_velocity,
+        e->horizontal_acceleration,
+        e->vertical_velocity,
+        e->vertical_acceleration,
+        e->friction_modifier,
+        e->width,
+        e->height,
+        e->horizontal_acceleration_modifier);
+
+      ImGui::TextUnformatted(info.c_str());
+
+      ImGui::SliderFloat("friction", &e->friction_modifier, 0.0f, 1.0f, "%.2f");
+      ImGui::SliderFloat("h acc mod",
+                         &e->horizontal_acceleration_modifier,
+                         0.0f,
+                         100.0f,
+                         "%.2f");
+
+      ImGui::InputFloat("x position (meter)",
+                        &player_data->moveable_entity.position.x);
+      ImGui::InputFloat("y position (meter)",
+                        &player_data->moveable_entity.position.y);
     }
   }
 }

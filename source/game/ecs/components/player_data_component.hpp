@@ -7,25 +7,31 @@
 #include "core/uuid.hpp"
 #include "network/connection_id.hpp"
 #include "core/value_store.hpp"
+#include "game/physics/units.hpp"
 
 namespace dib {
 
-/**
- * Note: connection_id will not be serialized
- */
 struct PlayerData
 {
-  Uuid uuid;
-  ConnectionId connection_id;
+  // ============================================================ //
+  // Member Varaibles
+  // ============================================================ //
 
+  Uuid uuid;
+  /// Note: connection_id will not be serialized
+  ConnectionId connection_id;
+  u16 ping;
+  u8 con_quality_local;
+  u8 con_quality_remote;
   String name;
-  u64 xp;
-  u8 player_class;
-  u8 body;
-  u8 direction;
-  float speed;
+
+  game::MoveableEntity moveable_entity;
 
   ValueStore dynamic_state{};
+
+  // ============================================================ //
+  // Operator Overloads
+  // ============================================================ //
 
   bool operator==(const PlayerData& other) const { return uuid == other.uuid; }
 
@@ -37,12 +43,11 @@ struct PlayerData
   bool ToBytes(alflib::RawMemoryWriter& mw) const
   {
     mw.Write(uuid);
+    mw.Write(ping);
+    mw.Write(con_quality_local);
+    mw.Write(con_quality_remote);
     mw.Write(name);
-    mw.Write(xp);
-    mw.Write(player_class);
-    mw.Write(body);
-    mw.Write(direction);
-    mw.Write(speed);
+    // TODO write moveable entity
     return mw.Write(dynamic_state);
   }
 
@@ -50,12 +55,11 @@ struct PlayerData
   {
     PlayerData data{};
     data.uuid = mr.Read<decltype(uuid)>();
+    data.ping = mr.Read<decltype(ping)>();
+    data.con_quality_local = mr.Read<decltype(con_quality_local)>();
+    data.con_quality_remote = mr.Read<decltype(con_quality_remote)>();
     data.name = mr.Read<decltype(name)>();
-    data.xp = mr.Read<decltype(xp)>();
-    data.player_class = mr.Read<decltype(player_class)>();
-    data.body = mr.Read<decltype(body)>();
-    data.direction = mr.Read<decltype(direction)>();
-    data.speed = mr.Read<decltype(speed)>();
+    // TODO read moveable entity
     data.dynamic_state = mr.Read<decltype(dynamic_state)>();
     return data;
   }

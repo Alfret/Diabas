@@ -5,7 +5,7 @@
 // ========================================================================== //
 
 #include "game/constants.hpp"
-#include "app/client/imgui/imgui.h"
+#include <imgui/imgui.h>
 #include "game/client/world_renderer.hpp"
 #include "game/client/debug_ui.hpp"
 
@@ -38,7 +38,7 @@ GameClient::Update(f64 delta)
     Exit();
   }
 
-  // ImGui::ShowTestWindow();
+  ImGui::ShowTestWindow();
 
   // ImGui
   if (ImGui::Begin("Diabas - Debug")) {
@@ -48,10 +48,12 @@ GameClient::Update(f64 delta)
     ShowTileDebug(*this);
     ShowItemDebug(*this);
     ShowNetworkDebug(*this);
+    ShowPlayerDebug(*this);
   }
   ImGui::End();
 
   UpdateCamera(delta);
+  mPlayer.Update(*this, delta);
   mWorld.Update();
 }
 

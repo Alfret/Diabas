@@ -18,6 +18,10 @@ namespace dib {
 // InputCommandCategory Enumeration
 // ========================================================================== //
 
+/**
+ * How to add a command category:
+ * TODO
+ */
 enum class InputCommandCategory
 {
   kUnknown,

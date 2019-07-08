@@ -87,7 +87,7 @@ CoreContent::SetupTiles(TileRegistry& tileRegistry)
   // Tile: Air
   mTileAir = new Tile(ResourcePath{ Path{ "./res/tiles/air.tga" } }, "air");
   mTileAir->SetOpacity(0.0f)
-    ->SetCollisionType(Tile::CollisionType::kNone)
+    ->SetCollisionType(CollisionType::kNone)
     ->SetIsDestructible(false)
     ->SetCanBeReplaced(true);
   tileRegistry.RegisterTile(MOD_ID, "air", mTileAir);

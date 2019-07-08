@@ -64,6 +64,11 @@ GameServer::RegisterCommands()
     InputCommandCategory::kSystem, "save", [](const std::string_view) {
       DLOG_INFO("Sorry to break it to you, but you cannot save yet..");
     });
+
+  mCLI.AddCommand(
+    InputCommandCategory::kInfo, "packet_types", [&](const std::string_view) {
+      mWorld.GetNetwork().GetPacketHandler().PrintPacketTypes();
+    });
 }
 
 }

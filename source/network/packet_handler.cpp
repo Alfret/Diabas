@@ -2,6 +2,7 @@
 #include "core/hash.hpp"
 #include <alflib/core/assert.hpp>
 #include <dlog.hpp>
+#include <microprofile/microprofile.h>
 
 namespace dib {
 
@@ -12,11 +13,12 @@ PacketHandler::~PacketHandler() = default;
 bool
 PacketHandler::HandlePacket(const Packet& packet) const
 {
+  MICROPROFILE_SCOPEI("packet handler", "handle packet", MP_YELLOW);
   bool could_handle = false;
 
   const PacketHeader* header = packet.GetHeader();
-  auto it = packet_metas_.find(header->type);
-  if (it != packet_metas_.end()) {
+  auto it = packet_type_metas_.find(header->type);
+  if (it != packet_type_metas_.end()) {
     could_handle = true;
     // TODO maybe not send the header, or clear the header first???
     it->second.callback(packet);
@@ -51,7 +53,7 @@ PacketHandler::AddDynamicPacketTypeBase(const String& packet_type_name,
                                         PacketHandlerCallback callback)
 {
   // check for name collision
-  for (const auto it : packet_metas_) {
+  for (const auto it : packet_type_metas_) {
     if (it.second.name == packet_type_name) {
       DLOG_ERROR("could not add dynamic packet type for [{}] since it "
                  "already exist an entry with that name.",
@@ -65,14 +67,14 @@ PacketHandler::AddDynamicPacketTypeBase(const String& packet_type_name,
   while (tries-- > 0) {
     // ensure no collision
     for (;;) {
-      if (packet_metas_.find(type_hint) == packet_metas_.end()) {
+      if (packet_type_metas_.find(type_hint) == packet_type_metas_.end()) {
         break;
       }
       ++type_hint;
     }
 
     [[maybe_unused]] const auto [it, ok] =
-      packet_metas_.insert({ type_hint, { packet_type_name, callback } });
+      packet_type_metas_.insert({ type_hint, { packet_type_name, callback } });
     if (ok) {
       // add it to our name-type map
       dynamic_types_.insert({ packet_type_name, it->first });
@@ -103,7 +105,7 @@ PacketHandler::AddStaticPacketType(const PacketHeaderStaticTypes static_type,
     HashFNV1a32(reinterpret_cast<const u8*>(&static_type), size);
 
   // Check for name collision
-  for (const auto it : packet_metas_) {
+  for (const auto it : packet_type_metas_) {
     if (it.second.name == packet_type_name) {
       DLOG_ERROR("could not add static packet type for [{}] since it already "
                  "exists an entry with that name.",
@@ -117,14 +119,14 @@ PacketHandler::AddStaticPacketType(const PacketHeaderStaticTypes static_type,
   while (tries-- > 0) {
     // ensure no collision
     for (;;) {
-      if (packet_metas_.find(type_hint) == packet_metas_.end()) {
+      if (packet_type_metas_.find(type_hint) == packet_type_metas_.end()) {
         break;
       }
       ++type_hint;
     }
 
     [[maybe_unused]] const auto [it, ok] =
-      packet_metas_.insert({ type_hint, { packet_type_name, callback } });
+      packet_type_metas_.insert({ type_hint, { packet_type_name, callback } });
     if (ok) {
       static_types_[static_cast<std::size_t>(static_type)] = it->first;
       break;
@@ -141,34 +143,35 @@ PacketHandler::AddStaticPacketType(const PacketHeaderStaticTypes static_type,
 }
 
 PacketHandler::SyncResult
-PacketHandler::Sync(const std::vector<PacketMetaSerializable>& correct)
+PacketHandler::Sync(const std::vector<PacketTypeMetaSerializable>& correct)
 {
   // are we missing a packet meta?
-  if (packet_metas_.size() < correct.size()) {
+  if (packet_type_metas_.size() < correct.size()) {
     DLOG_ERROR("we are missing {} packet types",
-               correct.size() - packet_metas_.size());
-    return SyncResult::kMissingPacketMeta;
+               correct.size() - packet_type_metas_.size());
+    return SyncResult::kMissingPacketType;
   }
 
   // do we have extra packet meta?
-  if (packet_metas_.size() > correct.size()) {
+  if (packet_type_metas_.size() > correct.size()) {
     DLOG_VERBOSE("we have {} more packet types than our sync source",
-                 packet_metas_.size() - correct.size());
+                 packet_type_metas_.size() - correct.size());
   }
 
   // for each name, are the hashes correct?
   String missing_names{};
-  std::vector<PacketMetaSerializable> missing_typees{};
+  std::vector<PacketTypeMetaSerializable> missing_typees{};
   bool found_name;
   bool found_type;
   for (const auto& correct_meta : correct) {
     found_name = false;
     found_type = false;
-    for (const auto& meta : packet_metas_) {
+    for (const auto& meta : packet_type_metas_) {
       if (correct_meta.name == meta.second.name) {
         found_name = true;
         if (correct_meta.type == meta.first) {
           found_type = true;
+          break;
         }
       }
     }
@@ -188,18 +191,19 @@ PacketHandler::Sync(const std::vector<PacketMetaSerializable>& correct)
   }
 
   // correct the type-name
-  std::vector<std::pair<PacketHeaderType, PacketMeta>> insert_vec{};
+  std::vector<std::pair<PacketHeaderType, PacketTypeMeta>> insert_vec{};
   for (const auto& missing_type : missing_typees) {
 
     // is it a dynamic type?
     if (auto dyn_it = dynamic_types_.find(missing_type.name);
         dyn_it != dynamic_types_.end()) {
-      auto packet_metas_it = packet_metas_.find(dyn_it->second);
-      AlfAssert(packet_metas_it != packet_metas_.end(),
+      auto packet_type_metas_it = packet_type_metas_.find(dyn_it->second);
+      AlfAssert(packet_type_metas_it != packet_type_metas_.end(),
                 "could not find"
                 " packet type, but previous code guarantees it");
-      insert_vec.push_back({ missing_type.type, { packet_metas_it->second } });
-      packet_metas_.erase(packet_metas_it);
+      insert_vec.push_back(
+        { missing_type.type, { packet_type_metas_it->second } });
+      packet_type_metas_.erase(packet_type_metas_it);
 
       dyn_it->second = missing_type.type;
     }
@@ -209,7 +213,7 @@ PacketHandler::Sync(const std::vector<PacketMetaSerializable>& correct)
       std::size_t i = 0;
       bool found = false;
       for (; i < static_types_.size(); i++) {
-        if (packet_metas_[static_types_[i]].name == missing_type.name) {
+        if (packet_type_metas_[static_types_[i]].name == missing_type.name) {
           found = true;
           break;
         }
@@ -218,20 +222,21 @@ PacketHandler::Sync(const std::vector<PacketMetaSerializable>& correct)
                 "could not find static packet type, but previous code"
                 " guarantees it.");
 
-      auto packet_metas_it = packet_metas_.find(static_types_[i]);
-      AlfAssert(packet_metas_it != packet_metas_.end(),
+      auto packet_type_metas_it = packet_type_metas_.find(static_types_[i]);
+      AlfAssert(packet_type_metas_it != packet_type_metas_.end(),
                 "could not find"
                 " packet type, but previous code guarantees it");
 
-      insert_vec.push_back({ missing_type.type, { packet_metas_it->second } });
-      packet_metas_.erase(packet_metas_it);
+      insert_vec.push_back(
+        { missing_type.type, { packet_type_metas_it->second } });
+      packet_type_metas_.erase(packet_type_metas_it);
 
       static_types_[i] = missing_type.type;
     }
   }
   if (!insert_vec.empty()) {
     for (const auto& item : insert_vec) {
-      packet_metas_.insert(item);
+      packet_type_metas_.insert(item);
     }
   }
 
@@ -246,9 +251,9 @@ PacketHandler::SyncResultToString(const SyncResult result)
       return "success";
     case SyncResult::kNameMissmatch:
       return "name missmatch";
-    case SyncResult::kExtraPacketMeta:
+    case SyncResult::kExtraPacketType:
       return "extra packet type";
-    case SyncResult::kMissingPacketMeta:
+    case SyncResult::kMissingPacketType:
       return "missing packet type";
     default:
       return "internal error";
@@ -303,12 +308,12 @@ PacketHandler::BuildPacketSync(Packet& packet)
 void
 PacketHandler::OnPacketSync(const Packet& packet)
 {
-  std::vector<PacketMetaSerializable> vec{};
+  std::vector<PacketTypeMetaSerializable> vec{};
   auto mr = packet.GetMemoryReader();
 
   for (std::size_t pos = 0; pos < packet.GetPayloadSize();
-       pos += mr.GetOffset()) {
-    vec.push_back(mr.Read<PacketMetaSerializable>());
+       pos = mr.GetOffset()) {
+    vec.push_back(mr.Read<PacketTypeMetaSerializable>());
   }
 
   const auto res = Sync(vec);
@@ -318,11 +323,11 @@ PacketHandler::OnPacketSync(const Packet& packet)
   DLOG_VERBOSE("Sync ok");
 }
 
-std::vector<PacketMetaSerializable>
+std::vector<PacketTypeMetaSerializable>
 PacketHandler::Serialize() const
 {
-  std::vector<PacketMetaSerializable> v{};
-  for (const auto it : packet_metas_) {
+  std::vector<PacketTypeMetaSerializable> v{};
+  for (const auto it : packet_type_metas_) {
     v.push_back({ it.first, it.second.name });
   }
   return v;
@@ -341,11 +346,34 @@ PacketHandler::FindDynamicType(const String& name) const
 std::optional<const String*>
 PacketHandler::GetPacketType(const Packet& packet) const
 {
-  if (const auto it = packet_metas_.find(packet.GetHeader()->type);
-      it != packet_metas_.end()) {
+  if (const auto it = packet_type_metas_.find(packet.GetHeader()->type);
+      it != packet_type_metas_.end()) {
     return &it->second.name;
   }
   return std::nullopt;
 }
 
+void
+PacketHandler::PrintPacketTypes() const
+{
+  DLOG_RAW("\n*** Registered packet types, {}.\n", packet_type_metas_.size());
+  DLOG_RAW("{:<15}{}\n", "ID", "PACKET TYPE NAME");
+  for (const auto packet_type_meta : packet_type_metas_) {
+    DLOG_RAW(
+      "#{:<14}{}\n", packet_type_meta.first, packet_type_meta.second.name);
+  }
+  DLOG_RAW("\n");
+}
+
+std::string
+PacketHandler::PacketTypesToString() const
+{
+  auto str = dlog::Format("{:-^34}\n", "Registered Packet Types");
+  str += dlog::Format("{:<15}{}\n", "ID", "PACKET TYPE NAME");
+  for (const auto packet_type_meta : packet_type_metas_) {
+    str += dlog::Format(
+      "#{:<14}{}\n", packet_type_meta.first, packet_type_meta.second.name);
+  }
+  return str;
+}
 }
