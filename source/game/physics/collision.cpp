@@ -64,17 +64,24 @@ GenerateTiles(const World& world,
   constexpr f32 d = kTileInMeters;
   const f32 maxx = TileToMeter(world.GetTerrain().GetWidth() - 1);
   const f32 maxy = TileToMeter(world.GetTerrain().GetHeight() - 1);
+  const u32 rows = static_cast<u32>(std::ceil(rect.height / kTileInMeters));
+  const u32 cols = static_cast<u32>(std::ceil(rect.width / kTileInMeters));
+  const f32 remainx = std::fmod(rect.height, kTileInMeters);
+  const f32 remainy = std::fmod(rect.width, kTileInMeters);
 
-  for (u32 row = 0;
-       row < static_cast<u32>(std::ceil(rect.height / kTileInMeters));
-       row++) {
-    for (u32 col = 0;
-         col < static_cast<u32>(std::ceil(rect.width / kTileInMeters));
-         col++) {
+  // Add up tiles in increments of @d
+  for (u32 row = 0; row < rows; row++) {
+    for (u32 col = 0; col < cols; col++) {
       // @PERF only push back if it doesnt already exist?
-      tiles.push_back(
-        MeterPosToWorldPos({ dutil::Clamp(origo.x + d * col, 0.0f, maxx),
-                             dutil::Clamp(origo.y + d * row, 0.0f, maxy) }));
+      tiles.push_back(MeterPosToWorldPos(
+        { dutil::Clamp(
+            (col + 1 != cols ? origo.x + d * col : origo.x + d * col + remainx),
+            0.0f,
+            maxx),
+          dutil::Clamp(
+            (row + 1 != rows ? origo.y + d * row : origo.y + d * row + remainy),
+            0.0f,
+            maxy) }));
     }
   }
 }
@@ -132,78 +139,16 @@ CollidesOnPosition(const World& world,
   }
 }
 
+bool
+OnGround(const World& world, const Moveable& entity)
+{
+  // check @offset pixel(s) below us
+  constexpr f32 offset = kPixelInMeter * 1;
+  const Position pos_under(entity.position.x, entity.position.y - offset);
+  return CollidesOnPosition(world, entity.collideable, pos_under);
+}
+
 // ============================================================ //
-
-// bool
-// PointInsideTile(const Position point, const WorldPos tile)
-// {
-//   const f32 px = MeterToPixel(point.x);
-//   const f32 py = MeterToPixel(point.y);
-//   const f32 tx = TileToPixel(tile.X());
-//   const f32 ty = TileToPixel(tile.Y());
-//   constexpr f32 twidth = kTileInPixels;
-//   constexpr f32 theight = kTileInPixels;
-//   return (tx <= px && px <= tx + twidth && ty <= py && py <= ty + theight);
-// }
-
-// bool
-// PointCollideWithTile(const World& world, const Position point, const WorldPos
-// tile_pos)
-// {
-//   const auto& terrain = world.GetTerrain();
-//   const Tile* tile = terrain.GetTile(tile_pos);
-//   if (const auto collision_type = tile->GetCollision(world, tile_pos);
-//       collision_type == CollisionType::kFullTile) {
-//     return PointInsideTile(point, tile_pos);
-//   }
-
-//   // TODO handle other collision types
-//   return false;
-// }
-
-// bool
-// PointCollideWithTile(const World& world, const Position point)
-// {
-//   const WorldPos tile_pos = MeterPosToWorldPos(point);
-//   return PointCollideWithTile(world, point, tile_pos);
-// }
-
-// bool
-// CheckCollision(const World& world,
-//                const Position point,
-//                const Collideable collideable)
-// {
-//   bool collide = false;
-
-//   if (collideable.type == CollisionType::kRect) {
-//     Position local_point = point;
-//     for (u32 i = 0; i < static_cast<u32>(std::ceil(collideable.rect.height /
-//                                                    kTileInMeters)); i++) {
-//       if (PointCollideWithTile(world, local_point)) {
-//         collide = true;
-//         break;
-//       }
-//       local_point.x += kTileInMeters;
-//       local_point.y += kTileInMeters;
-//     }
-//   } else if (collideable.type == CollisionType::kFullTile) {
-//     collide = PointCollideWithTile(world, point);
-//   } else {
-//     AlfAssert(false, "unknown collision type");
-//   }
-
-//   return collide;
-// }
-
-// bool
-// OnGround(const World& world, const MoveableEntity& entity)
-// {
-//   // check @offset pixel(s) below us
-//   constexpr f32 offset = kPixelInMeter * 1;
-//   const Position point_under(entity.position.x, entity.position.y - offset);
-//   const WorldPos tile_under = MeterPosToWorldPos(point_under);
-//   return PointCollideWithTile(world, entity.position, tile_under);
-// }
 
 // CollisionResult
 // TryMoveEntity(const World& world, MoveableEntity& entity, const Position
