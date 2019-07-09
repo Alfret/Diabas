@@ -28,9 +28,6 @@ Player::Update(GameClient& game, const f64 delta)
 
     /// PLAYGROUND
 
-    const bool col =
-      CollidesOnPosition(world, moveable.collideable, moveable.position);
-
     /// ---------------------
 
     f32 h_force = 0.0f;
@@ -45,17 +42,13 @@ Player::Update(GameClient& game, const f64 delta)
 
     if (game.IsKeyDown(Key::kKeySpace)) {
       f32 v_force = 15.0f;
-      // bool on_ground = OnGround(world, player_data->moveable_entity);
-      // if (on_ground) {
-      //   // ForceOnEntity(player_data->moveable_entity, h_force, v_force);
-      //}
+      const bool on_ground = OnGround(world, moveable);
+      if (on_ground) {
+        ForceOnMoveable(moveable, h_force, v_force);
+      }
     }
 
-    // MoveEntity(world,
-    //            delta,
-    //            player_data->moveable_entity,
-    //            current_h_acc,
-    //            current_v_acc);
+    MoveMoveable(world, delta, moveable, current_h_acc, current_v_acc);
   }
 }
 

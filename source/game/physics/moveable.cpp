@@ -1,10 +1,10 @@
 #include "moveable.hpp"
 #include <dutil/misc.hpp>
 #include "game/world.hpp"
+#include "game/physics/collision.hpp"
 
 namespace dib::game {
 
-/*
 void
 MoveMoveable(const World& world,
            const f64 delta,
@@ -13,7 +13,6 @@ MoveMoveable(const World& world,
            const Acceleration v_acc)
 {
   const auto& terrain = world.GetTerrain();
-  const Position old_position = moveable.position;
   const bool on_ground = OnGround(world, moveable);
 
   // calculate acceleration
@@ -69,29 +68,62 @@ MoveMoveable(const World& world,
   // calculate x position
   bool moved_x = false;
   if (!alflib::FloatEqual(moveable.horizontal_velocity, 0.0f)) {
-    moved_x = true;
     new_position.x = dutil::Clamp(
       static_cast<f32>(moveable.position.x + moveable.horizontal_velocity *
 delta), 0.0f, static_cast<f32>(terrain.GetWidth() - 1));
+    if (!alflib::FloatEqual(new_position.x, moveable.position.x)) {
+      moved_x = true;
+    }
   }
 
   // calculate y position
   bool moved_y = false;
   if ((!on_ground || moveable.vertical_velocity > 0.0f) &&
       !alflib::FloatEqual(moveable.vertical_velocity, 0.0f)) {
-    moved_y = true;
     new_position.y = dutil::Clamp(
       static_cast<f32>(moveable.position.y + moveable.vertical_velocity *
 delta), 0.0f, static_cast<f32>(terrain.GetHeight()-1));
+    if (!alflib::FloatEqual(new_position.y, moveable.position.y)) {
+      moved_y = true;
+    }
   }
 
   if (moved_x || moved_y) {
 
-    const CollisionResult result = TryMoveMoveable(world, moveable,
-new_position);
+    std::vector<Position> positions;
+    GeneratePositions(moveable.position, new_position, positions);
+    AlfAssert(positions.size() > 0, "Failed to generate positions");
+
+    bool colliding = false;
+    constexpr int kNone = 0;
+    constexpr int kHorizontal = 1;
+    constexpr int kVertical = 2;
+    int col_dir = kNone;
+
+    u32 col_i = 0;
+    for (; col_i < positions.size(); col_i++) {
+      if (CollidesOnPosition(world, moveable.collideable, positions[col_i])) {
+        colliding = true;
+        ++col_i; // for loop can end in two ways, this compensates.
+        break;
+      }
+    }
+    --col_i;
+    if (colliding) {
+      Position col_pos = positions[col_i];
+      col_dir = std::abs(moveable.position.x - col_pos.x) >
+                std::abs(moveable.position.y - col_pos.y) ?
+                kHorizontal : kVertical;
+      if (col_i > 1) {
+        // TODO move closer
+        moveable.position = positions[col_i - 1];
+      }
+    } else {
+      moveable.position = positions[col_i];
+    }
 
     // x
-    if (result.x_collision) {
+    if (colliding && col_dir == kHorizontal) {
       moveable.horizontal_acceleration = 0.0f;
       moveable.horizontal_velocity = 0.0f;
     } else if (on_ground) {
@@ -115,13 +147,14 @@ new_position);
     }
 
     // y
-    if (result.y_collision) {
+    if (colliding && col_dir == kVertical) {
       moveable.vertical_acceleration = 0.0f;
       moveable.vertical_velocity = 0.0f;
 
     } else {
       // apply drag (vertical friction)
-      constexpr f32 kFrictionConstant = 5.0f;
+#define kFrictionConstant 5.0f
+      //constexpr f32 kFrictionConstant = 5.0f;
       if (moveable.vertical_velocity < -kStandardGravity) {
         moveable.vertical_velocity -=
           (moveable.vertical_velocity - kFrictionConstant) * moveable.drag *
@@ -149,6 +182,6 @@ ForceOnMoveable(Moveable& moveable,
   moveable.horizontal_velocity += horizontal_force;
   moveable.vertical_velocity += vertical_force;
 }
-*/
+
 
 }

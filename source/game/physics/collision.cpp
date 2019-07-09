@@ -69,21 +69,37 @@ GenerateTiles(const World& world,
   const f32 remainx = std::fmod(rect.height, kTileInMeters);
   const f32 remainy = std::fmod(rect.width, kTileInMeters);
 
+  // @PERF we almost always add duplicate tiles, don't do that!
+
   // Add up tiles in increments of @d
   for (u32 row = 0; row < rows; row++) {
     for (u32 col = 0; col < cols; col++) {
-      // @PERF only push back if it doesnt already exist?
-      tiles.push_back(MeterPosToWorldPos(
-        { dutil::Clamp(
-            (col + 1 != cols ? origo.x + d * col : origo.x + d * col + remainx),
-            0.0f,
-            maxx),
-          dutil::Clamp(
-            (row + 1 != rows ? origo.y + d * row : origo.y + d * row + remainy),
-            0.0f,
-            maxy) }));
+      tiles.push_back(
+        MeterPosToWorldPos({ dutil::Clamp(origo.x + d * col, 0.0f, maxx),
+                             dutil::Clamp(origo.y + d * row, 0.0f, maxy) }));
     }
   }
+
+  // fill out the top row
+  const u32 row = rows-1;
+  for (u32 col = 0; col < cols; col++) {
+    tiles.push_back(MeterPosToWorldPos(
+        { dutil::Clamp(origo.x + d * col, 0.0f, maxx),
+          dutil::Clamp(origo.y + d * row + remainy, 0.0f, maxy) }));
+  }
+
+  // fill out the right most column
+  const u32 col = cols-1;
+  for (u32 row = 0; row < rows; row++) {
+    tiles.push_back(MeterPosToWorldPos(
+        { dutil::Clamp(origo.x + d * col + remainx, 0.0f, maxx),
+          dutil::Clamp(origo.y + d * row, 0.0f, maxy) }));
+  }
+
+  // top right one
+  tiles.push_back(MeterPosToWorldPos(
+    { dutil::Clamp(origo.x + d * (cols-1) + remainx, 0.0f, maxx),
+      dutil::Clamp(origo.y + d * (rows-1) + remainy, 0.0f, maxy) }));
 }
 
 static bool
@@ -96,7 +112,13 @@ CollidesOnPosition(const World& world,
     position.x, position.y, collideable->rect.width, collideable->rect.height
   };
   GenerateTiles(world, rect, position, tiles);
-  return CollidesOnTiles(world, rect, tiles);
+  bool collides = CollidesOnTiles(world, rect, tiles);
+  if (collides) {
+    Position col_dir(0.0f, 0.0f);
+
+  }
+
+  return collides;
 }
 
 static bool
@@ -140,12 +162,57 @@ CollidesOnPosition(const World& world,
 }
 
 bool
-OnGround(const World& world, const Moveable& entity)
+OnGround(const World& world, const Moveable& moveable)
 {
   // check @offset pixel(s) below us
   constexpr f32 offset = kPixelInMeter * 1;
-  const Position pos_under(entity.position.x, entity.position.y - offset);
-  return CollidesOnPosition(world, entity.collideable, pos_under);
+  const Position pos_under(moveable.position.x, moveable.position.y - offset);
+  return CollidesOnPosition(world, moveable.collideable, pos_under);
+}
+
+/**
+ *
+ * @pre a and b must correspond to valid tiles.
+ */
+void
+GeneratePositions(const Position a,
+                  const Position b,
+                  std::vector<Position>& positions)
+{
+  const f32 width = b.x - a.x;
+  const f32 height = b.y - a.y;
+  const f32 remainx = std::fmod(width, kTileInMeters);
+  const f32 remainy = std::fmod(height, kTileInMeters);
+  f32 dx = (width - remainx)  / kTileInMeters;
+  f32 dy = (height - remainy) / kTileInMeters;
+  u32 steps;
+
+  // select a delta such that the largest of dx and dy is kTileInMeters.
+  if (std::abs(width) > std::abs(height) && std::abs(width) > kTileInMeters) {
+    steps = static_cast<u32>(std::ceil(std::abs(width / kTileInMeters)));
+    dy = kTileInMeters * (dy / std::abs(dx));
+    dx = kTileInMeters * (dx < 0.0f ? -1.0f : 1.0f);
+  } else if (std::abs(height) > kTileInMeters){
+    steps = static_cast<u32>(std::ceil(std::abs(height / kTileInMeters)));
+    dx = kTileInMeters * (dx / std::abs(dy));
+    dy = kTileInMeters * (dy < 0.0f ? -1.0f : 1.0f);
+  } else {
+    constexpr f32 almost_pixel = kPixelInMeter * 0.99;
+    steps = std::abs(width) > almost_pixel || std::abs(height) > almost_pixel
+      ? 1 : 0;
+    dx = 0;
+    dy = 0;
+  }
+
+  // Add up tiles in increments of @dx, @dy
+  u32 step = 0;
+  for (; step < steps; step++) {
+      // @PERF only push back if it doesnt already exist?
+      positions.push_back({ a.x + dx * step, a.y + dy * step });
+  }
+  // Add the remaining point
+  positions.push_back(
+    { a.x + dx * (steps-1) + remainx, a.y + dy * (steps-1) + remainy });
 }
 
 // ============================================================ //

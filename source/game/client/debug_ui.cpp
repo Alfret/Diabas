@@ -590,7 +590,7 @@ ShowPlayerDebug(GameClient& gameClient)
   if (ImGui::CollapsingHeader("Player")) {
     auto maybe_entity = network.GetOurPlayerEntity();
     if (maybe_entity) {
-      Moveable m =
+      Moveable& m =
         world.GetEntityManager().GetRegistry().get<Moveable>(*maybe_entity);
 
       const bool col = CollidesOnPosition(world, m.collideable, m.position);
