@@ -7,6 +7,7 @@
 #include "game/item/item_registry.hpp"
 #include "game/tile/tile_registry.hpp"
 #include "game/gameplay/tile/tile_chair.hpp"
+#include "game/gameplay/tile/tile_variant.hpp"
 #include "game/world.hpp"
 
 // ========================================================================== //
@@ -32,6 +33,9 @@ private:
   Tile* mTileGrass = nullptr;
   /** Rock tile **/
   Tile* mTileRock = nullptr;
+
+  /** Tile: Dungeon wall **/
+  TileVariant* mTileDungeon = nullptr;
 
   /** Chair tile **/
   TileChair* mTileChair = nullptr;

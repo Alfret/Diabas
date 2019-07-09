@@ -61,6 +61,42 @@ CoreContent::GenerateWorld(World& world)
       }
     }
   }
+
+#if 0
+  for (u32 i = 0; i < 256; i++) {
+    u32 x = 20 + (i % 16) * 4;
+    u32 y = 20 + (i / 16) * 4;
+
+    WorldPos p{ x, y };
+    world.GetTerrain().GenSetTile(p, instance.mTileDungeon);
+
+    if (i & Bit(0)) {
+      world.GetTerrain().GenSetTile(p.TopLeft(), instance.mTileDungeon);
+    }
+    if (i & Bit(1)) {
+      world.GetTerrain().GenSetTile(p.Top(), instance.mTileDungeon);
+    }
+    if (i & Bit(2)) {
+      world.GetTerrain().GenSetTile(p.TopRight(), instance.mTileDungeon);
+    }
+    if (i & Bit(3)) {
+      world.GetTerrain().GenSetTile(p.Left(), instance.mTileDungeon);
+    }
+    if (i & Bit(4)) {
+      world.GetTerrain().GenSetTile(p.Right(), instance.mTileDungeon);
+    }
+    if (i & Bit(5)) {
+      world.GetTerrain().GenSetTile(p.BottomLeft(), instance.mTileDungeon);
+    }
+    if (i & Bit(6)) {
+      world.GetTerrain().GenSetTile(p.Bottom(), instance.mTileDungeon);
+    }
+    if (i & Bit(7)) {
+      world.GetTerrain().GenSetTile(p.BottomRight(), instance.mTileDungeon);
+    }
+  }
+#endif
+
   world.GetTerrain().ReCacheResourceIndices();
 }
 
@@ -109,6 +145,11 @@ CoreContent::SetupTiles(TileRegistry& tileRegistry)
   // Tile: Rock
   mTileRock = new Tile(ResourcePath{ Path{ "./res/tiles/rock.tga" } }, "rock");
   tileRegistry.RegisterTile(MOD_ID, "rock", mTileRock);
+
+  // Tile: Dungeon wall
+  mTileDungeon = new TileVariant(
+    ResourcePath{ Path{ "./res/tiles/dungeon_wall.png" } }, "dungeon_wall");
+  tileRegistry.RegisterTile(MOD_ID, "dungeon_wall", mTileDungeon);
 }
 
 }

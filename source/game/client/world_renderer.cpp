@@ -69,6 +69,7 @@ RenderWorldTerrain(graphics::Renderer& renderer,
       Vector2F texMin, texMax;
       cache.GetTextureCoordinatesForTile(
         terrainCell.tile, terrainCell.cachedTileSubResource, texMin, texMax);
+      std::swap(texMin.x, texMax.x);
       spriteBatch.Submit(cache.GetTileAtlasTexture(),
                          renderPosition,
                          Vector2F(TILE_SIZE, TILE_SIZE),
