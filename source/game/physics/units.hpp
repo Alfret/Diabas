@@ -32,44 +32,6 @@ constexpr f32 kDoorHeightInMeters = 2.0f;
 constexpr f32 kTileInMeters = kDoorHeightInMeters / kDoorHeightInTiles;
 constexpr f32 kPixelInMeter = kTileInMeters / kTileInPixels;
 
-// TODO move this
-struct MoveableEntity
-{
-  /**
-   * negative -> left
-   * positive -> right
-   */
-  game::Velocity horizontal_velocity;
-
-  /**
-   * negative -> down
-   * positive -> up
-   */
-  game::Velocity vertical_velocity;
-
-  /**
-   * position is specified in meters
-   * position origin is at middle x, bottom y, (right at the toes), of the
-   * character
-   */
-  game::Position position;
-
-  game::Acceleration horizontal_acceleration;
-  game::Acceleration vertical_acceleration;
-
-  f32 horizontal_acceleration_modifier;
-  f32 horizontal_max_acceleration;
-
-  f32 width;
-  f32 height;
-
-  /**
-   * How strong is the friction?
-   * Must be in range [0.0, 1.0].
-   */
-  f32 friction_modifier;
-};
-
 constexpr f32
 PixelToMeter(const f32 pixels)
 {

@@ -13,6 +13,7 @@
 #include "game/client/world_renderer.hpp"
 #include "game/tile/tile_registry.hpp"
 #include "game/ecs/systems/generic_system.hpp"
+#include "game/physics/moveable.hpp"
 
 // ========================================================================== //
 // DebugUI Implementation
@@ -587,45 +588,48 @@ ShowPlayerDebug(GameClient& gameClient)
   Network<Side::kClient>& network = world.GetNetwork();
 
   if (ImGui::CollapsingHeader("Player")) {
-    auto maybe_player_data = network.GetOurPlayerData();
-    if (maybe_player_data) {
-      PlayerData* player_data = *maybe_player_data;
-      MoveableEntity* e = &player_data->moveable_entity;
+    auto maybe_entity = network.GetOurPlayerEntity();
+    if (maybe_entity) {
+      Moveable m =
+        world.GetEntityManager().GetRegistry().get<Moveable>(*maybe_entity);
+
+      const bool col = CollidesOnPosition(world, m.collideable, m.position);
+
       std::string info = dlog::Format(
         "1 tile is {:.3f} meter\n1 pixel is {:.3f} meter\n"
         "meter: ({:<6.1f}, {:<6.1f})\npixels: ({:<6.1f}, {:<6.1f})\n"
         "tiles: ({:<6}, {:<6})\nh velocity: {}\nh acc: {}\nv velocity: {}\n"
-        "v acc: {}\nfriction: {}\nwidth,height: {},{}\nh acc mod:{}",
+        "v acc: {}\nwidth,height: {:.2f},{:.2f}\ncollision: {}",
         game::kTileInMeters,
         game::kPixelInMeter,
-        e->position.x,
-        e->position.y,
-        MeterToPixel(e->position.x),
-        MeterToPixel(e->position.y),
-        MeterToTile(e->position.x),
-        MeterToTile(e->position.y),
-        e->horizontal_velocity,
-        e->horizontal_acceleration,
-        e->vertical_velocity,
-        e->vertical_acceleration,
-        e->friction_modifier,
-        e->width,
-        e->height,
-        e->horizontal_acceleration_modifier);
+        m.position.x,
+        m.position.y,
+        MeterToPixel(m.position.x),
+        MeterToPixel(m.position.y),
+        MeterToTile(m.position.x),
+        MeterToTile(m.position.y),
+        m.horizontal_velocity,
+        m.horizontal_acceleration,
+        m.vertical_velocity,
+        m.vertical_acceleration,
+        m.width,
+        m.height,
+        col);
 
       ImGui::TextUnformatted(info.c_str());
 
-      ImGui::SliderFloat("friction", &e->friction_modifier, 0.0f, 1.0f, "%.2f");
+      ImGui::SliderFloat("friction", &m.friction, 0.0f, 1.0f, "%.2f");
+      ImGui::SliderFloat("drag", &m.drag, 0.0f, 1.0f, "%.2f");
       ImGui::SliderFloat("h acc mod",
-                         &e->horizontal_acceleration_modifier,
+                         &m.horizontal_acceleration_modifier,
                          0.0f,
-                         100.0f,
+                         1000.0f,
                          "%.2f");
+      ImGui::SliderFloat(
+        "max h acc", &m.horizontal_max_acceleration, 1.0f, 100.0f, "%.2f");
 
-      ImGui::InputFloat("x position (meter)",
-                        &player_data->moveable_entity.position.x);
-      ImGui::InputFloat("y position (meter)",
-                        &player_data->moveable_entity.position.y);
+      ImGui::InputFloat("x position (meter)", &m.position.x);
+      ImGui::InputFloat("y position (meter)", &m.position.y);
     }
   }
 }

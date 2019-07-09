@@ -10,6 +10,7 @@
 #include "game/ecs/components/npc_data_component.hpp"
 #include "game/ecs/components/projectile_data_component.hpp"
 #include "game/ecs/components/tile_data_component.hpp"
+#include "game/physics/moveable.hpp"
 #include "game/world.hpp"
 #include <limits>
 #include "game/chat/chat.hpp"
@@ -307,7 +308,7 @@ Network<Side::kClient>::SetupPacketHandler()
         return;
       }
 
-      // 3. Set our player entity
+      // 3. Make our player entity
       auto client = GetClient();
       const auto maybe_entity =
         system::EntityFromUuid<PlayerData>(registry, my_player_data.uuid);
@@ -315,15 +316,17 @@ Network<Side::kClient>::SetupPacketHandler()
                 "could not find the newly created PlayerData entity");
       client->SetOurPlayerEntity(maybe_entity);
 
-      // 3.1
+      // 3.1 Set our player RenderComponent
 #if !defined(DIB_IS_SERVER)
       auto texture = std::make_shared<graphics::Texture>("Wizard");
       texture->Load(Path{ "./res/entity/wizard.tga" });
       game::RenderComponent renderComponent{ texture };
-      system::Assign(world_->GetEntityManager().GetRegistry(),
-                     *maybe_entity,
-                     renderComponent);
+      system::Assign(registry, *maybe_entity, renderComponent);
 #endif
+
+      // 3.2 Set our player Moveable (and Collideable)
+      game::Moveable moveable = game::MoveableMakeDefault();
+      system::Assign(registry, *maybe_entity, moveable);
 
       // 4. Send kPlayerJoin packet
       Packet player_join_packet{};
@@ -354,9 +357,12 @@ Network<Side::kClient>::SetupPacketHandler()
   // ============================================================ //
 
   const auto PlayerJoinCb = [this](const Packet& packet) {
+    // 1. parse the data
     auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
     auto& registry = world_->GetEntityManager().GetRegistry();
+
+    // 2. create entity and fill with PlayerData
     const bool ok = system::Create(registry, player_data);
     if (!ok) {
       DLOG_ERROR("Create on PlayerJoin failed, disconnecting us");
@@ -364,8 +370,24 @@ Network<Side::kClient>::SetupPacketHandler()
       client->CloseConnection();
       return;
     }
+    const auto maybe_entity =
+      system::EntityFromUuid<PlayerData>(registry, player_data.uuid);
+    AlfAssert(maybe_entity,
+              "could not find the newly created PlayerData entity");
 
-    // display all connections
+    // 3. add RenderComponent
+#if !defined(DIB_IS_SERVER)
+    auto texture = std::make_shared<graphics::Texture>("Wizard");
+    texture->Load(Path{ "./res/entity/wizard.tga" });
+    game::RenderComponent renderComponent{ texture };
+    system::Assign(registry, *maybe_entity, renderComponent);
+#endif
+
+    // 4. add Moveable (and Collideable)
+    game::Moveable moveable = game::MoveableMakeDefault();
+    system::Assign(registry, *maybe_entity, moveable);
+
+    // 5. display all connections
     DLOG_INFO("All active connections:");
     std::string_view _{};
     NetworkInfo(_);

@@ -45,6 +45,8 @@ set(COMMON_SOURCE
   source/game/chat/chat_message.hpp
   source/game/physics/collision.cpp
   source/game/physics/collision.hpp
+  source/game/physics/moveable.cpp
+  source/game/physics/moveable.hpp
   source/game/ecs/entity_manager.cpp
   source/game/ecs/entity_manager.hpp
   source/game/ecs/components/player_data_component.hpp

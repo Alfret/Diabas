@@ -5,8 +5,8 @@
 // ========================================================================== //
 
 #include "game/physics/units.hpp"
-#include "game/ecs/components/player_data_component.hpp"
 #include "game/client/render_component.hpp"
+#include "game/physics/moveable.hpp"
 
 // ========================================================================== //
 // Functions
@@ -22,12 +22,11 @@ RenderEntities(graphics::Renderer& renderer,
   renderer.GetSpriteBatch().Begin(&camera);
 
   // Retrieve views of entities
-  auto view = entityManager.GetRegistry().view<PlayerData, RenderComponent>();
+  auto view = entityManager.GetRegistry().view<Moveable, RenderComponent>();
 
   // Render each entity
   for (auto entity : view) {
-    MoveableEntity& movableComponent =
-      view.get<PlayerData>(entity).moveable_entity;
+    Moveable& movableComponent = view.get<Moveable>(entity);
     RenderComponent& renderComponent = view.get<RenderComponent>(entity);
 
     renderer.GetSpriteBatch().Submit(
