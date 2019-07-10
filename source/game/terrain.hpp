@@ -49,8 +49,6 @@ public:
   };
 
 private:
-  /** Tile registry **/
-  const TileRegistry& mTileRegistry;
   /** World **/
   World& mWorld;
 
@@ -64,19 +62,16 @@ private:
 
 public:
   /** Construct a world of the specified dimensions **/
-  Terrain(const TileRegistry& tileRegistry,
-          World& world,
-          u32 width,
-          u32 height);
+  Terrain(World& world, u32 width, u32 height);
 
   /** Construct a world of the specified size **/
-  Terrain(const TileRegistry& tileRegistry, World& world, Size size);
+  Terrain(World& world, Size size);
 
   /** Returns the tile at the specified location in the world **/
-  Tile* GetTile(WorldPos pos) const;
+  [[nodiscard]] Tile* GetTile(WorldPos pos) const;
 
   /** Returns the ID of the tile at the specified location in the world **/
-  TileRegistry::TileID GetTileID(WorldPos pos) const;
+  [[nodiscard]] TileRegistry::TileID GetTileID(WorldPos pos) const;
 
   /** Sets the tile at the specified location in the world. The function returns
    * false if the tile could not be placed **/
@@ -146,11 +141,11 @@ public:
   Cell& GetCell(WorldPos pos);
 
   /** Returns the width of the terrain in number of tiles. Zero (0) is left **/
-  u32 GetWidth() const { return mWidth; };
+  [[nodiscard]] u32 GetWidth() const { return mWidth; };
 
   /** Returns the height of the terrain in number of tiles. Zero (0) is
    * bottom **/
-  u32 GetHeight() const { return mHeight; };
+  [[nodiscard]] u32 GetHeight() const { return mHeight; };
 
 private:
   /** Initialize the terrain layers **/

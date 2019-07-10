@@ -14,12 +14,8 @@
 
 namespace dib::game {
 
-Terrain::Terrain(const TileRegistry& tileRegistry,
-                 World& world,
-                 u32 width,
-                 u32 height)
-  : mTileRegistry(tileRegistry)
-  , mWorld(world)
+Terrain::Terrain(World& world, u32 width, u32 height)
+  : mWorld(world)
   , mWidth(width)
   , mHeight(height)
 {
@@ -29,11 +25,8 @@ Terrain::Terrain(const TileRegistry& tileRegistry,
 
 // -------------------------------------------------------------------------- //
 
-Terrain::Terrain(const TileRegistry& tileRegistry,
-                 World& world,
-                 Terrain::Size size)
-  : mTileRegistry(tileRegistry)
-  , mWorld(world)
+Terrain::Terrain(World& world, Terrain::Size size)
+  : mWorld(world)
 {
   // Determine size
   switch (size) {
@@ -69,7 +62,7 @@ Terrain::Terrain(const TileRegistry& tileRegistry,
 Tile*
 Terrain::GetTile(WorldPos pos) const
 {
-  return mTileRegistry.GetTile(GetTileID(pos));
+  return TileRegistry::Instance().GetTile(GetTileID(pos));
 }
 
 // -------------------------------------------------------------------------- //
@@ -85,7 +78,7 @@ Terrain::GetTileID(WorldPos pos) const
 bool
 Terrain::SetTile(WorldPos pos, Tile* tile)
 {
-  return SetTile(pos, mTileRegistry.GetTileID(tile));
+  return SetTile(pos, TileRegistry::Instance().GetTileID(tile));
 }
 
 // -------------------------------------------------------------------------- //
@@ -101,7 +94,7 @@ Terrain::SetTile(WorldPos pos, TileRegistry::TileID id)
 void
 Terrain::GenSetTile(WorldPos pos, Tile* tile, bool updateNeighbours)
 {
-  GenSetTile(pos, mTileRegistry.GetTileID(tile), updateNeighbours);
+  GenSetTile(pos, TileRegistry::Instance().GetTileID(tile), updateNeighbours);
 }
 
 // -------------------------------------------------------------------------- //
@@ -112,10 +105,10 @@ Terrain::GenSetTile(WorldPos pos,
                     bool updateNeighbours)
 {
   Cell& cell = GetCell(pos);
-  Tile* tile = mTileRegistry.GetTile(cell.tile);
+  Tile* tile = TileRegistry::Instance().GetTile(cell.tile);
   tile->OnDestroyed(mWorld, pos);
 
-  tile = mTileRegistry.GetTile(id);
+  tile = TileRegistry::Instance().GetTile(id);
   cell.tile = id;
   tile->OnPlaced(mWorld, pos);
   UpdateCachedIndices(pos, updateNeighbours);
@@ -126,7 +119,7 @@ Terrain::GenSetTile(WorldPos pos,
 void
 Terrain::RemoveTile(WorldPos pos, Tile* replacementTile)
 {
-  RemoveTile(pos, mTileRegistry.GetTileID(replacementTile));
+  RemoveTile(pos, TileRegistry::Instance().GetTileID(replacementTile));
 }
 
 // -------------------------------------------------------------------------- //
@@ -204,7 +197,7 @@ Terrain::SetTileAdvanced(WorldPos pos,
   Cell& cell = GetCell(pos);
 
   // Notify old tile
-  Tile* tile = mTileRegistry.GetTile(cell.tile);
+  Tile* tile = TileRegistry::Instance().GetTile(cell.tile);
   if (!ignoreReplaceCheck && !tile->CanBeReplaced(mWorld, pos)) {
     return false;
   }
@@ -218,7 +211,7 @@ Terrain::SetTileAdvanced(WorldPos pos,
   tile->OnDestroyed(mWorld, pos);
 
   // Set new tile
-  tile = mTileRegistry.GetTile(id);
+  tile = TileRegistry::Instance().GetTile(id);
   u32 oldId = cell.tile;
   cell.tile = id;
   if (tile->IsMultiTile(mWorld, pos)) {

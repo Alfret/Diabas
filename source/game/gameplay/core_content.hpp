@@ -52,7 +52,7 @@ public:
   static CoreContent& GetInstance();
 
   /** Setup items and tiles **/
-  static void Setup(ItemRegistry& itemRegistry, TileRegistry& tileRegistry);
+  static void Setup();
 
   /** Generate the base world **/
   static void GenerateWorld(World& world);
@@ -68,10 +68,10 @@ private:
   CoreContent() = default;
 
   /** Setup core items **/
-  void SetupItems(ItemRegistry& itemRegistry);
+  void SetupItems();
 
   /** Setup core tiles **/
-  void SetupTiles(TileRegistry& tileRegistry);
+  void SetupTiles();
 };
 
 }

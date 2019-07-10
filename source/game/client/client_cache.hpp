@@ -58,10 +58,10 @@ public:
   ClientCache() = default;
 
   /** Build the tile atlas **/
-  void BuildTileAtlas(const TileRegistry& tileRegistry);
+  void BuildTileAtlas();
 
   /** Build the item atlas **/
-  void BuildItemAtlas(const ItemRegistry& itemRegistry);
+  void BuildItemAtlas();
 
   /** Returns the list of sub-resources for a tile ID **/
   const std::vector<AtlasRegion>& GetTileSubResources(TileRegistry::TileID id);
@@ -77,7 +77,8 @@ public:
                                     Vector2F& texMax);
 
   /** Return the tile atlas texture **/
-  const std::shared_ptr<graphics::Texture>& GetTileAtlasTexture() const
+  [[nodiscard]] const std::shared_ptr<graphics::Texture>& GetTileAtlasTexture()
+    const
   {
     return mTileAtlasTexture;
   }
@@ -96,7 +97,8 @@ public:
                                     Vector2F& texMax);
 
   /** Return the item atlas texture **/
-  const std::shared_ptr<graphics::Texture>& GetItemAtlasTexture() const
+  [[nodiscard]] const std::shared_ptr<graphics::Texture>& GetItemAtlasTexture()
+    const
   {
     return mItemAtlasTexture;
   }

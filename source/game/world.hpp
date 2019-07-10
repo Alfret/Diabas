@@ -24,12 +24,8 @@ namespace dib::game {
 /** Class representing the game world **/
 class World
 {
-private:
-  /** Tile registry **/
-  const TileRegistry& mTileRegistry;
-
 public:
-  World(const TileRegistry& tileRegistry);
+  World();
 
   void Update();
 

@@ -73,6 +73,8 @@ set(COMMON_SOURCE
   source/game/tile/tile.cpp
   source/game/tile/tile_entity.cpp
   source/game/tile/tile_registry.cpp
+  source/game/wall/wall.cpp
+  source/game/wall/wall_registry.cpp
   source/network/network.cpp
   source/network/network.hpp
   source/network/server.cpp

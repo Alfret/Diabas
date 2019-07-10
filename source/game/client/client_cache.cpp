@@ -16,8 +16,10 @@
 namespace dib::game {
 
 void
-ClientCache::BuildTileAtlas(const TileRegistry& tileRegistry)
+ClientCache::BuildTileAtlas()
 {
+  TileRegistry& tileRegistry = TileRegistry::Instance();
+
   // List of all images to pack and their keys
   alflib::ArrayList<alflib::Image> packImages;
   alflib::ArrayList<String> packNames;
@@ -92,8 +94,10 @@ ClientCache::BuildTileAtlas(const TileRegistry& tileRegistry)
 // -------------------------------------------------------------------------- //
 
 void
-ClientCache::BuildItemAtlas(const ItemRegistry& itemRegistry)
+ClientCache::BuildItemAtlas()
 {
+  ItemRegistry& itemRegistry = ItemRegistry::Instance();
+
   // List of all images to pack and their keys
   alflib::ArrayList<alflib::Image> packImages;
   alflib::ArrayList<String> packNames;

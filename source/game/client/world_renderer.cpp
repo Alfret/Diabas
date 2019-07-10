@@ -26,7 +26,6 @@ RenderWorldTerrain(graphics::Renderer& renderer,
 
   // Retrieve objects
   ClientCache& cache = gameClient.GetCache();
-  TileRegistry& tileRegistry = gameClient.GetTileRegistry();
   World& world = gameClient.GetWorld();
   Terrain& terrain = world.GetTerrain();
 

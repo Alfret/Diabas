@@ -120,7 +120,7 @@ ShowModDebug(GameClient& gameClient)
 void
 ShowTileDebug(GameClient& gameClient)
 {
-  TileRegistry& tileRegistry = gameClient.GetTileRegistry();
+  TileRegistry& tileRegistry = TileRegistry::Instance();
   Terrain& terrain = gameClient.GetWorld().GetTerrain();
 
   if (ImGui::CollapsingHeader("Tile")) {
@@ -162,10 +162,8 @@ ShowTileDebug(GameClient& gameClient)
     // Display tile by ID
     if (ImGui::TreeNode("By ID")) {
       static s32 indices[2] = { 0, 0 };
-      ImGui::SliderInt("Index",
-                       &indices[0],
-                       0,
-                       gameClient.GetTileRegistry().GetTiles().size() - 1);
+      ImGui::SliderInt(
+        "Index", &indices[0], 0, tileRegistry.GetTiles().size() - 1);
       u32 maxSubResource =
         gameClient.GetCache().GetTileSubResourceCount(indices[0]) - 1;
       indices[1] = alflib::Clamp(indices[1], 0, s32(maxSubResource));
@@ -263,7 +261,7 @@ ShowItemDebug(GameClient& gameClient)
       ImGui::SliderInt("Index",
                        &indices[0],
                        0,
-                       gameClient.GetItemRegistry().GetItems().size() - 1);
+                       ItemRegistry::Instance().GetItems().size() - 1);
       u32 maxSubResource =
         gameClient.GetCache().GetItemSubResourceCount(indices[0]) - 1;
       indices[1] = alflib::Clamp(indices[1], 0, s32(maxSubResource));

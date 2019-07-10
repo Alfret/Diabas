@@ -66,30 +66,33 @@ public:
   bool RegisterTile(const String& registryKey, Tile* tile);
 
   /** Returns the tile for a given ID **/
-  Tile* GetTile(TileID id) const;
+  [[nodiscard]] Tile* GetTile(TileID id) const;
 
   /** Returns the tile for a given registry key **/
-  Tile* GetTile(const String& registryKey) const;
+  [[nodiscard]] Tile* GetTile(const String& registryKey) const;
 
   /** Returns the tile ID for a given registry key **/
-  TileID GetTileID(const String& registryKey) const;
+  [[nodiscard]] TileID GetTileID(const String& registryKey) const;
 
   /** Returns the tile ID for a given tile **/
-  TileID GetTileID(Tile* tile) const;
+  [[nodiscard]] TileID GetTileID(Tile* tile) const;
 
   /** Returns the list of all registered tiles. Indices are the IDs of the
    * tile **/
-  const std::vector<Tile*>& GetTiles() const { return mTiles; }
+  [[nodiscard]] const std::vector<Tile*>& GetTiles() const { return mTiles; }
 
   /** Returns the map of registered tiles. Keys are the registry names and the
    * value is the ID of the tile. This ID can then be used to index the vector
    * returned from 'GetTiles()'**/
-  const tsl::robin_map<String, TileID> GetRegistryMap() const
+  [[nodiscard]] const tsl::robin_map<String, TileID>& GetRegistryMap() const
   {
     return mTileRegistryMap;
   }
 
 public:
+  /** Returns the TileRegistry instance **/
+  static TileRegistry& Instance();
+
   /** Create a registry key from the name of a mod and the mod-specific key **/
   static String CreateRegistryKey(const String& mod, const String& key);
 };

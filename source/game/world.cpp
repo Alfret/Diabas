@@ -2,9 +2,8 @@
 
 namespace dib::game {
 
-World::World(const TileRegistry& tileRegistry)
-  : mTileRegistry(tileRegistry)
-  , mTerrain(mTileRegistry, *this, Terrain::Size::kLarge)
+World::World()
+  : mTerrain(*this, Terrain::Size::kLarge)
 {}
 
 // -------------------------------------------------------------------------- //

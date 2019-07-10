@@ -33,10 +33,10 @@ CoreContent::GetInstance()
 // -------------------------------------------------------------------------- //
 
 void
-CoreContent::Setup(ItemRegistry& itemRegistry, TileRegistry& tileRegistry)
+CoreContent::Setup()
 {
-  GetInstance().SetupItems(itemRegistry);
-  GetInstance().SetupTiles(tileRegistry);
+  GetInstance().SetupItems();
+  GetInstance().SetupTiles();
 }
 
 // -------------------------------------------------------------------------- //
@@ -103,9 +103,11 @@ CoreContent::GenerateWorld(World& world)
 // -------------------------------------------------------------------------- //
 
 void
-CoreContent::SetupItems(ItemRegistry& itemRegistry)
+CoreContent::SetupItems()
 {
   MICROPROFILE_SCOPEI("CoreGame", "SetupItems", MP_PINK);
+
+  ItemRegistry& itemRegistry = ItemRegistry::Instance();
 
   // Item: Apple
   mItemApple = new Item(
@@ -116,9 +118,11 @@ CoreContent::SetupItems(ItemRegistry& itemRegistry)
 // -------------------------------------------------------------------------- //
 
 void
-CoreContent::SetupTiles(TileRegistry& tileRegistry)
+CoreContent::SetupTiles()
 {
   MICROPROFILE_SCOPEI("CoreGame", "SetupTile", MP_BISQUE3);
+
+  TileRegistry& tileRegistry = TileRegistry::Instance();
 
   // Tile: Air
   mTileAir = new Tile(ResourcePath{ Path{ "./res/tiles/air.tga" } }, "air");
