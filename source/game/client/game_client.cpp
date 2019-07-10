@@ -55,7 +55,7 @@ GameClient::Update(f64 delta)
 
   UpdateCamera(delta);
   mPlayer.Update(*this, delta);
-  mWorld.Update();
+  mWorld.Update(delta);
 }
 
 // -------------------------------------------------------------------------- //

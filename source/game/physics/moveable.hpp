@@ -22,6 +22,8 @@ struct Moveable
 
   f32 velocity_input;
   f32 velocity_max;
+  f32 velocity_jump;
+  bool jumping;
 
   /**
    * position is specified in meters
@@ -29,8 +31,6 @@ struct Moveable
    * character
    */
   game::Position position;
-
-
 
   /**
    * Visual width and height
@@ -49,7 +49,13 @@ struct Moveable
 // ============================================================ //
 
 /**
- *
+ * Simulate what all the moveables will do in the given time step.
+ */
+void
+SimulateMoveables(World& world, f64 delta);
+
+/**
+ * Prepare the moveable with fresh input.
  */
 void
 UpdateMoveable(const World& world,
@@ -65,8 +71,9 @@ UpdateMoveable(const World& world,
  * Note, this will not move the moveable, good practice would be to apply the
  * force, then moving the moveable.
  */
-void
-ForceOnMoveable(Moveable& moveable, f32 horizontal_force, f32 vertical_force);
+void ForceOnMoveable(Moveable& moveable,
+                     f32 horizontal_force,
+                     f32 vertical_force);
 
 inline Moveable
 MoveableMakeDefault()
@@ -76,6 +83,8 @@ MoveableMakeDefault()
   m.height = game::kTileInMeters * 2.9f;
   m.velocity_input = 20.0f;
   m.velocity_max = 10.0f;
+  m.velocity_jump = 14.0f;
+  m.jumping = true;
   m.position.x = game::TileToMeter(10);
   m.position.y = game::TileToMeter(20);
 

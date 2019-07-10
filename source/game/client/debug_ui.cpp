@@ -593,13 +593,11 @@ ShowPlayerDebug(GameClient& gameClient)
       Moveable& m =
         world.GetEntityManager().GetRegistry().get<Moveable>(*maybe_entity);
 
-      const bool col = CollidesOnPosition(world, m.collideable, m.position);
-
       std::string info = dlog::Format(
         "1 tile is {:.3f} meter\n1 pixel is {:.3f} meter\n"
         "meter: ({:<6.1f}, {:<6.1f})\npixels: ({:<6.1f}, {:<6.1f})\n"
         "tiles: ({:<6}, {:<6})\nh velocity: {}\nv velocity: {}\n"
-        "width,height: {:.2f},{:.2f}\ncollision: {}",
+        "width,height: {:.2f},{:.2f}",
         game::kTileInMeters,
         game::kPixelInMeter,
         m.position.x,
@@ -611,14 +609,15 @@ ShowPlayerDebug(GameClient& gameClient)
         m.horizontal_velocity,
         m.vertical_velocity,
         m.width,
-        m.height,
-        col);
+        m.height);
 
       ImGui::TextUnformatted(info.c_str());
       ImGui::SliderFloat(
         "velocity input", &m.velocity_input, 0.0f, 1000.0f, "%.2f");
       ImGui::SliderFloat(
         "velocity max", &m.velocity_max, 0.0f, 1000.0f, "%.2f");
+      ImGui::SliderFloat(
+        "velocity jump", &m.velocity_jump, 0.0f, 1000.0f, "%.2f");
       ImGui::InputFloat("x position (meter)", &m.position.x);
       ImGui::InputFloat("y position (meter)", &m.position.y);
     }

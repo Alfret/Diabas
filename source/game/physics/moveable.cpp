@@ -8,7 +8,7 @@ namespace dib::game {
 /**
  * @pre col_pos must be a colliding position for moveable.
  */
-CollisionInfo
+static CollisionInfo
 MoveSubTileOnCollision(const World& world, Moveable& moveable,
                        Position col_pos)
 {
@@ -55,7 +55,7 @@ MoveSubTileOnCollision(const World& world, Moveable& moveable,
   return col_info;
 }
 
-CollisionInfo
+static CollisionInfo
 MoveMoveable(const World& world,
              Moveable& moveable,
              const Position target)
@@ -83,6 +83,11 @@ MoveMoveable(const World& world,
   if (colliding) {
     moveable.position = ok_pos;
     col_info = MoveSubTileOnCollision(world, moveable, col_pos);
+    if (col_info.VerticalCollision() && !col_info.HorizontalCollision()) {
+      moveable.position.x = col_pos.x;
+    } else if (col_info.HorizontalCollision() && !col_info.VerticalCollision()) {
+      moveable.position.y = col_pos.y;
+    }
   } else {
     moveable.position = positions.back();
   }
@@ -90,41 +95,16 @@ MoveMoveable(const World& world,
   return col_info;
 }
 
-void
-UpdateMoveable(const World& world,
+/**
+ * Based on the current moveable values, simulate a step of size @delta.
+ */
+static void
+SimulateMoveable(const World& world,
            const f64 delta,
-           Moveable& moveable,
-           const f32 h_vel,
-           const f32 v_vel)
+           Moveable& moveable)
 {
   const auto& terrain = world.GetTerrain();
   const bool on_ground = OnGround(world, moveable);
-
-  // vertical velocity
-  if (!on_ground) {
-    if (moveable.vertical_velocity > 0.0f) {
-      moveable.vertical_velocity -= (v_vel + kStandardGravity * 3) * delta;
-    } else {
-      // falling feels better if faster than rising
-      moveable.vertical_velocity -= (v_vel + kStandardGravity * 5) * delta;
-    }
-  } else if (v_vel > 0.0f) {
-    moveable.vertical_velocity = v_vel * delta;
-  }
-
-  // horizontal velocity
-  if (std::abs(h_vel) > 0.0f) {
-    moveable.horizontal_velocity = dutil::Clamp(
-      moveable.horizontal_velocity + h_vel * static_cast<f32>(delta) -
-        moveable.horizontal_velocity * static_cast<f32>(delta),
-      -moveable.velocity_max,
-      moveable.velocity_max);
-  } else if (on_ground ||
-             (on_ground && std::abs(std::copysignf(1.0f, moveable.horizontal_velocity) +
-                                    std::copysignf(1.0f, h_vel)) < 1.0f)) {
-    moveable.horizontal_velocity = 0.0f;
-  }
-
   Position new_position = moveable.position;
 
   // calculate x position
@@ -161,8 +141,63 @@ delta), 0.0f, static_cast<f32>(terrain.GetHeight()-1));
 
     // y
     if (col_info.VerticalCollision()) {
-      moveable.vertical_velocity = 0.0f;
+      if (on_ground) {
+        moveable.vertical_velocity = 0.0f;
+      }
     }
+  }
+}
+
+// ============================================================ //
+
+void
+SimulateMoveables(World& world, const f64 delta)
+{
+  auto& registry = world.GetEntityManager().GetRegistry();
+  auto view = registry.view<Moveable>();
+  for (auto entity : view) {
+    Moveable& moveable = registry.get<Moveable>(entity);
+    SimulateMoveable(world, delta, moveable);
+  }
+}
+
+void
+UpdateMoveable(const World& world,
+               const f64 delta,
+               Moveable& moveable,
+               const f32 h_vel,
+               const f32 v_vel)
+{
+  const bool on_ground = OnGround(world, moveable);
+
+  // vertical velocity
+  if (!on_ground) {
+    if (moveable.vertical_velocity > 0.0f) {
+      if (moveable.jumping) {
+        moveable.vertical_velocity -= (v_vel + kStandardGravity * 3) * delta;
+      } else {
+        moveable.vertical_velocity = 0;
+      }
+    } else {
+      // falling feels better if faster than rising
+      moveable.vertical_velocity -= (v_vel + kStandardGravity * 5) * delta;
+    }
+  } else if (v_vel > 0.0f) {
+    moveable.vertical_velocity = v_vel * delta;
+  }
+  moveable.jumping = false;
+
+  // horizontal velocity
+  if (std::abs(h_vel) > 0.0f) {
+    moveable.horizontal_velocity = dutil::Clamp(
+      moveable.horizontal_velocity + h_vel * static_cast<f32>(delta) -
+        moveable.horizontal_velocity * static_cast<f32>(delta),
+      -moveable.velocity_max,
+      moveable.velocity_max);
+  } else if (on_ground ||
+             (on_ground && std::abs(std::copysignf(1.0f, moveable.horizontal_velocity) +
+                                    std::copysignf(1.0f, h_vel)) < 1.0f)) {
+    moveable.horizontal_velocity = 0.0f;
   }
 }
 

@@ -1,4 +1,5 @@
 #include "world.hpp"
+#include "game/physics/moveable.hpp"
 
 namespace dib::game {
 
@@ -10,9 +11,10 @@ World::World(const TileRegistry& tileRegistry)
 // -------------------------------------------------------------------------- //
 
 void
-World::Update()
+World::Update(const f64 delta)
 {
   network_.Update();
+  SimulateMoveables(*this, delta);
 }
 
 // -------------------------------------------------------------------------- //
