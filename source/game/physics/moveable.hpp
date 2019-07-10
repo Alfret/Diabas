@@ -66,11 +66,11 @@ struct Moveable
  * @param v_acc Delta should already be applied.
  */
 void
-MoveMoveable(const World& world,
-             f64 delta,
-             Moveable& moveable,
-             Acceleration h_acc,
-             Acceleration v_acc);
+UpdateMoveable(const World& world,
+               f64 delta,
+               Moveable& moveable,
+               Acceleration h_acc,
+               Acceleration v_acc);
 
 /**
  * Apply a force to a moveable. This means, instantly, modifying the entities

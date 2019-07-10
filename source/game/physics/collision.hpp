@@ -11,6 +11,20 @@ namespace dib::game {
 
 struct MoveableEntity;
 
+struct CollisionInfo
+{
+  float x;
+  float y;
+
+  bool LeftCollision() const { return x < 0.0f; }
+  bool RightCollision() const { return x > 0.0f; }
+  bool UpCollision() const { return y > 0.0f; }
+  bool DownCollision() const { return y < 0.0f; }
+  bool HorizontalCollision() const { return LeftCollision() || RightCollision();}
+  bool VerticalCollision() const { return UpCollision() || DownCollision(); }
+  operator bool() const { return HorizontalCollision() or VerticalCollision(); }
+};
+
 /**
  * Is the @collidable colliding with any tiles when on @position?
  */
@@ -27,13 +41,14 @@ OnGround(const World& world, const Moveable& moveable);
 
 /**
  * Make a collection of positions on the range [@a, @b], in steps of
- * kTileInMeters. Useful for generating a set of possible collisions
+ * @d_stepsize. Useful for generating a set of possible collisions
  * when moving from @a to @b.
  */
 void
 GeneratePositions(const Position a,
                   const Position b,
-                  std::vector<Position>& positions);
+                  std::vector<Position>& positions,
+                  float d_stepsize = kTileInMeters);
 }
 
 #endif // COLLISION_HPP_

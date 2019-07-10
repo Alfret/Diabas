@@ -112,13 +112,7 @@ CollidesOnPosition(const World& world,
     position.x, position.y, collideable->rect.width, collideable->rect.height
   };
   GenerateTiles(world, rect, position, tiles);
-  bool collides = CollidesOnTiles(world, rect, tiles);
-  if (collides) {
-    Position col_dir(0.0f, 0.0f);
-
-  }
-
-  return collides;
+  return CollidesOnTiles(world, rect, tiles);
 }
 
 static bool
@@ -177,25 +171,26 @@ OnGround(const World& world, const Moveable& moveable)
 void
 GeneratePositions(const Position a,
                   const Position b,
-                  std::vector<Position>& positions)
+                  std::vector<Position>& positions,
+                  const float d_stepsize)
 {
   const f32 width = b.x - a.x;
   const f32 height = b.y - a.y;
-  const f32 remainx = std::fmod(width, kTileInMeters);
-  const f32 remainy = std::fmod(height, kTileInMeters);
-  f32 dx = (width - remainx)  / kTileInMeters;
-  f32 dy = (height - remainy) / kTileInMeters;
+  const f32 remainx = std::fmod(width, d_stepsize);
+  const f32 remainy = std::fmod(height, d_stepsize);
+  f32 dx = (width - remainx)  / d_stepsize;
+  f32 dy = (height - remainy) / d_stepsize;
   u32 steps;
 
-  // select a delta such that the largest of dx and dy is kTileInMeters.
-  if (std::abs(width) > std::abs(height) && std::abs(width) > kTileInMeters) {
-    steps = static_cast<u32>(std::ceil(std::abs(width / kTileInMeters)));
-    dy = kTileInMeters * (dy / std::abs(dx));
-    dx = kTileInMeters * (dx < 0.0f ? -1.0f : 1.0f);
-  } else if (std::abs(height) > kTileInMeters){
-    steps = static_cast<u32>(std::ceil(std::abs(height / kTileInMeters)));
-    dx = kTileInMeters * (dx / std::abs(dy));
-    dy = kTileInMeters * (dy < 0.0f ? -1.0f : 1.0f);
+  // select a delta such that the largest of dx and dy is d_stepsize.
+  if (std::abs(width) > std::abs(height) && std::abs(width) > d_stepsize) {
+    steps = static_cast<u32>(std::ceil(std::abs(width / d_stepsize)));
+    dy = d_stepsize * (dy / std::abs(dx));
+    dx = d_stepsize * (dx < 0.0f ? -1.0f : 1.0f);
+  } else if (std::abs(height) > d_stepsize){
+    steps = static_cast<u32>(std::ceil(std::abs(height / d_stepsize)));
+    dx = d_stepsize * (dx / std::abs(dy));
+    dy = d_stepsize * (dy < 0.0f ? -1.0f : 1.0f);
   } else {
     constexpr f32 almost_pixel = kPixelInMeter * 0.99;
     steps = std::abs(width) > almost_pixel || std::abs(height) > almost_pixel
@@ -214,148 +209,5 @@ GeneratePositions(const Position a,
   positions.push_back(
     { a.x + dx * (steps-1) + remainx, a.y + dy * (steps-1) + remainy });
 }
-
-// ============================================================ //
-
-// CollisionResult
-// TryMoveEntity(const World& world, MoveableEntity& entity, const Position
-// target)
-// {
-//   // TODO handle more collision types than just tile?
-
-//   CollisionResult result{ false, false };
-//   bool changed_position;
-//   Position last_position;
-//   const f32 diffx = target.x - entity.position.x;
-//   const f32 diffy = target.y - entity.position.y;
-//   const f32 signx = std::copysign(1.0f, diffx);
-//   const f32 signy = std::copysign(1.0f, diffy);
-//   f32 dx = diffx / kTileInMeters;
-//   f32 dy = diffy / kTileInMeters;
-//   f32 remainx = std::remainderf(dx, kTileInMeters);
-//   f32 remainy = std::remainderf(dy, kTileInMeters);
-//   dx = std::trunc(dx);
-//   dy = std::trunc(dy);
-
-//   // figure out the step size, such that the largest of dx and dy
-//   // will be kTileInMeters.
-//   if (std::abs(dx) > std::abs(dy) ) {
-//     dy = kTileInMeters * (dy / std::abs(dx));
-//     dx = kTileInMeters * signx;
-//   } else if (std::abs(dx) > kPixelInMeter - kPixelInMeter / 100.0f){
-//     dx = kTileInMeters * (dx / std::abs(dy));
-//     dy = kTileInMeters * signy;
-//   } else {
-//     // Both are very small, make them big such that the algorithm below will
-//     // ignore them.
-//     dx = kTileInMeters;
-//     dy = kTileInMeters;
-//   }
-
-//   // Move with tile precision
-//   for (;;) {
-//     changed_position = false;
-//     last_position = entity.position;
-
-//     // if ((dx < 0.0f && entity.position.x + dx -
-//     //      entity.collision.rect.width / 2.0f > target.x)  /* left */ ||
-//     //     (dx > 0.0f && entity.position.x + dx +
-//     //      entity.collision.rect.width / 2.0f < target.x)) /* right */  {
-//     //   changed_position = true;
-//     //   entity.position.x += dx;
-//     //   if (CheckCollision(world, entity.position, entity.collision)) {
-//     //     result.x_collision = true;
-//     //   }
-//     // }
-//     // if ((dy < 0.0f && entity.position.y + dy > target.y)  /* down */ ||
-//     //     (dy > 0.0f && entity.position.y + dy +
-//     //      entity.collision.rect.height < target.y)) /* up */ {
-//     //   changed_position = true;
-//     //   entity.position.y += dy;
-//     //   if (CheckCollision(world, entity.position, entity.collision)) {
-//     //     result.y_collision = true;
-//     //   }
-//     // }
-
-//     if ((dx < 0.0f && entity.position.x + dx > target.x)  /* left */ ||
-//         (dx > 0.0f && entity.position.x + dx < target.x)) /* right */  {
-//       changed_position = true;
-//       entity.position.x += dx;
-//       if (CheckCollision(world, entity.position, entity.collision)) {
-//         result.x_collision = true;
-//       }
-//     }
-//     if ((dy < 0.0f && entity.position.y + dy > target.y)  /* down */ ||
-//         (dy > 0.0f && entity.position.y + dy < target.y)) /* up */ {
-//       changed_position = true;
-//       entity.position.y += dy;
-//       if (CheckCollision(world, entity.position, entity.collision)) {
-//         result.y_collision = true;
-//       }
-//     }
-
-//     if (!changed_position) {
-//       // move with sub tile precision
-//       entity.position.x += remainx;
-//       entity.position.y += remainy;
-//       if (CheckCollision(world, entity.position, entity.collision)) {
-//         if (remainx > kPixelInMeter - kPixelInMeter / 100.0) {
-//           result.x_collision = true;
-//         }
-//         if (remainy > kPixelInMeter - kPixelInMeter / 100.0) {
-//           result.y_collision = true;
-//         }
-//       } else {
-//         break;
-//       }
-//     }
-
-//     if (result.y_collision || result.x_collision) {
-//       // reposition entity beside the collided tile
-
-//       const Position collided_position = entity.position;
-//       const WorldPos collided_tile = MeterPosToWorldPos(collided_position);
-//       const f32 half_width = entity.collision.rect.width / 2.0f;
-
-//       if (result.x_collision) {
-//         if (last_position.x + half_width > collided_position.x) {
-//           // colliding tile to the left
-//           entity.position.x =
-//             TileToMeter(collided_tile.X()) - entity.collision.rect.width
-//             / 2.0f;
-//         } else if (last_position.x - half_width < collided_position.x) {
-//           // colliding tile to the right
-//           entity.position.x = TileToMeter(collided_tile.X()) + kTileInMeters
-//           +
-//                               entity.collision.rect.width / 2.0f;
-//         }
-//       }
-//       else
-//       {
-//         // did not collide on this axis
-//         entity.position.x = last_position.x;
-//       }
-
-//       if (result.y_collision) {
-//         if (last_position.y + entity.collision.rect.height >
-//             collided_position.y) {
-//           // colliding tile up
-//           entity.position.y =
-//             TileToMeter(collided_tile.Y()) - entity.collision.rect.height;
-//         } else if (last_position.y < collided_position.y) {
-//           // collding tile down
-//           entity.position.y = TileToMeter(collided_tile.Y()) + kTileInMeters;
-//         }
-//       } else {
-//         // did not collide on this axis
-//         entity.position.y = last_position.y;
-//       }
-
-//       break;
-//     }
-//   }
-
-//   return result;
-// }
 
 }
