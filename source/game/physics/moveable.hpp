@@ -12,13 +12,15 @@ struct Moveable
    * negative -> left
    * positive -> right
    */
-  game::Velocity horizontal_velocity;
+  f32 horizontal_velocity;
 
   /**
    * negative -> down
    * positive -> up
    */
-  game::Velocity vertical_velocity;
+  f32 vertical_velocity;
+
+  f32 velocity_input_max;
 
   /**
    * position is specified in meters
@@ -27,11 +29,7 @@ struct Moveable
    */
   game::Position position;
 
-  game::Acceleration horizontal_acceleration;
-  game::Acceleration vertical_acceleration;
 
-  f32 horizontal_acceleration_modifier;
-  f32 horizontal_max_acceleration;
 
   /**
    * Visual width and height
@@ -61,16 +59,14 @@ struct Moveable
 // ============================================================ //
 
 /**
- * Move your moveable, by inputting vertical and horizontal acceleration.
- * @param h_acc Delta should already be applied.
- * @param v_acc Delta should already be applied.
+ *
  */
 void
 UpdateMoveable(const World& world,
                f64 delta,
                Moveable& moveable,
-               Acceleration h_acc,
-               Acceleration v_acc);
+               f32 h_vel,
+               f32 v_vel);
 
 /**
  * Apply a force to a moveable. This means, instantly, modifying the entities
@@ -90,8 +86,7 @@ MoveableMakeDefault()
   m.drag = 0.7f;
   m.width = game::kTileInMeters * 1.5f;
   m.height = game::kTileInMeters * 2.9f;
-  m.horizontal_acceleration_modifier = 100.0f;
-  m.horizontal_max_acceleration = 12.0f;
+  m.velocity_input_max = 12.0f;
   m.position.x = game::TileToMeter(10);
   m.position.y = game::TileToMeter(20);
 

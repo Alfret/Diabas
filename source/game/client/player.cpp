@@ -23,32 +23,31 @@ Player::Update(GameClient& game, const f64 delta)
     auto& registry = world.GetEntityManager().GetRegistry();
     Moveable& moveable = registry.get<Moveable>(*maybe_entity);
 
-    Acceleration current_h_acc = 0.0f;
-    Acceleration current_v_acc = 0.0f;
-
     /// PLAYGROUND
+
 
     /// ---------------------
 
-    f32 h_force = 0.0f;
+    f32 h_vel = 0.0f;
+    f32 v_vel = 0.0f;
+
     if (game.IsKeyDown(Key::kKeyA)) {
-      //h_force = -5.0f;
-      current_h_acc -= moveable.horizontal_acceleration_modifier;
+      h_vel -= moveable.velocity_input_max;
     }
     if (game.IsKeyDown(Key::kKeyD)) {
-      //h_force = 5.0f;
-      current_h_acc += moveable.horizontal_acceleration_modifier;
+      h_vel += moveable.velocity_input_max;
     }
 
     if (game.IsKeyDown(Key::kKeySpace)) {
-      f32 v_force = 18.0f;
+      f32 h_force = 0.0f;
+      f32 v_force = 14.0f;
       const bool on_ground = OnGround(world, moveable);
       if (on_ground && moveable.vertical_velocity == 0) {
         ForceOnMoveable(moveable, h_force, v_force);
       }
     }
 
-    UpdateMoveable(world, delta, moveable, current_h_acc, current_v_acc);
+    UpdateMoveable(world, delta, moveable, h_vel, v_vel);
   }
 }
 

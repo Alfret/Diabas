@@ -598,8 +598,8 @@ ShowPlayerDebug(GameClient& gameClient)
       std::string info = dlog::Format(
         "1 tile is {:.3f} meter\n1 pixel is {:.3f} meter\n"
         "meter: ({:<6.1f}, {:<6.1f})\npixels: ({:<6.1f}, {:<6.1f})\n"
-        "tiles: ({:<6}, {:<6})\nh velocity: {}\nh acc: {}\nv velocity: {}\n"
-        "v acc: {}\nwidth,height: {:.2f},{:.2f}\ncollision: {}",
+        "tiles: ({:<6}, {:<6})\nh velocity: {}\nv velocity: {}\n"
+        "width,height: {:.2f},{:.2f}\ncollision: {}",
         game::kTileInMeters,
         game::kPixelInMeter,
         m.position.x,
@@ -609,25 +609,16 @@ ShowPlayerDebug(GameClient& gameClient)
         MeterToTile(m.position.x),
         MeterToTile(m.position.y),
         m.horizontal_velocity,
-        m.horizontal_acceleration,
         m.vertical_velocity,
-        m.vertical_acceleration,
         m.width,
         m.height,
         col);
 
       ImGui::TextUnformatted(info.c_str());
-
       ImGui::SliderFloat("friction", &m.friction, 0.0f, 1.0f, "%.2f");
       ImGui::SliderFloat("drag", &m.drag, 0.0f, 1.0f, "%.2f");
-      ImGui::SliderFloat("h acc mod",
-                         &m.horizontal_acceleration_modifier,
-                         0.0f,
-                         1000.0f,
-                         "%.2f");
       ImGui::SliderFloat(
-        "max h acc", &m.horizontal_max_acceleration, 1.0f, 100.0f, "%.2f");
-
+        "velocity input max", &m.velocity_input_max, 0.0f, 1000.0f, "%.2f");
       ImGui::InputFloat("x position (meter)", &m.position.x);
       ImGui::InputFloat("y position (meter)", &m.position.y);
     }

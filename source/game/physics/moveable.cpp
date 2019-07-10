@@ -94,57 +94,26 @@ void
 UpdateMoveable(const World& world,
            const f64 delta,
            Moveable& moveable,
-           const Acceleration h_acc,
-           const Acceleration v_acc)
+           const f32 h_vel,
+           const f32 v_vel)
 {
   const auto& terrain = world.GetTerrain();
   const bool on_ground = OnGround(world, moveable);
 
-  // calculate acceleration
-  constexpr float kExtreme = kStandardGravity * kMaxAccelerationModifier;
-  if (!alflib::FloatEqual(h_acc, 0.0f)) {
-    const float max_acceleration =
-        std::min(kExtreme, moveable.horizontal_max_acceleration);
-
-    f32 mod = dutil::Clamp(h_acc, -max_acceleration, max_acceleration) *
-              static_cast<f32>(delta);
-    if (std::abs(std::copysignf(1.0f, moveable.horizontal_velocity) +
-                 std::copysign(1.0f, moveable.horizontal_acceleration)) <
-        1.0f) {
-      mod *= 3; }
-
-    moveable.horizontal_acceleration = moveable.horizontal_acceleration + mod;
-  } else {
-    moveable.horizontal_acceleration = 0.0f;
-  }
-
-  if (!alflib::FloatEqual(v_acc, 0.0f)) {
-    moveable.vertical_acceleration =
-        dutil::Clamp(moveable.vertical_acceleration + v_acc * static_cast<f32>(delta), -kExtreme, kExtreme);
-  } else {
-    moveable.vertical_acceleration = 0.0f;
-  }
-
-  Acceleration v_acc_gravity = moveable.vertical_acceleration;
+  // vertical velocity
   if (!on_ground) {
     if (moveable.vertical_velocity > 0.0f) {
-      v_acc_gravity -= kStandardGravity * 3;
+      moveable.vertical_velocity -= (v_vel + kStandardGravity * 3) * delta;
     } else {
       // falling feels better if faster than rising
-      v_acc_gravity -= kStandardGravity * 5;
+      moveable.vertical_velocity -= (v_vel + kStandardGravity * 5) * delta;
     }
+  } else if (v_vel > 0.0f) {
+    moveable.vertical_velocity += v_vel * delta;
   }
 
-  // calculate velocity based on acceleration
-  // TODO maby remove these checks? always add?
-  bool has_h_acc = false;
-  if (!alflib::FloatEqual(moveable.horizontal_acceleration, 0.0f)) {
-    has_h_acc = true;
-    moveable.horizontal_velocity += moveable.horizontal_acceleration * delta;
-  }
-  if (!alflib::FloatEqual(v_acc_gravity, 0.0f)) {
-    moveable.vertical_velocity += v_acc_gravity * delta;
-  }
+  // horizontal velocity
+  moveable.horizontal_velocity += h_vel * delta;
 
   Position new_position = moveable.position;
 
@@ -177,11 +146,10 @@ delta), 0.0f, static_cast<f32>(terrain.GetHeight()-1));
 
     // x
     if (col_info.HorizontalCollision()) {
-      moveable.horizontal_acceleration = 0.0f;
       moveable.horizontal_velocity = 0.0f;
-    } else if (on_ground && alflib::FloatEqual(moveable.horizontal_acceleration, 0.0f)) {
+    } else if (on_ground) {
       // apply friction
-      const f32 clamp = moveable.horizontal_velocity > 0.0f ? 10.0f : -10.0f;
+      const f32 clamp = moveable.horizontal_velocity > 0.0f ? 100.0f : -100.0f;
       moveable.horizontal_velocity -= ((moveable.horizontal_velocity + clamp) * moveable.friction * delta);
       if (std::abs(moveable.horizontal_velocity) < kPixelInMeter / 10.0f) {
         moveable.horizontal_velocity = 0.0f;
@@ -206,7 +174,6 @@ delta), 0.0f, static_cast<f32>(terrain.GetHeight()-1));
 
     // y
     if (col_info.VerticalCollision()) {
-      moveable.vertical_acceleration = 0.0f;
       moveable.vertical_velocity = 0.0f;
 
     } else {
