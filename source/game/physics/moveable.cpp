@@ -109,11 +109,21 @@ UpdateMoveable(const World& world,
       moveable.vertical_velocity -= (v_vel + kStandardGravity * 5) * delta;
     }
   } else if (v_vel > 0.0f) {
-    moveable.vertical_velocity += v_vel * delta;
+    moveable.vertical_velocity = v_vel * delta;
   }
 
   // horizontal velocity
-  moveable.horizontal_velocity += h_vel * delta;
+  if (std::abs(h_vel) > 0.0f) {
+    moveable.horizontal_velocity = dutil::Clamp(
+      moveable.horizontal_velocity + h_vel * static_cast<f32>(delta) -
+        moveable.horizontal_velocity * static_cast<f32>(delta),
+      -moveable.velocity_max,
+      moveable.velocity_max);
+  } else if (on_ground ||
+             (on_ground && std::abs(std::copysignf(1.0f, moveable.horizontal_velocity) +
+                                    std::copysignf(1.0f, h_vel)) < 1.0f)) {
+    moveable.horizontal_velocity = 0.0f;
+  }
 
   Position new_position = moveable.position;
 
@@ -147,53 +157,11 @@ delta), 0.0f, static_cast<f32>(terrain.GetHeight()-1));
     // x
     if (col_info.HorizontalCollision()) {
       moveable.horizontal_velocity = 0.0f;
-    } else if (on_ground) {
-      // apply friction
-      const f32 clamp = moveable.horizontal_velocity > 0.0f ? 100.0f : -100.0f;
-      moveable.horizontal_velocity -= ((moveable.horizontal_velocity + clamp) * moveable.friction * delta);
-      if (std::abs(moveable.horizontal_velocity) < kPixelInMeter / 10.0f) {
-        moveable.horizontal_velocity = 0.0f;
-      }
-      // constexpr f32 kFrictionConstant = 5.0f;
-//       if (moveable.horizontal_velocity < 0.0f) {
-//         moveable.horizontal_velocity -=
-//           (moveable.horizontal_velocity) * moveable.friction * delta;
-//         if (moveable.horizontal_velocity > 0.0f) {
-//           // cancel out over adjustments
-//           moveable.horizontal_velocity = 0.0f;
-//         }
-//       } else if (moveable.horizontal_velocity > 0.0f) {
-//         moveable.horizontal_velocity -=
-//           (moveable.horizontal_velocity + kFrictionConstant) * moveable.friction
-// * delta; if (moveable.horizontal_velocity < 0.0f) {
-//           // cancel out over adjustments
-//           moveable.horizontal_velocity = 0.0f;
-//         }
-//       }
     }
 
     // y
     if (col_info.VerticalCollision()) {
       moveable.vertical_velocity = 0.0f;
-
-    } else {
-      // apply drag (vertical friction)
-      constexpr f32 kFrictionConstant = 5.0f;
-      if (moveable.vertical_velocity < -kStandardGravity) {
-        moveable.vertical_velocity -=
-          (moveable.vertical_velocity - kFrictionConstant) * moveable.drag *
-delta; if (moveable.vertical_velocity > 0.0f) {
-          // cancel out over adjustments
-          moveable.vertical_velocity = 0.0f;
-        }
-      } else if (moveable.vertical_velocity > kStandardGravity) {
-        moveable.vertical_velocity -=
-          (moveable.vertical_velocity + kFrictionConstant) * moveable.drag *
-delta; if (moveable.vertical_velocity < 0.0f) {
-          // cancel out over adjustments
-          moveable.vertical_velocity = 0.0f;
-        }
-      }
     }
   }
 }

@@ -20,7 +20,8 @@ struct Moveable
    */
   f32 vertical_velocity;
 
-  f32 velocity_input_max;
+  f32 velocity_input;
+  f32 velocity_max;
 
   /**
    * position is specified in meters
@@ -41,17 +42,6 @@ struct Moveable
    * Physical footprint of the moveable.
    */
   Collideable collideable;
-
-  /**
-   * Friction is applied when in contact with ground.
-   * How strong is the friction? Must be in range [0.0, 1.0].
-   */
-  f32 friction;
-
-  /**
-   * Drag is applied when falling. Must be in range [0.0, 1.0].
-   */
-  f32 drag;
 };
 
 // ============================================================ //
@@ -82,11 +72,10 @@ inline Moveable
 MoveableMakeDefault()
 {
   Moveable m{};
-  m.friction = 0.7f;
-  m.drag = 0.7f;
   m.width = game::kTileInMeters * 1.5f;
   m.height = game::kTileInMeters * 2.9f;
-  m.velocity_input_max = 12.0f;
+  m.velocity_input = 20.0f;
+  m.velocity_max = 10.0f;
   m.position.x = game::TileToMeter(10);
   m.position.y = game::TileToMeter(20);
 

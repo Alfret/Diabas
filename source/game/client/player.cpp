@@ -25,17 +25,16 @@ Player::Update(GameClient& game, const f64 delta)
 
     /// PLAYGROUND
 
-
     /// ---------------------
 
     f32 h_vel = 0.0f;
     f32 v_vel = 0.0f;
 
     if (game.IsKeyDown(Key::kKeyA)) {
-      h_vel -= moveable.velocity_input_max;
+      h_vel -= moveable.velocity_input;
     }
     if (game.IsKeyDown(Key::kKeyD)) {
-      h_vel += moveable.velocity_input_max;
+      h_vel += moveable.velocity_input;
     }
 
     if (game.IsKeyDown(Key::kKeySpace)) {
@@ -49,6 +48,7 @@ Player::Update(GameClient& game, const f64 delta)
 
     UpdateMoveable(world, delta, moveable, h_vel, v_vel);
   }
+
 }
 
 }

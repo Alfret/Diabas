@@ -615,10 +615,10 @@ ShowPlayerDebug(GameClient& gameClient)
         col);
 
       ImGui::TextUnformatted(info.c_str());
-      ImGui::SliderFloat("friction", &m.friction, 0.0f, 1.0f, "%.2f");
-      ImGui::SliderFloat("drag", &m.drag, 0.0f, 1.0f, "%.2f");
       ImGui::SliderFloat(
-        "velocity input max", &m.velocity_input_max, 0.0f, 1000.0f, "%.2f");
+        "velocity input", &m.velocity_input, 0.0f, 1000.0f, "%.2f");
+      ImGui::SliderFloat(
+        "velocity max", &m.velocity_max, 0.0f, 1000.0f, "%.2f");
       ImGui::InputFloat("x position (meter)", &m.position.x);
       ImGui::InputFloat("y position (meter)", &m.position.y);
     }
