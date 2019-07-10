@@ -195,9 +195,8 @@ ShowTileDebug(GameClient& gameClient)
         // Retrieve world position
         f64 mouseX, mouseY;
         gameClient.GetMousePosition(mouseX, mouseY);
-        WorldPos pos = PickWorldPosition(gameClient.GetWorld(),
-                                         gameClient.GetCamera(),
-                                         Vector2F(mouseX, mouseY));
+        WorldPos pos = gameClient.GetWorldRenderer().PickScreenTile(
+          gameClient.GetCamera(), Vector2F(mouseX, mouseY));
 
         // Handle different modes
         if (buttonIndex == 1) {

@@ -17,17 +17,32 @@
 
 namespace dib::game {
 
+WorldRenderer::WorldRenderer(World& world, ClientCache& clientCache)
+  : mWorld(world)
+  , mClientCache(clientCache)
+{
+  mWorld.GetTerrain().RegisterChangeListener(this);
+  mDataCells =
+    new Cell[mWorld.GetTerrain().GetWidth() * mWorld.GetTerrain().GetHeight()];
+}
+
+// -------------------------------------------------------------------------- //
+
+WorldRenderer::~WorldRenderer()
+{
+  mWorld.GetTerrain().UnregisterChangeListener(this);
+}
+
+// -------------------------------------------------------------------------- //
+
 void
-RenderWorldTerrain(graphics::Renderer& renderer,
-                   const graphics::Camera& camera,
-                   GameClient& gameClient)
+WorldRenderer::Render(graphics::Renderer& renderer,
+                      const graphics::Camera& camera)
 {
   MICROPROFILE_SCOPEI("WorldRenderer", "RenderTerrain", MP_SANDYBROWN);
 
   // Retrieve objects
-  ClientCache& cache = gameClient.GetCache();
-  World& world = gameClient.GetWorld();
-  Terrain& terrain = world.GetTerrain();
+  Terrain& terrain = mWorld.GetTerrain();
 
   // Retrieve batch and begin
   graphics::SpriteBatch& spriteBatch = renderer.GetSpriteBatch();
@@ -60,21 +75,17 @@ RenderWorldTerrain(graphics::Renderer& renderer,
     for (u32 x = minX; x < minX + countX + 2; x++) {
 
       WorldPos worldPosition{ x, y };
-      Terrain::Cell& terrainCell = terrain.GetCell(worldPosition);
 
       Vector3F renderPosition = Vector3F(
         x * TILE_SIZE - cameraPos.x, y * TILE_SIZE - cameraPos.y, 0.5f);
       alflib::Color tint = alflib::Color::WHITE;
-      Vector2F texMin, texMax;
-      cache.GetTextureCoordinatesForTile(
-        terrainCell.tile, terrainCell.cachedTileSubResource, texMin, texMax);
-      std::swap(texMin.x, texMax.x);
-      spriteBatch.Submit(cache.GetTileAtlasTexture(),
+      Cell& cell = GetCell(worldPosition);
+      spriteBatch.Submit(mClientCache.GetTileAtlasTexture(),
                          renderPosition,
                          Vector2F(TILE_SIZE, TILE_SIZE),
                          tint,
-                         texMin,
-                         texMax);
+                         cell.texMin,
+                         cell.texMax);
     }
   }
 
@@ -85,15 +96,43 @@ RenderWorldTerrain(graphics::Renderer& renderer,
 // -------------------------------------------------------------------------- //
 
 WorldPos
-PickWorldPosition(const World& world,
-                  const graphics::Camera& camera,
-                  Vector2F mousePos)
+WorldRenderer::PickScreenTile(const graphics::Camera& camera,
+                              Vector2F mousePosition)
 {
   // TODO(Filip Björklund): Implement support for zoom
-  WorldPos pos{ u32(mousePos.x / TILE_SIZE), u32(mousePos.y / TILE_SIZE) };
-  pos.X() = alflib::Clamp(pos.X(), 0u, world.GetTerrain().GetWidth());
-  pos.Y() = alflib::Clamp(pos.Y(), 0u, world.GetTerrain().GetHeight());
+  WorldPos pos{ u32(mousePosition.x / TILE_SIZE),
+                u32(mousePosition.y / TILE_SIZE) };
+  pos.X() = alflib::Clamp(pos.X(), 0u, mWorld.GetTerrain().GetWidth());
+  pos.Y() = alflib::Clamp(pos.Y(), 0u, mWorld.GetTerrain().GetHeight());
   return pos;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+WorldRenderer::OnTileChanged(WorldPos pos)
+{
+  TileRegistry::TileID id = mWorld.GetTerrain().GetTileID(pos);
+  Tile* tile = TileRegistry::Instance().GetTile(id);
+  Cell& cell = GetCell(pos);
+
+  mClientCache.GetTextureCoordinatesForTile(
+    id, tile->GetResourceIndex(mWorld, pos), cell.texMin, cell.texMax);
+  std::swap(cell.texMin.x, cell.texMax.x);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+WorldRenderer::OnWallChanged(WorldPos pos)
+{}
+
+// -------------------------------------------------------------------------- //
+
+WorldRenderer::Cell&
+WorldRenderer::GetCell(WorldPos pos)
+{
+  return *(mDataCells + mWorld.GetTerrain().GetWidth() * pos.Y() + pos.X());
 }
 
 }

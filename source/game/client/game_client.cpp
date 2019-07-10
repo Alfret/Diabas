@@ -20,6 +20,7 @@ GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
   : AppClient(descriptor)
   , mModLoader(Path{ "./mods" })
   , mCamera(GetWidth(), GetHeight())
+  , mWorldRenderer(mWorld, mClientCache)
 {
   CoreContent::Setup();
 
@@ -64,7 +65,7 @@ GameClient::Render()
 {
   mRenderer.NewFrame();
 
-  RenderWorldTerrain(mRenderer, mCamera, *this);
+  mWorldRenderer.Render(mRenderer, mCamera);
   RenderEntities(mRenderer, mCamera, mWorld.GetEntityManager());
 }
 

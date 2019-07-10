@@ -5,6 +5,7 @@
 // ========================================================================== //
 
 #include <microprofile/microprofile.h>
+#include <dutil/stopwatch.hpp>
 
 // ========================================================================== //
 // CoreContent Implementation
@@ -45,6 +46,9 @@ void
 CoreContent::GenerateWorld(World& world)
 {
   CoreContent& instance = GetInstance();
+
+  dutil::Stopwatch sw;
+  sw.Start();
 
   MICROPROFILE_SCOPEI("CoreGame", "WorldGen", MP_BROWN2);
 
@@ -98,6 +102,10 @@ CoreContent::GenerateWorld(World& world)
 #endif
 
   world.GetTerrain().ReCacheResourceIndices();
+
+  sw.Stop();
+  f64 seconds = sw.fs();
+  DLOG_VERBOSE("World generation (Core) finished in {:.3f}s", seconds);
 }
 
 // -------------------------------------------------------------------------- //

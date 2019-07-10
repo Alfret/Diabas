@@ -140,7 +140,9 @@ Terrain::ReCacheResourceIndices()
       WorldPos pos{ x, y };
       Tile* tile = GetTile(pos);
       Cell& cell = GetCell(pos);
-      cell.cachedTileSubResource = tile->GetResourceIndex(mWorld, pos);
+      for (auto& listener : mChangeListeners) {
+        listener->OnTileChanged(pos);
+      }
     }
   }
 }
@@ -167,6 +169,25 @@ void
 Terrain::SetMetadata(WorldPos pos, u8 metadata)
 {
   GetCell(pos).metadata = metadata;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::RegisterChangeListener(Terrain::ChangeListener* changeListener)
+{
+  mChangeListeners.push_back(changeListener);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::UnregisterChangeListener(Terrain::ChangeListener* changeListener)
+{
+  mChangeListeners.erase(std::remove(mChangeListeners.begin(),
+                                     mChangeListeners.end(),
+                                     changeListener),
+                         mChangeListeners.end());
 }
 
 // -------------------------------------------------------------------------- //
@@ -234,7 +255,9 @@ Terrain::SafeNeighbourUpdate(WorldPos pos)
     Tile* tile = GetTile(pos);
     tile->OnNeighbourChange(mWorld, pos);
     Cell& cell = GetCell(pos);
-    cell.cachedTileSubResource = tile->GetResourceIndex(mWorld, pos);
+    for (auto& listener : mChangeListeners) {
+      listener->OnTileChanged(pos);
+    }
   }
 }
 
@@ -246,7 +269,9 @@ Terrain::UpdateCachedIndices(WorldPos pos, bool updateNeighbours)
   // Update center tile
   Tile* centerTile = GetTile(pos);
   Cell& centerCell = GetCell(pos);
-  centerCell.cachedTileSubResource = centerTile->GetResourceIndex(mWorld, pos);
+  for (auto& listener : mChangeListeners) {
+    listener->OnTileChanged(pos);
+  }
 
   // Update neighbours
   if (updateNeighbours) {

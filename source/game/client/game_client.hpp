@@ -8,6 +8,7 @@
 #include "game/world.hpp"
 #include "game/client/client_cache.hpp"
 #include "game/client/player.hpp"
+#include "game/client/world_renderer.hpp"
 #include "game/gameplay/core_content.hpp"
 #include "game/mod/mod_loader.hpp"
 #include "graphics/camera.hpp"
@@ -36,6 +37,9 @@ private:
 
   /** Client resource cache **/
   ClientCache mClientCache;
+
+  /** World renderer **/
+  WorldRenderer mWorldRenderer;
 
   Player mPlayer{};
 
@@ -80,6 +84,12 @@ public:
 
   /** Returns the client cache **/
   const ClientCache& GetCache() const { return mClientCache; }
+
+  /** Returns the world renderer **/
+  WorldRenderer& GetWorldRenderer() { return mWorldRenderer; }
+
+  /** Returns the world renderer **/
+  const WorldRenderer& GetWorldRenderer() const { return mWorldRenderer; }
 
 private:
   /** Update the game camera **/

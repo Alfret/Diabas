@@ -72,8 +72,8 @@ class Tile
 protected:
   /** Path to the resource **/
   ResourcePath mResourcePath;
-  /** Translation key for the block in general. More can be specified in
-   * sub-classes if the block has different keys depending on position **/
+  /** Translation key for the tile in general. More can be specified in
+   * sub-classes if the tile has different keys depending on position **/
   String mTranslationKey;
 
   /** Whether tile is a light emitter **/
@@ -105,7 +105,7 @@ public:
    * is actually only loaded on clients and not used on servers.
    *
    * A translation key can also be specified that is used for translation of the
-   * name of the block **/
+   * name of the tile **/
   explicit Tile(ResourcePath resourcePath, String translationKey);
 
   /** Virtual destructor **/
@@ -117,11 +117,11 @@ public:
   /** Called just before a tile is destroyed **/
   virtual void OnDestroyed(World& world, WorldPos pos);
 
-  /** Called when block is activated (right-clicked on client). Returning true
-   * means that the block handled the activation **/
+  /** Called when tile is activated (right-clicked on client). Returning true
+   * means that the tile handled the activation **/
   virtual bool OnActivated(World& world, WorldPos pos);
 
-  /** Called when one of the neighbouring eight (8) blocks has changed **/
+  /** Called when one of the neighbouring eight (8) tiles has changed **/
   virtual void OnNeighbourChange(World& world, WorldPos pos);
 
   /** Returns whether or not the tile is a multi-tile object **/
@@ -131,7 +131,7 @@ public:
    * in the world **/
   virtual bool CanPlaceMultiTile(World& world, WorldPos pos);
 
-  /** Place the block of the multi-tile structure. This returns false if the
+  /** Place the tile of the multi-tile structure. This returns false if the
    * multi-tile cannot be placed at the specified position **/
   virtual bool PlaceMultiTile(World& world, WorldPos pos);
 

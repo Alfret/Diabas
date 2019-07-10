@@ -10,6 +10,7 @@
 #include "core/macros.hpp"
 #include "graphics/camera.hpp"
 #include "game/tile/tile_registry.hpp"
+#include "game/wall/wall_registry.hpp"
 
 // ========================================================================== //
 // Terrain Declaration
@@ -40,12 +41,20 @@ public:
   struct Cell
   {
     TileRegistry::TileID tile;
-    TileRegistry::WallID wall;
-    TileRegistry::WireID wire;
+    WallRegistry::WallID wall;
+    // TileRegistry::WireID wire;
     u8 metadata;
-    u8 cachedTileSubResource;
-    u8 cachedWallSubResource;
-    u8 cachedWireSubResource;
+  };
+
+  /** Change listener **/
+  class ChangeListener
+  {
+  public:
+    /** Called when a tile in the world changed **/
+    virtual void OnTileChanged(WorldPos pos) = 0;
+
+    /** Called when a wall in the world changed **/
+    virtual void OnWallChanged(WorldPos pos) = 0;
   };
 
 private:
@@ -59,6 +68,9 @@ private:
 
   /** Terrain cells **/
   Cell* mTerrainCells;
+
+  /** Change listeners **/
+  std::vector<ChangeListener*> mChangeListeners;
 
 public:
   /** Construct a world of the specified dimensions **/
@@ -136,6 +148,12 @@ public:
 
   /** Sets the metadata for a position in the world **/
   void SetMetadata(WorldPos pos, u8 metadata);
+
+  /** Register change listener **/
+  void RegisterChangeListener(ChangeListener* changeListener);
+
+  /** Unregister change listener **/
+  void UnregisterChangeListener(ChangeListener* changeListener);
 
   /** Returns a cell in the world data **/
   Cell& GetCell(WorldPos pos);

@@ -27,10 +27,6 @@ class TileRegistry
 public:
   /** Type for tile IDs **/
   using TileID = u16;
-  /** Type for wall-tile IDs **/
-  using WallID = u16;
-  /** Type for wire-tile IDs **/
-  using WireID = u8;
 
 private:
   /** List of registered tiles. Indices in the array are their IDs **/
