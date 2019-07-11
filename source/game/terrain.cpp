@@ -30,6 +30,11 @@ Terrain::Terrain(World& world, Terrain::Size size)
 {
   // Determine size
   switch (size) {
+    case Size::kTiny: {
+      mWidth = 2100;
+      mHeight = 600;
+      break;
+    }
     case Size::kSmall: {
       mWidth = 4200;
       mHeight = 1200;
@@ -75,6 +80,22 @@ Terrain::GetTileID(WorldPos pos) const
 
 // -------------------------------------------------------------------------- //
 
+Wall*
+Terrain::GetWall(WorldPos pos) const
+{
+  return WallRegistry::Instance().GetWall(GetWallID(pos));
+}
+
+// -------------------------------------------------------------------------- //
+
+WallRegistry::WallID
+Terrain::GetWallID(WorldPos pos) const
+{
+  return (mTerrainCells + mWidth * pos.Y() + pos.X())->wall;
+}
+
+// -------------------------------------------------------------------------- //
+
 bool
 Terrain::SetTile(WorldPos pos, Tile* tile)
 {
@@ -87,6 +108,22 @@ bool
 Terrain::SetTile(WorldPos pos, TileRegistry::TileID id)
 {
   return SetTileAdvanced(pos, id);
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Terrain::SetWall(WorldPos pos, Wall* wall)
+{
+  return SetWall(pos, WallRegistry::Instance().GetWallID(wall));
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Terrain::SetWall(WorldPos pos, WallRegistry::WallID id)
+{
+  return SetWallAdvanced(pos, id);
 }
 
 // -------------------------------------------------------------------------- //
@@ -111,7 +148,32 @@ Terrain::GenSetTile(WorldPos pos,
   tile = TileRegistry::Instance().GetTile(id);
   cell.tile = id;
   tile->OnPlaced(mWorld, pos);
-  UpdateCachedIndices(pos, updateNeighbours);
+  UpdateCachedTileIndices(pos, updateNeighbours);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::GenSetWall(WorldPos pos, Wall* wall, bool updateNeighbours)
+{
+  GenSetWall(pos, WallRegistry::Instance().GetWallID(wall), updateNeighbours);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::GenSetWall(WorldPos pos,
+                    WallRegistry::WallID id,
+                    bool updateNeighbours)
+{
+  Cell& cell = GetCell(pos);
+  Wall* wall = WallRegistry::Instance().GetWall(cell.wall);
+  wall->OnDestroyed(mWorld, pos);
+
+  wall = WallRegistry::Instance().GetWall(id);
+  cell.wall = id;
+  wall->OnPlaced(mWorld, pos);
+  UpdateCachedWallIndices(pos, updateNeighbours);
 }
 
 // -------------------------------------------------------------------------- //
@@ -138,10 +200,9 @@ Terrain::ReCacheResourceIndices()
   for (u32 y = 0; y < mHeight; y++) {
     for (u32 x = 0; x < mWidth; x++) {
       WorldPos pos{ x, y };
-      Tile* tile = GetTile(pos);
-      Cell& cell = GetCell(pos);
       for (auto& listener : mChangeListeners) {
         listener->OnTileChanged(pos);
+        listener->OnWallChanged(pos);
       }
     }
   }
@@ -242,19 +303,18 @@ Terrain::SetTileAdvanced(WorldPos pos,
     }
   }
   tile->OnPlaced(mWorld, pos);
-  UpdateCachedIndices(pos, updateNeighbour);
+  UpdateCachedTileIndices(pos, updateNeighbour);
   return true;
 }
 
 // -------------------------------------------------------------------------- //
 
 void
-Terrain::SafeNeighbourUpdate(WorldPos pos)
+Terrain::SafeNeighbourTileUpdate(WorldPos pos)
 {
   if (IsValidPosition(pos)) {
     Tile* tile = GetTile(pos);
     tile->OnNeighbourChange(mWorld, pos);
-    Cell& cell = GetCell(pos);
     for (auto& listener : mChangeListeners) {
       listener->OnTileChanged(pos);
     }
@@ -264,25 +324,85 @@ Terrain::SafeNeighbourUpdate(WorldPos pos)
 // -------------------------------------------------------------------------- //
 
 void
-Terrain::UpdateCachedIndices(WorldPos pos, bool updateNeighbours)
+Terrain::UpdateCachedTileIndices(WorldPos pos, bool updateNeighbours)
 {
   // Update center tile
-  Tile* centerTile = GetTile(pos);
-  Cell& centerCell = GetCell(pos);
   for (auto& listener : mChangeListeners) {
     listener->OnTileChanged(pos);
   }
 
   // Update neighbours
   if (updateNeighbours) {
-    SafeNeighbourUpdate(pos.TopLeft());
-    SafeNeighbourUpdate(pos.Top());
-    SafeNeighbourUpdate(pos.TopRight());
-    SafeNeighbourUpdate(pos.Left());
-    SafeNeighbourUpdate(pos.Right());
-    SafeNeighbourUpdate(pos.BottomLeft());
-    SafeNeighbourUpdate(pos.Bottom());
-    SafeNeighbourUpdate(pos.BottomRight());
+    SafeNeighbourTileUpdate(pos.TopLeft());
+    SafeNeighbourTileUpdate(pos.Top());
+    SafeNeighbourTileUpdate(pos.TopRight());
+    SafeNeighbourTileUpdate(pos.Left());
+    SafeNeighbourTileUpdate(pos.Right());
+    SafeNeighbourTileUpdate(pos.BottomLeft());
+    SafeNeighbourTileUpdate(pos.Bottom());
+    SafeNeighbourTileUpdate(pos.BottomRight());
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Terrain::SetWallAdvanced(WorldPos pos,
+                         WallRegistry::WallID id,
+                         bool ignoreReplaceCheck,
+                         bool updateNeighbour)
+{
+  Cell& cell = GetCell(pos);
+
+  // Notify old tile
+  Wall* wall = WallRegistry::Instance().GetWall(cell.wall);
+  if (!ignoreReplaceCheck && !wall->CanBeReplaced(mWorld, pos)) {
+    return false;
+  }
+  wall->OnDestroyed(mWorld, pos);
+
+  // Set new tile
+  wall = WallRegistry::Instance().GetWall(id);
+  cell.wall = id;
+  wall->OnPlaced(mWorld, pos);
+  UpdateCachedWallIndices(pos, updateNeighbour);
+  return true;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::SafeNeighbourWallUpdate(WorldPos pos)
+{
+  if (IsValidPosition(pos)) {
+    Wall* wall = GetWall(pos);
+    wall->OnNeighbourChange(mWorld, pos);
+    for (auto& listener : mChangeListeners) {
+      listener->OnWallChanged(pos);
+    }
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::UpdateCachedWallIndices(WorldPos pos, bool updateNeighbours)
+{
+  // Update center tile
+  for (auto& listener : mChangeListeners) {
+    listener->OnWallChanged(pos);
+  }
+
+  // Update neighbours
+  if (updateNeighbours) {
+    SafeNeighbourWallUpdate(pos.TopLeft());
+    SafeNeighbourWallUpdate(pos.Top());
+    SafeNeighbourWallUpdate(pos.TopRight());
+    SafeNeighbourWallUpdate(pos.Left());
+    SafeNeighbourWallUpdate(pos.Right());
+    SafeNeighbourWallUpdate(pos.BottomLeft());
+    SafeNeighbourWallUpdate(pos.Bottom());
+    SafeNeighbourWallUpdate(pos.BottomRight());
   }
 }
 

@@ -203,7 +203,7 @@ ShowTileDebug(GameClient& gameClient)
           gameClient.GetWorld().GetTerrain().SetTile(pos, indices[0]);
         } else if (buttonIndex == 2) {
           gameClient.GetWorld().GetTerrain().RemoveTile(
-            pos, CoreContent::GetTileAir());
+            pos, CoreContent::GetTiles().air);
         }
       }
 
@@ -236,6 +236,139 @@ ShowTileDebug(GameClient& gameClient)
       }
 
       const auto& atlasTexture = gameClient.GetCache().GetTileAtlasTexture();
+      ImGui::Image(reinterpret_cast<ImTextureID>(atlasTexture->GetID()),
+                   ImVec2(atlasSize[0], atlasSize[1]),
+                   ImVec2(0, 0),
+                   ImVec2(1, 1),
+                   ImVec4(1, 1, 1, 1),
+                   ImVec4(0, 0, 0, 1));
+
+      ImGui::TreePop();
+    }
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ShowWallDebug(GameClient& gameClient)
+{
+  WallRegistry& wallRegistry = WallRegistry::Instance();
+  Terrain& terrain = gameClient.GetWorld().GetTerrain();
+
+  if (ImGui::CollapsingHeader("Wall")) {
+    // Display registered tiles
+    if (ImGui::TreeNode("Registered walls")) {
+      std::vector<String> wallNames;
+      for (auto& entry : wallRegistry.GetRegistryMap()) {
+        wallNames.push_back(entry.first);
+      }
+      static s32 listIndex = 0;
+      const auto NameRetrieval =
+        [](void* data, s32 n, const char** textOut) -> bool {
+        auto _tileNames = static_cast<std::vector<String>*>(data);
+        *textOut = (*_tileNames)[n].GetUTF8();
+        return true;
+      };
+      ImGui::ListBox("",
+                     &listIndex,
+                     NameRetrieval,
+                     static_cast<void*>(&wallNames),
+                     s32(wallNames.size()));
+
+      // List information
+      WallRegistry::WallID wallId =
+        wallRegistry.GetWallID(wallNames[listIndex]);
+      Wall* wall = wallRegistry.GetWalls()[wallId];
+      ImGui::Text("ID: %i", wallId);
+      ImGui::Text("Mod ID: %s", wall->GetResourcePath().GetModId().GetUTF8());
+      ImGui::Text("Resource: \"%s\"",
+                  wall->GetResourcePath().GetPath().GetPathString().GetUTF8());
+
+      // List subresources
+      ImGui::Text("Sub-resource count: %zu",
+                  gameClient.GetCache().GetWallSubResources(wallId).size());
+
+      ImGui::TreePop();
+    }
+
+    // Display tile by ID
+    if (ImGui::TreeNode("By ID")) {
+      static s32 indices[2] = { 0, 0 };
+      ImGui::SliderInt(
+        "Index", &indices[0], 0, wallRegistry.GetWalls().size() - 1);
+      u32 maxSubResource =
+        gameClient.GetCache().GetWallSubResourceCount(indices[0]) - 1;
+      indices[1] = alflib::Clamp(indices[1], 0, s32(maxSubResource));
+      ImGui::SliderInt("Sub-resource", &indices[1], 0, maxSubResource);
+
+      Vector2F texMin, texMax;
+      gameClient.GetCache().GetTextureCoordinatesForWall(
+        indices[0], indices[1], texMin, texMax);
+      const auto& atlasTexture = gameClient.GetCache().GetWallAtlasTexture();
+      Vector2F size((texMax.x - texMin.x) * atlasTexture->GetWidth() * 10,
+                    (texMax.y - texMin.y) * atlasTexture->GetHeight() * 10);
+      ImGui::Image(reinterpret_cast<ImTextureID>(atlasTexture->GetID()),
+                   ImVec2(size.x, size.y),
+                   ImVec2(texMin.x, texMin.y),
+                   ImVec2(texMax.x, texMax.y),
+                   ImVec4(1, 1, 1, 1),
+                   ImVec4(0, 0, 0, 1));
+
+      // Tile placement/removal
+      static s32 buttonIndex = 0;
+      ImGui::RadioButton("Select", &buttonIndex, 0);
+      ImGui::SameLine();
+      ImGui::RadioButton("Place", &buttonIndex, 1);
+      ImGui::SameLine();
+      ImGui::RadioButton("Remove", &buttonIndex, 2);
+
+      if (!ImGui::IsMouseHoveringAnyWindow() &&
+          gameClient.IsMouseDown(MouseButton::kMouseButtonLeft)) {
+        // Retrieve world position
+        f64 mouseX, mouseY;
+        gameClient.GetMousePosition(mouseX, mouseY);
+        WorldPos pos = gameClient.GetWorldRenderer().PickScreenTile(
+          gameClient.GetCamera(), Vector2F(mouseX, mouseY));
+
+        // Handle different modes
+        if (buttonIndex == 1) {
+          gameClient.GetWorld().GetTerrain().SetWall(pos, indices[0]);
+        } else if (buttonIndex == 2) {
+          // gameClient.GetWorld().GetTerrain().RemoveWall(
+          //  pos, CoreContent::GetTiles().air);
+        }
+      }
+
+      ImGui::TreePop();
+    }
+
+    // Display information about wall in world
+    if (ImGui::TreeNode("In world")) {
+      static s32 position[2] = { 0, 0 };
+      ImGui::InputInt("X", &position[0], 1, 100);
+      ImGui::InputInt("Y", &position[1], 1, 100);
+      position[0] = alflib::Clamp(u32(position[0]), 0u, terrain.GetWidth());
+      position[1] = alflib::Clamp(u32(position[1]), 0u, terrain.GetHeight());
+
+      // Tile* tile =
+
+      ImGui::TreePop();
+    }
+
+    // Display wall atlas
+    if (ImGui::TreeNode("Atlas")) {
+
+      static s32 atlasSize[2] = { 256, 256 };
+      static bool uniformAtlasSize = true;
+      ImGui::Checkbox("Uniform size", &uniformAtlasSize);
+      ImGui::SliderInt("Width", &atlasSize[0], 64, 2048);
+      ImGui::SliderInt("Height", &atlasSize[1], 64, 2048);
+      if (uniformAtlasSize) {
+        atlasSize[1] = atlasSize[0];
+      }
+
+      const auto& atlasTexture = gameClient.GetCache().GetWallAtlasTexture();
       ImGui::Image(reinterpret_cast<ImTextureID>(atlasTexture->GetID()),
                    ImVec2(atlasSize[0], atlasSize[1]),
                    ImVec2(0, 0),

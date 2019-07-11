@@ -82,6 +82,11 @@ SpriteBatch::Flush()
 void
 SpriteBatch::Submit(const Sprite& sprite)
 {
+  // Flush if max limix reached
+  if (mDataCount >= MAX_SPRITES) {
+    Flush();
+  }
+
   // Flush if different texture
   if (mCurrentTexture && mCurrentTexture != sprite.GetTexture()) {
     Flush();
@@ -136,6 +141,11 @@ SpriteBatch::Submit(const std::shared_ptr<Texture>& texture,
                     Vector2F texMin,
                     Vector2F texMax)
 {
+  // Flush if max limix reached
+  if (mDataCount >= MAX_SPRITES) {
+    Flush();
+  }
+
   // Flush if different texture
   if (mCurrentTexture && mCurrentTexture != texture) {
     Flush();

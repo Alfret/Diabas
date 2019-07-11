@@ -24,8 +24,9 @@ GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
 {
   CoreContent::Setup();
 
-  mClientCache.BuildTileAtlas();
   mClientCache.BuildItemAtlas();
+  mClientCache.BuildTileAtlas();
+  mClientCache.BuildWallAtlas();
 
   CoreContent::GenerateWorld(mWorld);
 }
@@ -46,8 +47,9 @@ GameClient::Update(f64 delta)
     ShowStatisticsDebug(*this, delta);
     ShowScriptDebug(*this);
     ShowModDebug(*this);
-    ShowTileDebug(*this);
     ShowItemDebug(*this);
+    ShowTileDebug(*this);
+    ShowWallDebug(*this);
     ShowNetworkDebug(*this);
     ShowPlayerDebug(*this);
   }

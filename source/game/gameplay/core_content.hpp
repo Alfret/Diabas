@@ -6,6 +6,7 @@
 
 #include "game/item/item_registry.hpp"
 #include "game/tile/tile_registry.hpp"
+#include "game/wall/wall_registry.hpp"
 #include "game/gameplay/tile/tile_chair.hpp"
 #include "game/gameplay/tile/tile_variant.hpp"
 #include "game/world.hpp"
@@ -25,23 +26,40 @@ public:
   static constexpr char8 MOD_ID[] = "core";
 
 private:
-  /** Air tile **/
-  Tile* mTileAir = nullptr;
-  /** Dirt tile **/
-  Tile* mTileDirt = nullptr;
-  /** Grass tile **/
-  Tile* mTileGrass = nullptr;
-  /** Rock tile **/
-  Tile* mTileRock = nullptr;
+  /** Items **/
+  struct Items
+  {
+    /** Apple  **/
+    Item* apple = nullptr;
+  } mItems;
 
-  /** Tile: Dungeon wall **/
-  TileVariant* mTileDungeon = nullptr;
+  /** Tiles **/
+  struct Tiles
+  {
+    /** Air **/
+    Tile* air = nullptr;
+    /** Dirt **/
+    Tile* dirt = nullptr;
+    /** Grass **/
+    Tile* grass = nullptr;
+    /** Rock **/
+    Tile* rock = nullptr;
 
-  /** Chair tile **/
-  TileChair* mTileChair = nullptr;
+    /** Dungeon wall **/
+    TileVariant* dungeon = nullptr;
 
-  /** Apple item **/
-  Item* mItemApple = nullptr;
+    /** Chair **/
+    TileChair* chair = nullptr;
+  } mTiles;
+
+  /** Walls **/
+  struct Walls
+  {
+    /** Air **/
+    Wall* air = nullptr;
+    /** Stone **/
+    Wall* stone = nullptr;
+  } mWalls;
 
 public:
   /** Destruct core content **/
@@ -57,11 +75,14 @@ public:
   /** Generate the base world **/
   static void GenerateWorld(World& world);
 
-  /** Returns the air tile **/
-  static Tile* GetTileAir() { return GetInstance().mTileAir; }
+  /** Returns core items **/
+  static Items& GetItems() { return GetInstance().mItems; }
 
-  /** Returns the chair tile **/
-  static TileChair* GetTileChair() { return GetInstance().mTileChair; }
+  /** Returns core tiles **/
+  static Tiles& GetTiles() { return GetInstance().mTiles; }
+
+  /** Returns core walls **/
+  static Walls& GetWalls() { return GetInstance().mWalls; }
 
 private:
   /** Construct core content **/
@@ -72,6 +93,9 @@ private:
 
   /** Setup core tiles **/
   void SetupTiles();
+
+  /** Setup core walls **/
+  void SetupWalls();
 };
 
 }

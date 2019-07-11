@@ -3,7 +3,7 @@
 namespace dib::game {
 
 World::World()
-  : mTerrain(*this, Terrain::Size::kLarge)
+  : mTerrain(*this, Terrain::Size::kTiny)
 {}
 
 // -------------------------------------------------------------------------- //

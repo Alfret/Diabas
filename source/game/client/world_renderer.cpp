@@ -69,23 +69,44 @@ WorldRenderer::Render(graphics::Renderer& renderer,
     countY = terrain.GetHeight() - minY;
   }
 
-  // Render each tile
+  // Render each wall
   // TODO(Filip Björklund): Implement zooming
   for (u32 y = minY; y < minY + countY + 2; y++) {
     for (u32 x = minX; x < minX + countX + 2; x++) {
-
       WorldPos worldPosition{ x, y };
+      Cell& cell = GetCell(worldPosition);
+      alflib::Color tint = alflib::Color::WHITE;
 
+      // Render wall
+      Vector3F renderPosWall =
+        Vector3F(f32(x * WALL_SIZE) - cameraPos.x - (WALL_SIZE / 2.0f),
+                 f32(y * WALL_SIZE) - cameraPos.y - (WALL_SIZE / 2.0f),
+                 0.5f);
+      spriteBatch.Submit(mClientCache.GetWallAtlasTexture(),
+                         renderPosWall,
+                         Vector2F(WALL_SIZE * 2.0f, WALL_SIZE * 2.0f),
+                         tint,
+                         cell.texMinWall,
+                         cell.texMaxWall);
+    }
+  }
+
+  // Render each tile
+  for (u32 y = minY; y < minY + countY + 2; y++) {
+    for (u32 x = minX; x < minX + countX + 2; x++) {
+      WorldPos worldPosition{ x, y };
+      Cell& cell = GetCell(worldPosition);
+      alflib::Color tint = alflib::Color::WHITE;
+
+      // Render tile
       Vector3F renderPosition = Vector3F(
         x * TILE_SIZE - cameraPos.x, y * TILE_SIZE - cameraPos.y, 0.5f);
-      alflib::Color tint = alflib::Color::WHITE;
-      Cell& cell = GetCell(worldPosition);
       spriteBatch.Submit(mClientCache.GetTileAtlasTexture(),
                          renderPosition,
                          Vector2F(TILE_SIZE, TILE_SIZE),
                          tint,
-                         cell.texMin,
-                         cell.texMax);
+                         cell.texMinTile,
+                         cell.texMaxTile);
     }
   }
 
@@ -117,15 +138,23 @@ WorldRenderer::OnTileChanged(WorldPos pos)
   Cell& cell = GetCell(pos);
 
   mClientCache.GetTextureCoordinatesForTile(
-    id, tile->GetResourceIndex(mWorld, pos), cell.texMin, cell.texMax);
-  std::swap(cell.texMin.x, cell.texMax.x);
+    id, tile->GetResourceIndex(mWorld, pos), cell.texMinTile, cell.texMaxTile);
+  std::swap(cell.texMinTile.x, cell.texMaxTile.x);
 }
 
 // -------------------------------------------------------------------------- //
 
 void
 WorldRenderer::OnWallChanged(WorldPos pos)
-{}
+{
+  WallRegistry::WallID id = mWorld.GetTerrain().GetWallID(pos);
+  Wall* wall = WallRegistry::Instance().GetWall(id);
+  Cell& cell = GetCell(pos);
+
+  mClientCache.GetTextureCoordinatesForWall(
+    id, wall->GetResourceIndex(mWorld, pos), cell.texMinWall, cell.texMaxWall);
+  std::swap(cell.texMinWall.x, cell.texMaxWall.x);
+}
 
 // -------------------------------------------------------------------------- //
 
@@ -134,5 +163,4 @@ WorldRenderer::GetCell(WorldPos pos)
 {
   return *(mDataCells + mWorld.GetTerrain().GetWidth() * pos.Y() + pos.X());
 }
-
 }

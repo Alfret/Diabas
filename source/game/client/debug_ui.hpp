@@ -38,6 +38,13 @@ ShowModDebug(GameClient& gameClient);
 /** Show debugging information related to tiles and the world **/
 void
 ShowTileDebug(GameClient& gameClient);
+
+// -------------------------------------------------------------------------- //
+
+/** Show debugging information related to walls and the world **/
+void
+ShowWallDebug(GameClient& gameClient);
+
 // -------------------------------------------------------------------------- //
 
 /** Show debugging information related to items **/

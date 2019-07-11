@@ -27,6 +27,8 @@ public:
   /** Common terrain sizes **/
   enum class Size
   {
+    /** Tiny world **/
+    kTiny,
     /** Small world **/
     kSmall,
     /** Normal world size **/
@@ -67,7 +69,7 @@ private:
   u32 mHeight;
 
   /** Terrain cells **/
-  Cell* mTerrainCells;
+  Cell* mTerrainCells = nullptr;
 
   /** Change listeners **/
   std::vector<ChangeListener*> mChangeListeners;
@@ -85,6 +87,12 @@ public:
   /** Returns the ID of the tile at the specified location in the world **/
   [[nodiscard]] TileRegistry::TileID GetTileID(WorldPos pos) const;
 
+  /** Returns the wall at the specified location in the world **/
+  [[nodiscard]] Wall* GetWall(WorldPos pos) const;
+
+  /** Returns the ID of the wall at the specified location in the world **/
+  [[nodiscard]] WallRegistry::WallID GetWallID(WorldPos pos) const;
+
   /** Sets the tile at the specified location in the world. The function returns
    * false if the tile could not be placed **/
   bool SetTile(WorldPos pos, Tile* tile);
@@ -92,6 +100,14 @@ public:
   /** Sets the tile at the specified location in the world given its ID. The
    * function returns false if the tile could not be placed **/
   bool SetTile(WorldPos pos, TileRegistry::TileID id);
+
+  /** Sets the wall at the specified location in the world. The function returns
+   * false if the wall could not be placed **/
+  bool SetWall(WorldPos pos, Wall* wall);
+
+  /** Sets the wall at the specified location in the world given its ID. The
+   * function returns false if the wall could not be placed **/
+  bool SetWall(WorldPos pos, WallRegistry::WallID id);
 
   /** Set the tile at the given position in the world during generation. It's
    * important that the function 'Terrain::SetTile' is used during game-play
@@ -121,6 +137,12 @@ public:
    */
   void GenSetTile(WorldPos pos,
                   TileRegistry::TileID id,
+                  bool updateNeighbours = false);
+
+  void GenSetWall(WorldPos pos, Wall* wall, bool updateNeighbours = false);
+
+  void GenSetWall(WorldPos pos,
+                  WallRegistry::WallID id,
                   bool updateNeighbours = false);
 
   /** Remove the tile at the given location in the world. The removed tile is
@@ -176,10 +198,22 @@ private:
                        bool updateNeighbour = true);
 
   /** Update the neighbour only if the position is valid in the world **/
-  void SafeNeighbourUpdate(WorldPos pos);
+  void SafeNeighbourTileUpdate(WorldPos pos);
 
   /** Update sub-resource indices **/
-  void UpdateCachedIndices(WorldPos pos, bool updateNeighbours = true);
+  void UpdateCachedTileIndices(WorldPos pos, bool updateNeighbours = true);
+
+  /** Implementation of 'SetWall' with more flags to determine how it works **/
+  bool SetWallAdvanced(WorldPos pos,
+                       WallRegistry::WallID id,
+                       bool ignoreReplaceCheck = false,
+                       bool updateNeighbour = true);
+
+  /** Update the neighbour only if the position is valid in the world **/
+  void SafeNeighbourWallUpdate(WorldPos pos);
+
+  /** Update sub-resource indices **/
+  void UpdateCachedWallIndices(WorldPos pos, bool updateNeighbours = true);
 };
 
 }

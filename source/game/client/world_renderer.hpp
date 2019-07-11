@@ -35,7 +35,9 @@ public:
   struct Cell
   {
     /** Cached tile texture coordinates **/
-    Vector2F texMin, texMax;
+    Vector2F texMinTile, texMaxTile;
+    /** Cached wall texture coordinates **/
+    Vector2F texMinWall, texMaxWall;
     /** Cached shadow information **/
   };
 

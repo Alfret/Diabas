@@ -33,7 +33,7 @@ TileChair::CanPlaceMultiTile(World& world, WorldPos pos)
 {
   Terrain& terrain = world.GetTerrain();
   return terrain.IsValidPosition(pos.Top()) &&
-         terrain.GetTile(pos.Top()) == CoreContent::GetTileAir();
+         terrain.GetTile(pos.Top()) == CoreContent::GetTiles().air;
 }
 
 // -------------------------------------------------------------------------- //
@@ -44,11 +44,11 @@ TileChair::PlaceMultiTile(World& world, WorldPos pos)
   Terrain& terrain = world.GetTerrain();
   if (terrain.IsValidPosition(pos.Top())) {
     Tile* topTile = terrain.GetTile(pos.Top());
-    if (topTile != CoreContent::GetTileAir()) {
+    if (topTile != CoreContent::GetTiles().air) {
       return false;
     }
 
-    terrain.GenSetTile(pos.Top(), CoreContent::GetTileChair(), true);
+    terrain.GenSetTile(pos.Top(), CoreContent::GetTiles().chair, true);
     terrain.SetMetadata(pos.Top(), 0);
     terrain.SetMetadata(pos, 2);
     return true;
@@ -63,11 +63,11 @@ TileChair::KillMultiTile(World& world, WorldPos pos)
 {
   Terrain& terrain = world.GetTerrain();
   if (terrain.GetMetadata(pos) == 0) {
-    terrain.GenSetTile(pos, CoreContent::GetTileAir(), true);
-    terrain.GenSetTile(pos.Bottom(), CoreContent::GetTileAir(), true);
+    terrain.GenSetTile(pos, CoreContent::GetTiles().air, true);
+    terrain.GenSetTile(pos.Bottom(), CoreContent::GetTiles().air, true);
   } else if (terrain.GetMetadata(pos) == 2) {
-    terrain.GenSetTile(pos.Top(), CoreContent::GetTileAir(), true);
-    terrain.GenSetTile(pos, CoreContent::GetTileAir(), true);
+    terrain.GenSetTile(pos.Top(), CoreContent::GetTiles().air, true);
+    terrain.GenSetTile(pos, CoreContent::GetTiles().air, true);
   }
   return true;
 }
