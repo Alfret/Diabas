@@ -1,11 +1,34 @@
 #ifndef MOVEABLE_HPP_
 #define MOVEABLE_HPP_
 
+#include <alflib/memory/raw_memory_writer.hpp>
+#include <alflib/memory/raw_memory_reader.hpp>
 #include "game/physics/units.hpp"
 #include "core/types.hpp"
 #include "game/physics/collideable.hpp"
+#include "game/client/player.hpp"
 
 namespace dib::game {
+
+/**
+ * This structure will be sent often over network. Contain the fast changing
+ * variables of the moveable.
+ */
+struct MoveableIncrement
+{
+  f32 horizontal_velocity;
+  f32 vertical_velocity;
+  u8 jumping : 1;
+  Position position;
+  PlayerInput input;
+
+  bool ToBytes(alflib::RawMemoryWriter& mw) const;
+
+  static MoveableIncrement FromBytes(alflib::RawMemoryReader& mr);
+};
+
+// ============================================================ //
+
 struct Moveable
 {
   /**
@@ -23,14 +46,16 @@ struct Moveable
   f32 velocity_input;
   f32 velocity_max;
   f32 velocity_jump;
-  bool jumping;
+  u8 jumping : 1;
 
   /**
    * position is specified in meters
    * position origin is at middle x, bottom y, (right at the toes), of the
    * character
    */
-  game::Position position;
+  Position position;
+
+  PlayerInput input;
 
   /**
    * Visual width and height
@@ -42,6 +67,16 @@ struct Moveable
    * Physical footprint of the moveable.
    */
   Collideable collideable;
+
+  // ============================================================ //
+
+  MoveableIncrement ToIncrement() const;
+
+  void FromIncrement(const MoveableIncrement& m);
+
+  bool ToBytes(alflib::RawMemoryWriter& mw) const;
+
+  static Moveable FromBytes(alflib::RawMemoryReader& mr);
 };
 
 // ============================================================ //
@@ -60,9 +95,7 @@ SimulateMoveables(World& world, f64 delta);
 void
 UpdateMoveable(const World& world,
                f64 delta,
-               Moveable& moveable,
-               f32 h_vel,
-               f32 v_vel);
+               Moveable& moveable);
 
 /**
  * Apply a force to a moveable. This means, instantly, modifying the entities
@@ -75,6 +108,11 @@ void ForceOnMoveable(Moveable& moveable,
                      f32 horizontal_force,
                      f32 vertical_force);
 
+
+void
+ApplyMoveableIncrement(Moveable& moveable, MoveableIncrement increment,
+                       bool is_our_moveable);
+
 inline Moveable
 MoveableMakeDefault()
 {
@@ -84,7 +122,7 @@ MoveableMakeDefault()
   m.velocity_input = 20.0f;
   m.velocity_max = 10.0f;
   m.velocity_jump = 14.0f;
-  m.jumping = true;
+  m.jumping = false;
   m.position.x = game::TileToMeter(10);
   m.position.y = game::TileToMeter(20);
 

@@ -1,7 +1,6 @@
 #include "network.hpp"
 #include <chrono>
 #include <thread>
-#include "core/fixed_time_update.hpp"
 #include <functional>
 #include "game/client/player_data_storage.hpp"
 #include "game/ecs/systems/player_system.hpp"
@@ -15,8 +14,8 @@
 #include <limits>
 #include "game/chat/chat.hpp"
 #include <dutil/misc.hpp>
+#include <dutil/stopwatch.hpp>
 #include <microprofile/microprofile.h>
-
 #if !defined(DIB_IS_SERVER)
 #include "game/client/render_component.hpp"
 #endif
@@ -143,7 +142,7 @@ Network<Side::kClient>::StartServer()
 }
 
 template<>
-std::optional<u32>
+std::optional<entt::entity>
 Network<Side::kServer>::GetOurPlayerEntity() const
 {
   AlfAssert(false, "cannot get our player entity on server");
@@ -151,7 +150,7 @@ Network<Side::kServer>::GetOurPlayerEntity() const
 }
 
 template<>
-std::optional<u32>
+std::optional<entt::entity>
 Network<Side::kClient>::GetOurPlayerEntity() const
 {
   auto client = GetClient();
@@ -160,7 +159,7 @@ Network<Side::kClient>::GetOurPlayerEntity() const
 
 template<>
 void
-Network<Side::kServer>::SetOurPlayerEntity(const std::optional<u32>)
+Network<Side::kServer>::SetOurPlayerEntity(const std::optional<entt::entity>)
 {
   AlfAssert(false, "cannot set our player entity on server");
 }
@@ -168,7 +167,7 @@ Network<Side::kServer>::SetOurPlayerEntity(const std::optional<u32>)
 template<>
 void
 Network<Side::kClient>::SetOurPlayerEntity(
-  const std::optional<u32> maybe_entity)
+  const std::optional<entt::entity> maybe_entity)
 {
   auto client = GetClient();
   client->SetOurPlayerEntity(maybe_entity);
@@ -191,6 +190,27 @@ Network<Side::kClient>::GetOurPlayerData() const
     PlayerData* pd = &registry.get<PlayerData>(*maybe_entity);
     return pd;
   }
+  return std::nullopt;
+}
+
+template<>
+std::optional<entt::entity>
+Network<Side::kServer>::EntityFromConnection(const ConnectionId con) const
+{
+  auto& registry = world_->GetEntityManager().GetRegistry();
+  const auto view = registry.view<PlayerData>();
+  for (const auto entity : view) {
+    if (view.get(entity).connection_id == con) {
+      return entity;
+    }
+  }
+  return std::nullopt;
+}
+
+template<>
+std::optional<entt::entity>
+Network<Side::kClient>::EntityFromConnection(const ConnectionId) const
+{
   return std::nullopt;
 }
 
@@ -261,12 +281,13 @@ Network<Side::kServer>::SendPlayerList(const ConnectionId connection_id) const
   packet_handler_.BuildPacketHeader(packet,
                                     PacketHeaderStaticTypes::kPlayerJoin);
 
-  world_->GetEntityManager().GetRegistry().view<PlayerData>().each(
-    [&](const PlayerData& player_data) {
+  world_->GetEntityManager().GetRegistry().view<PlayerData, game::Moveable>().each(
+      [&](const PlayerData& player_data, const game::Moveable& moveable) {
       if (connection_id != player_data.connection_id) {
-        packet.Clear();
+        packet.ClearPayload();
         auto mw = packet.GetMemoryWriter();
         mw->Write(player_data);
+        mw->Write(moveable);
         mw.Finalize();
         auto server = GetServer();
         server->PacketUnicast(packet, SendStrategy::kReliable, connection_id);
@@ -300,8 +321,8 @@ Network<Side::kClient>::SetupPacketHandler()
 
       // 2. Insert into ecs system
       auto& registry = world_->GetEntityManager().GetRegistry();
-      const bool ok = system::Create(registry, my_player_data);
-      if (!ok) {
+      const auto maybe_entity = system::SafeCreate(registry, my_player_data);
+      if (!maybe_entity) {
         DLOG_ERROR("failed to create our PlayerData");
         auto client = GetClient();
         client->CloseConnection();
@@ -310,10 +331,6 @@ Network<Side::kClient>::SetupPacketHandler()
 
       // 3. Make our player entity
       auto client = GetClient();
-      const auto maybe_entity =
-        system::EntityFromUuid<PlayerData>(registry, my_player_data.uuid);
-      AlfAssert(maybe_entity,
-                "could not find the newly created PlayerData entity");
       client->SetOurPlayerEntity(maybe_entity);
 
       // 3.1 Set our player RenderComponent
@@ -334,6 +351,7 @@ Network<Side::kClient>::SetupPacketHandler()
                                         PacketHeaderStaticTypes::kPlayerJoin);
       auto mw = player_join_packet.GetMemoryWriter();
       mw->Write(my_player_data);
+      mw->Write(moveable);
       mw.Finalize();
       client->PacketSend(player_join_packet, SendStrategy::kReliable);
     }
@@ -360,20 +378,17 @@ Network<Side::kClient>::SetupPacketHandler()
     // 1. parse the data
     auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
+    auto moveable = mr.Read<game::Moveable>();
     auto& registry = world_->GetEntityManager().GetRegistry();
 
     // 2. create entity and fill with PlayerData
-    const bool ok = system::Create(registry, player_data);
-    if (!ok) {
+    const auto maybe_entity = system::SafeCreate(registry, player_data);
+    if (!maybe_entity) {
       DLOG_ERROR("Create on PlayerJoin failed, disconnecting us");
       auto client = GetClient();
       client->CloseConnection();
       return;
     }
-    const auto maybe_entity =
-      system::EntityFromUuid<PlayerData>(registry, player_data.uuid);
-    AlfAssert(maybe_entity,
-              "could not find the newly created PlayerData entity");
 
     // 3. add RenderComponent
 #if !defined(DIB_IS_SERVER)
@@ -384,7 +399,6 @@ Network<Side::kClient>::SetupPacketHandler()
 #endif
 
     // 4. add Moveable (and Collideable)
-    game::Moveable moveable = game::MoveableMakeDefault();
     system::Assign(registry, *maybe_entity, moveable);
 
     // 5. display all connections
@@ -469,13 +483,55 @@ Network<Side::kClient>::SetupPacketHandler()
 
   // ============================================================ //
 
+  const auto PlayerIncrementCb = [this](const Packet& packet) {
+    auto mr = packet.GetMemoryReader();
+    auto size = mr.Read<u32>();
+    game::MoveableIncrement inc;
+    Uuid uuid;
+    auto view =
+        world_->GetEntityManager().GetRegistry().view<PlayerData, game::Moveable>();
+    auto maybe_our_entity = GetOurPlayerEntity();
+    if (maybe_our_entity) {
+      for (u32 i = 0; i < size; i++) {
+        inc = mr.Read<game::MoveableIncrement>();
+        uuid = mr.Read<Uuid>();
+        for (const auto entity : view) {
+          if (view.get<PlayerData>(entity).uuid == uuid) {
+            game::ApplyMoveableIncrement(view.get<game::Moveable>(entity),
+                                         inc,
+                                         *maybe_our_entity == entity);
+          }
+        }
+      }
+    }
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerIncrement,
+    "player increment",
+    PlayerIncrementCb);
+  AlfAssert(ok, "could not add packet type player increment");
+
+  // ============================================================ //
+
+  const auto PlayerInputCb = [](const Packet&) {
+    DLOG_WARNING("got a PlayerInput packet, but server should "
+                 "not send those, ignoring it");
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerInput,
+    "player input",
+    PlayerInputCb);
+  AlfAssert(ok, "could not add packet type player input");
+
+  // ============================================================ //
+
   const auto ItemUpdateCb = [this](const Packet& packet) {
     auto& registry = world_->GetEntityManager().GetRegistry();
     auto mr = packet.GetMemoryReader();
     auto item_data = mr.Read<ItemData>();
 
     if (!system::Replace(registry, item_data)) {
-      if (!system::Create(registry, item_data)) {
+      if (!system::SafeCreate(registry, item_data)) {
         AlfAssert(false, "could not replace, or create ItemData");
       }
     }
@@ -492,7 +548,7 @@ Network<Side::kClient>::SetupPacketHandler()
     auto npc_data = mr.Read<NpcData>();
 
     if (!system::Replace(registry, npc_data)) {
-      if (!system::Create(registry, npc_data)) {
+      if (!system::SafeCreate(registry, npc_data)) {
         AlfAssert(false, "could not replace, or create NpcData");
       }
     }
@@ -509,7 +565,7 @@ Network<Side::kClient>::SetupPacketHandler()
     auto projectile_data = mr.Read<ProjectileData>();
 
     if (!system::Replace(registry, projectile_data)) {
-      if (!system::Create(registry, projectile_data)) {
+      if (!system::SafeCreate(registry, projectile_data)) {
         AlfAssert(false, "could not replace, or create ProjectileData");
       }
     }
@@ -528,7 +584,7 @@ Network<Side::kClient>::SetupPacketHandler()
     auto tile_data = mr.Read<TileData>();
 
     if (!system::Replace(registry, tile_data)) {
-      if (!system::Create(registry, tile_data)) {
+      if (!system::SafeCreate(registry, tile_data)) {
         AlfAssert(false, "could not replace, or create TileData");
       }
     }
@@ -585,6 +641,7 @@ Network<Side::kServer>::SetupPacketHandler()
     // Read the PlayerData
     auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
+    auto moveable = mr.Read<game::Moveable>();
     player_data.connection_id = packet.GetFromConnection();
 
     // Does the player exist
@@ -601,16 +658,18 @@ Network<Side::kServer>::SetupPacketHandler()
       server->DisconnectConnection(packet.GetFromConnection());
     } else {
       DLOG_INFO("player join [{}]", player_data);
-      const bool ok = system::Create(registry, player_data);
-      if (!ok) {
+      const auto maybe_entity = system::SafeCreate(registry, player_data);
+      if (maybe_entity) {
+        registry.assign<game::Moveable>(*maybe_entity, moveable);
+        server->PacketBroadcastExclude(
+          packet, SendStrategy::kReliable, packet.GetFromConnection());
+        SendPlayerList(packet.GetFromConnection());
+      } else {
         DLOG_WARNING("failed to create PlayerData, disconnecting the "
                      "connection {}",
                      packet.GetFromConnection());
         server->DisconnectConnection(packet.GetFromConnection());
       }
-      server->PacketBroadcastExclude(
-        packet, SendStrategy::kReliable, packet.GetFromConnection());
-      SendPlayerList(packet.GetFromConnection());
     }
   };
   ok = packet_handler_.AddStaticPacketType(
@@ -738,6 +797,41 @@ Network<Side::kServer>::SetupPacketHandler()
 
   // ============================================================ //
 
+  const auto PlayerIncrementCb = [this](const Packet& packet) {
+    DLOG_WARNING("got a PlayerIncrement packet, but client should "
+                 "not send those, disconnecting the client");
+    auto server = GetServer();
+    server->DisconnectConnection(packet.GetFromConnection());
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerIncrement,
+    "player increment",
+    PlayerIncrementCb);
+  AlfAssert(ok, "could not add packet type player increment");
+
+  // ============================================================ //
+
+  const auto PlayerInputCb = [this](const Packet& packet) {
+    auto mr = packet.GetMemoryReader();
+    const auto player_input = mr.Read<game::PlayerInput>();
+    auto& registry = world_->GetEntityManager().GetRegistry();
+    auto view = registry.view<PlayerData, game::Moveable>();
+    for (const auto entity : view) {
+      if (view.get<PlayerData>(entity).connection_id ==
+          packet.GetFromConnection()) {
+        auto& moveable = view.get<game::Moveable>(entity);
+        moveable.input = player_input;
+      }
+    }
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kPlayerInput,
+    "player input",
+    PlayerInputCb);
+  AlfAssert(ok, "could not add packet type player input");
+
+  // ============================================================ //
+
   const auto ItemUpdateCb = [this](const Packet& packet) {
     DLOG_WARNING("got a ItemUpdate packet, but client should "
                  "not send those, disconnecting the client");
@@ -799,7 +893,7 @@ Network<Side::kClient>::Update()
   static const auto PollClient =
     std::bind(&Client::Poll, client, std::ref(got_update), std::ref(packet_));
   got_update = false;
-  FixedTimeUpdate(kNetTicksPerSec, PollClient);
+  dutil::FixedTimeUpdate(kNetTicksPerSec, PollClient);
   if (got_update) {
     bool success = packet_handler_.HandlePacket(packet_);
     if (!success) {
@@ -820,7 +914,7 @@ Network<Side::kServer>::Update()
   static const auto PollServer =
     std::bind(&Server::Poll, server, std::ref(got_update), std::ref(packet_));
   got_update = false;
-  FixedTimeUpdate(kNetTicksPerSec, PollServer);
+  dutil::FixedTimeUpdate(kNetTicksPerSec, PollServer);
   if (got_update) {
     bool success = packet_handler_.HandlePacket(packet_);
     if (!success) {

@@ -1,5 +1,6 @@
 #include "world.hpp"
 #include "game/physics/moveable.hpp"
+#include <dutil/stopwatch.hpp>
 
 namespace dib::game {
 
@@ -14,7 +15,7 @@ void
 World::Update(const f64 delta)
 {
   network_.Update();
-  SimulateMoveables(*this, delta);
+  dutil::FixedTimeUpdate(60, [&](){SimulateMoveables(*this, 1/60.0);});
 }
 
 // -------------------------------------------------------------------------- //

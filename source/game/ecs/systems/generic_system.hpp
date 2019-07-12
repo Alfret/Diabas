@@ -12,15 +12,15 @@
 namespace dib::system {
 
 /**
- * Create an entity with component.
+ * Create an entity with component, fails if component already exists.
  *
  * @tparam TComponent Be pod structure, implement operator==
  * Note: The operator== must uniquely identify it among the entities
- * @return If the component didn't already exist and could be created.
+ * @return
  */
 template<typename TComponent>
-bool
-Create(entt::registry& registry, const TComponent& component)
+std::optional<entt::entity>
+SafeCreate(entt::registry& registry, const TComponent& component)
 {
   const auto view = registry.view<TComponent>();
 
@@ -35,11 +35,11 @@ Create(entt::registry& registry, const TComponent& component)
   if (!found) {
     auto entity = registry.create();
     registry.assign<TComponent>(entity, component);
+    return entity;
   } else {
     DLOG_WARNING("entity already exists, create failed");
+    return std::nullopt;
   }
-
-  return !found;
 }
 
 // -------------------------------------------------------------------------- //

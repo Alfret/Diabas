@@ -1,9 +1,89 @@
 #include "moveable.hpp"
 #include <dutil/misc.hpp>
+#include <dutil/stopwatch.hpp>
 #include "game/world.hpp"
 #include "game/physics/collision.hpp"
+#include <microprofile/microprofile.h>
 
 namespace dib::game {
+
+bool MoveableIncrement::ToBytes(alflib::RawMemoryWriter& mw) const
+{
+  mw.Write(horizontal_velocity);
+  mw.Write(vertical_velocity);
+  mw.Write(jumping);
+  mw.Write(position.x);
+  mw.Write(position.y);
+  return mw.Write(input);
+}
+
+MoveableIncrement MoveableIncrement::FromBytes(alflib::RawMemoryReader& mr)
+{
+  MoveableIncrement data{};
+  data.horizontal_velocity = mr.Read<f32>();
+  data.vertical_velocity = mr.Read<f32>();
+  data.jumping = mr.Read<u8>();
+  data.position.x = mr.Read<f32>();
+  data.position.y = mr.Read<f32>();
+  data.input = mr.Read<PlayerInput>();
+  return data;
+}
+
+// ============================================================ //
+
+MoveableIncrement Moveable::ToIncrement() const {
+  MoveableIncrement m{};
+  m.horizontal_velocity = horizontal_velocity;
+  m.vertical_velocity = vertical_velocity;
+  m.jumping = jumping;
+  m.position = position;
+  m.input = input;
+  return m;
+}
+
+void Moveable::FromIncrement(const MoveableIncrement& m) {
+  horizontal_velocity = m.horizontal_velocity;
+  vertical_velocity = m.vertical_velocity;
+  jumping = m.jumping;
+  position = m.position;
+  input = m.input;
+}
+
+bool Moveable::ToBytes(alflib::RawMemoryWriter& mw) const
+{
+  mw.Write(horizontal_velocity);
+  mw.Write(vertical_velocity);
+  mw.Write(velocity_input);
+  mw.Write(velocity_max);
+  mw.Write(velocity_jump);
+  mw.Write(jumping);
+  mw.Write(position.x);
+  mw.Write(position.y);
+  mw.Write(input);
+  mw.Write(width);
+  mw.Write(height);
+  return mw.Write(collideable);
+}
+
+Moveable Moveable::FromBytes(alflib::RawMemoryReader& mr)
+{
+  Moveable data{};
+  data.horizontal_velocity = mr.Read<f32>();
+  data.vertical_velocity = mr.Read<f32>();
+  data.velocity_input = mr.Read<f32>();
+  data.velocity_max = mr.Read<f32>();
+  data.velocity_jump = mr.Read<decltype(velocity_jump)>();
+  data.jumping = mr.Read<decltype(jumping)>();
+  data.position.x = mr.Read<f32>();
+  data.position.y = mr.Read<f32>();
+  data.input = mr.Read<PlayerInput>();
+  data.width = mr.Read<f32>();
+  data.height = mr.Read<f32>();
+  data.collideable = mr.Read<Collideable>();
+  return data;
+}
+
+// ============================================================ //
 
 /**
  * @pre col_pos must be a colliding position for moveable.
@@ -153,22 +233,63 @@ delta), 0.0f, static_cast<f32>(terrain.GetHeight()-1));
 void
 SimulateMoveables(World& world, const f64 delta)
 {
+  MICROPROFILE_SCOPEI("player", "simulate moveables", MP_PURPLE);
   auto& registry = world.GetEntityManager().GetRegistry();
-  auto view = registry.view<Moveable>();
-  for (auto entity : view) {
-    Moveable& moveable = registry.get<Moveable>(entity);
-    SimulateMoveable(world, delta, moveable);
+
+  if constexpr (kSide == Side::kClient) {
+    auto view = registry.view<Moveable>();
+    for (const auto entity : view) {
+      MICROPROFILE_SCOPEI("player", "simulate moveable", MP_PURPLE1);
+      Moveable& moveable = view.get(entity);
+      UpdateMoveable(world, delta, moveable);
+      SimulateMoveable(world, delta, moveable);
+    }
+  } else {
+    auto view = registry.view<PlayerData, Moveable>();
+    Packet packet{};
+    world.GetNetwork().GetPacketHandler().BuildPacketHeader(
+      packet, PacketHeaderStaticTypes::kPlayerIncrement);
+    auto mw = packet.GetMemoryWriter();
+    mw->Write(static_cast<u32>(view.size()));
+    for (const auto entity : view) {
+      MICROPROFILE_SCOPEI("player", "simulate moveable", MP_PURPLE1);
+      Moveable& moveable = view.get<Moveable>(entity);
+      UpdateMoveable(world, delta, moveable);
+      SimulateMoveable(world, delta, moveable);
+      mw->Write(moveable.ToIncrement());
+      mw->Write(view.get<PlayerData>(entity).uuid);
+    }
+    mw.Finalize();
+
+    dutil::FixedTimeUpdate(
+        60, [&]() { world.GetNetwork().PacketBroadcast(packet); });
   }
 }
 
 void
 UpdateMoveable(const World& world,
                const f64 delta,
-               Moveable& moveable,
-               const f32 h_vel,
-               const f32 v_vel)
+               Moveable& moveable)
 {
   const bool on_ground = OnGround(world, moveable);
+
+  f32 h_vel = 0.0f;
+  f32 v_vel = 0.0f;
+  //f32 v_vel = 0.0f;
+  if (moveable.input.Left()) {
+    h_vel -= moveable.velocity_input;
+  }
+  if (moveable.input.Right()) {
+    h_vel += moveable.velocity_input;
+  }
+  if (moveable.input.Jump()) {
+    if (on_ground && moveable.vertical_velocity == 0) {
+      ForceOnMoveable(moveable, 0.0f, moveable.velocity_jump);
+    }
+    moveable.jumping = 1;
+  } else {
+    moveable.jumping = 0;
+  }
 
   // vertical velocity
   if (!on_ground) {
@@ -185,7 +306,7 @@ UpdateMoveable(const World& world,
   } else if (v_vel > 0.0f) {
     moveable.vertical_velocity = v_vel * delta;
   }
-  moveable.jumping = false;
+  moveable.jumping = 0;
 
   // horizontal velocity
   if (std::abs(h_vel) > 0.0f) {
@@ -210,5 +331,26 @@ ForceOnMoveable(Moveable& moveable,
   moveable.vertical_velocity += vertical_force;
 }
 
+void
+ApplyMoveableIncrement(Moveable& moveable, const MoveableIncrement increment,
+                       const bool is_our_moveable)
+{
+  if constexpr (kSide == Side::kServer) {
+      AlfAssert(false, "Server should not apply moveable increments");
+    }
 
+    if (!is_our_moveable) {
+      moveable.input = increment.input;
+    }
+
+  static constexpr f32 kMaxDiff = kTileInMeters * 5.0f;
+  if (std::abs(moveable.position.x - increment.position.x) > kMaxDiff) {
+    moveable.position.x = increment.position.x;
+    moveable.horizontal_velocity = increment.horizontal_velocity;
+  }
+  if (std::abs(moveable.position.y - increment.position.y) > kMaxDiff) {
+    moveable.position.y = increment.position.y;
+    moveable.vertical_velocity = increment.vertical_velocity;
+  }
+}
 }

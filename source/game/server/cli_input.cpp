@@ -10,9 +10,9 @@
 namespace dib {
 
 AsyncGetline::AsyncGetline()
-  : mInput("")
+  : mContinueGettingInput(true)
   , mSendOverNextLine(true)
-  , mContinueGettingInput(true)
+  , mInput("")
 {
 
   std::thread([&]() {

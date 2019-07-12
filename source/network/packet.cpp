@@ -109,7 +109,7 @@ Packet::operator=(Packet&& other) noexcept
 // ============================================================ //
 
 void
-Packet::Clear()
+Packet::ClearPayload()
 {
   size_ = kHeaderSize;
 }
@@ -297,11 +297,19 @@ Packet::GetMemoryReader() const
 MemoryWriter::MemoryWriter(Packet* packet)
   : mw_(packet->GetRawPayload(), packet->GetPayloadCapacity())
   , packet_(packet)
+  , did_finalize(false)
 {}
+
+MemoryWriter::~MemoryWriter()
+{
+  AlfAssert(did_finalize, "memory writer was destructed without have "
+            "gotten a call to finalize, this is a bug");
+}
 
 void
 MemoryWriter::Finalize()
 {
+  did_finalize = true;
   const std::size_t before = packet_->GetPayloadSize();
   const std::size_t after = before + mw_.GetOffset();
   AlfAssert(after >= before, "offset wrong");

@@ -58,6 +58,16 @@ enum class PacketHeaderStaticTypes : std::size_t
   kPlayerUpdateRejected,
 
   /**
+   * Contains the players last MoveableIncrement.
+   */
+  kPlayerIncrement,
+
+  /**
+   * Holds the players current player input.
+   */
+  kPlayerInput,
+
+  /**
    * An item was created, or its state was changed.
    */
   kItemUpdate,
