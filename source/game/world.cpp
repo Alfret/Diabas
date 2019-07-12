@@ -1,6 +1,7 @@
 #include "world.hpp"
 #include "game/physics/moveable.hpp"
 #include <dutil/stopwatch.hpp>
+#include <microprofile/microprofile.h>
 
 namespace dib::game {
 
@@ -14,8 +15,9 @@ World::World(const TileRegistry& tileRegistry)
 void
 World::Update(const f64 delta)
 {
+  MICROPROFILE_SCOPEI("world", "update", MP_BLUE);
   network_.Update();
-  dutil::FixedTimeUpdate(60, [&](){SimulateMoveables(*this, 1/60.0);});
+  UpdateMoveables(*this, delta);
 }
 
 // -------------------------------------------------------------------------- //

@@ -81,25 +81,25 @@ GenerateTiles(const World& world,
   }
 
   // fill out the top row
-  const u32 row = rows-1;
+  const u32 row = rows - 1;
   for (u32 col = 0; col < cols; col++) {
     tiles.push_back(MeterPosToWorldPos(
-        { dutil::Clamp(origo.x + d * col, 0.0f, maxx),
-          dutil::Clamp(origo.y + d * row + remainy, 0.0f, maxy) }));
+      { dutil::Clamp(origo.x + d * col, 0.0f, maxx),
+        dutil::Clamp(origo.y + d * row + remainy, 0.0f, maxy) }));
   }
 
   // fill out the right most column
-  const u32 col = cols-1;
+  const u32 col = cols - 1;
   for (u32 row = 0; row < rows; row++) {
     tiles.push_back(MeterPosToWorldPos(
-        { dutil::Clamp(origo.x + d * col + remainx, 0.0f, maxx),
-          dutil::Clamp(origo.y + d * row, 0.0f, maxy) }));
+      { dutil::Clamp(origo.x + d * col + remainx, 0.0f, maxx),
+        dutil::Clamp(origo.y + d * row, 0.0f, maxy) }));
   }
 
   // top right one
   tiles.push_back(MeterPosToWorldPos(
-    { dutil::Clamp(origo.x + d * (cols-1) + remainx, 0.0f, maxx),
-      dutil::Clamp(origo.y + d * (rows-1) + remainy, 0.0f, maxy) }));
+    { dutil::Clamp(origo.x + d * (cols - 1) + remainx, 0.0f, maxx),
+      dutil::Clamp(origo.y + d * (rows - 1) + remainy, 0.0f, maxy) }));
 }
 
 static bool
@@ -178,7 +178,7 @@ GeneratePositions(const Position a,
   const f32 height = b.y - a.y;
   const f32 remainx = std::fmod(width, d_stepsize);
   const f32 remainy = std::fmod(height, d_stepsize);
-  f32 dx = (width - remainx)  / d_stepsize;
+  f32 dx = (width - remainx) / d_stepsize;
   f32 dy = (height - remainy) / d_stepsize;
   u32 steps;
 
@@ -187,14 +187,14 @@ GeneratePositions(const Position a,
     steps = static_cast<u32>(std::ceil(std::abs(width / d_stepsize)));
     dy = d_stepsize * (dy / std::abs(dx));
     dx = d_stepsize * (dx < 0.0f ? -1.0f : 1.0f);
-  } else if (std::abs(height) > d_stepsize){
+  } else if (std::abs(height) > d_stepsize) {
     steps = static_cast<u32>(std::ceil(std::abs(height / d_stepsize)));
     dx = d_stepsize * (dx / std::abs(dy));
     dy = d_stepsize * (dy < 0.0f ? -1.0f : 1.0f);
   } else {
     constexpr f32 almost_pixel = kPixelInMeter * 0.99;
-    steps = std::abs(width) > almost_pixel || std::abs(height) > almost_pixel
-      ? 1 : 0;
+    steps =
+      std::abs(width) > almost_pixel || std::abs(height) > almost_pixel ? 1 : 0;
     dx = 0;
     dy = 0;
   }
@@ -202,12 +202,12 @@ GeneratePositions(const Position a,
   // Add up tiles in increments of @dx, @dy
   u32 step = 0;
   for (; step < steps; step++) {
-      // @PERF only push back if it doesnt already exist?
-      positions.push_back({ a.x + dx * step, a.y + dy * step });
+    // @PERF only push back if it doesnt already exist?
+    positions.push_back({ a.x + dx * step, a.y + dy * step });
   }
   // Add the remaining point
   positions.push_back(
-    { a.x + dx * (steps-1) + remainx, a.y + dy * (steps-1) + remainy });
+    { a.x + dx * (steps - 1) + remainx, a.y + dy * (steps - 1) + remainy });
 }
 
 }

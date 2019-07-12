@@ -12,9 +12,8 @@ class GameClient;
 
 class PlayerInput
 {
- public:
-
-  bool Left() const { return  b_[kLeft]; }
+public:
+  bool Left() const { return b_[kLeft]; }
   bool Right() const { return b_[kRight]; }
   bool Jump() const { return b_[kJump]; }
 
@@ -22,20 +21,20 @@ class PlayerInput
   void ActionRight() { b_.set(kRight); }
   void ActionJump() { b_.set(kJump); }
 
-
- private:
+private:
   static constexpr u32 kLeft = 0;
   static constexpr u32 kRight = 1;
   static constexpr u32 kJump = 2;
   std::bitset<3> b_;
 
- public:
-
-  bool ToBytes(alflib::RawMemoryWriter& mw) const {
+public:
+  bool ToBytes(alflib::RawMemoryWriter& mw) const
+  {
     return mw.Write(b_.to_ulong());
   }
 
-  static PlayerInput FromBytes(alflib::RawMemoryReader& mr) {
+  static PlayerInput FromBytes(alflib::RawMemoryReader& mr)
+  {
     PlayerInput p{};
     p.b_ = mr.Read<unsigned long>();
     return p;
@@ -45,12 +44,11 @@ class PlayerInput
 class Player
 {
 public:
-
   /**
    * Take input from the user and apply them both locally, and send them
    * to the server.
    */
-  void Update(GameClient& game, const f64 delta);
+  static void Update(GameClient& game, const f64 delta);
 
 private:
 };

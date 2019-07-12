@@ -52,7 +52,7 @@ public:
 public:
   static constexpr u16 kPort = 24812;
 
-  static constexpr f64 kNetTicksPerSec = 32;
+  static constexpr f64 kNetTicksPerSec = 64;
 
   // ============================================================ //
   // Shared Methods

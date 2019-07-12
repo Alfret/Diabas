@@ -302,7 +302,8 @@ MemoryWriter::MemoryWriter(Packet* packet)
 
 MemoryWriter::~MemoryWriter()
 {
-  AlfAssert(did_finalize, "memory writer was destructed without have "
+  AlfAssert(did_finalize,
+            "memory writer was destructed without have "
             "gotten a call to finalize, this is a bug");
 }
 

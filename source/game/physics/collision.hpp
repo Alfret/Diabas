@@ -20,7 +20,10 @@ struct CollisionInfo
   bool RightCollision() const { return x > 0.0f; }
   bool UpCollision() const { return y > 0.0f; }
   bool DownCollision() const { return y < 0.0f; }
-  bool HorizontalCollision() const { return LeftCollision() || RightCollision();}
+  bool HorizontalCollision() const
+  {
+    return LeftCollision() || RightCollision();
+  }
   bool VerticalCollision() const { return UpCollision() || DownCollision(); }
   operator bool() const { return HorizontalCollision() or VerticalCollision(); }
 };

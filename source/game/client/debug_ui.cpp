@@ -620,6 +620,8 @@ ShowPlayerDebug(GameClient& gameClient)
         "velocity jump", &m.velocity_jump, 0.0f, 1000.0f, "%.2f");
       ImGui::InputFloat("x position (meter)", &m.position.x);
       ImGui::InputFloat("y position (meter)", &m.position.y);
+    } else {
+      ImGui::TextUnformatted("Connect to server to see player information.");
     }
   }
 }

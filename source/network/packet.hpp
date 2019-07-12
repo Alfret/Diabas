@@ -121,7 +121,6 @@ public:
   // Packet / General
   // ============================================================ //
 public:
-
   /**
    * Get how many bytes are unused in the packet.
    */

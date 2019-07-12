@@ -41,8 +41,6 @@ private:
   /** Client resource cache **/
   ClientCache mClientCache;
 
-  Player mPlayer{};
-
 public:
   /** Construct game client **/
   explicit GameClient(const AppClient::Descriptor& descriptor);

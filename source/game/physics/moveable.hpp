@@ -10,6 +10,10 @@
 
 namespace dib::game {
 
+// ============================================================ //
+// Structs
+// ============================================================ //
+
 /**
  * This structure will be sent often over network. Contain the fast changing
  * variables of the moveable.
@@ -87,32 +91,26 @@ struct Moveable
  * Simulate what all the moveables will do in the given time step.
  */
 void
-SimulateMoveables(World& world, f64 delta);
-
-/**
- * Prepare the moveable with fresh input.
- */
-void
-UpdateMoveable(const World& world,
-               f64 delta,
-               Moveable& moveable);
+UpdateMoveables(World& world, f64 delta);
 
 /**
  * Apply a force to a moveable. This means, instantly, modifying the entities
  * velocity.
- *
- * Note, this will not move the moveable, good practice would be to apply the
- * force, then moving the moveable.
  */
-void ForceOnMoveable(Moveable& moveable,
-                     f32 horizontal_force,
-                     f32 vertical_force);
-
-
 void
-ApplyMoveableIncrement(Moveable& moveable, MoveableIncrement increment,
+ForceOnMoveable(Moveable& moveable, f32 horizontal_force, f32 vertical_force);
+
+/**
+ * Apply the incremental update to the given moveable.
+ */
+void
+ApplyMoveableIncrement(Moveable& moveable,
+                       MoveableIncrement increment,
                        bool is_our_moveable);
 
+/**
+ * To be removed when players can be created and stored in a better way.
+ */
 inline Moveable
 MoveableMakeDefault()
 {
