@@ -35,27 +35,38 @@ GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
 void
 GameClient::Update(f64 delta)
 {
+  MICROPROFILE_SCOPEI("game client", "update", MP_CYAN);
   if (IsKeyDown(Key::kKeyEscape)) {
     Exit();
   }
 
-  ImGui::ShowTestWindow();
+  {
+    MICROPROFILE_SCOPEI("game client", "ImGui", MP_CYAN1);
+    static bool demo_window = false;
+    if (demo_window) {
+      ImGui::ShowTestWindow();
+    }
 
-  // ImGui
-  if (ImGui::Begin("Diabas - Debug")) {
-    ShowStatisticsDebug(*this, delta);
-    ShowScriptDebug(*this);
-    ShowModDebug(*this);
-    ShowTileDebug(*this);
-    ShowItemDebug(*this);
-    ShowNetworkDebug(*this);
-    ShowPlayerDebug(*this);
+    // ImGui
+    if (ImGui::Begin("Diabas - Debug")) {
+      ShowStatisticsDebug(*this, delta);
+      ShowScriptDebug(*this);
+      ShowModDebug(*this);
+      ShowTileDebug(*this);
+      ShowItemDebug(*this);
+      ShowNetworkDebug(*this);
+      ShowPlayerDebug(*this);
+      ImGui::Checkbox("show ImGui demo window", &demo_window);
+    }
+    ImGui::End();
   }
-  ImGui::End();
 
-  UpdateCamera(delta);
-  mPlayer.Update(*this, delta);
-  mWorld.Update();
+  {
+    MICROPROFILE_SCOPEI("game client", "game", MP_CYAN2);
+    UpdateCamera(delta);
+    Player::Update(*this, delta);
+    mWorld.Update(delta);
+  }
 }
 
 // -------------------------------------------------------------------------- //

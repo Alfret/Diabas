@@ -7,7 +7,6 @@
 #include "core/uuid.hpp"
 #include "network/connection_id.hpp"
 #include "core/value_store.hpp"
-#include "game/physics/units.hpp"
 
 namespace dib {
 
@@ -24,8 +23,6 @@ struct PlayerData
   u8 con_quality_local;
   u8 con_quality_remote;
   String name;
-
-  game::MoveableEntity moveable_entity;
 
   ValueStore dynamic_state{};
 

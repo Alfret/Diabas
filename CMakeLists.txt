@@ -21,7 +21,10 @@ include_directories(SYSTEM
 if (WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 else ()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -rdynamic")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+
+  # because Filip never uses his function arguments!
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
 endif ()
 
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDIB_DEBUG")
@@ -55,6 +58,10 @@ set(COMMON_SOURCE
   source/game/ecs/systems/npc_system.hpp
   source/game/gameplay/core_content.cpp
   source/game/gameplay/tile/tile_chair.cpp
+  source/game/gameplay/player.cpp
+  source/game/gameplay/player.hpp
+  source/game/gameplay/moveable.cpp
+  source/game/gameplay/moveable.hpp
   source/game/resource.cpp
   source/game/resource.hpp
   source/game/terrain.cpp
@@ -114,8 +121,6 @@ set(CLIENT_SOURCE
   source/game/client/entity_render.cpp
   source/game/client/game_client.cpp
   source/game/client/world_renderer.cpp
-  source/game/client/player.cpp
-  source/game/client/player.hpp
   source/graphics/camera.cpp
   source/graphics/index_buffer.cpp
   source/graphics/renderer.cpp

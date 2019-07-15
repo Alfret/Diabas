@@ -15,7 +15,7 @@ namespace dib {
 // ============================================================ //
 
 /**
- * Steps to follow when ADDING (an element / a new packet type):
+ * Steps to follow when ADDING a new packet type.
  * 1. Add the enum here.
  * 2. Register a packet handler callback on the packet_handler with
  *    AddStaticPacketType. Typically done in Networks's SetupPacketHandler.
@@ -56,6 +56,16 @@ enum class PacketHeaderStaticTypes : std::size_t
    * packet type.
    */
   kPlayerUpdateRejected,
+
+  /**
+   * Contains the players last MoveableIncrement.
+   */
+  kPlayerIncrement,
+
+  /**
+   * Holds the players current player input.
+   */
+  kPlayerInput,
 
   /**
    * An item was created, or its state was changed.
