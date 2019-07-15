@@ -65,6 +65,8 @@ public:
   WorldPos PickScreenTile(const graphics::Camera& camera,
                           Vector2F mousePosition);
 
+  void OnResize(u32 width, u32 height) override;
+
   void OnTileChanged(WorldPos pos) override;
 
   void OnWallChanged(WorldPos pos) override;

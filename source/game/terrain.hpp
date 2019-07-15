@@ -23,6 +23,8 @@ DIB_FORWARD_DECLARE_CLASS(World);
 /** Class that manages the terrain  **/
 class Terrain
 {
+  friend World;
+
 public:
   /** Common terrain sizes **/
   enum class Size
@@ -52,6 +54,9 @@ public:
   class ChangeListener
   {
   public:
+    /** Called when the terrain has been resized **/
+    virtual void OnResize(u32 width, u32 height) = 0;
+
     /** Called when a tile in the world changed **/
     virtual void OnTileChanged(WorldPos pos) = 0;
 
@@ -153,14 +158,8 @@ public:
    * replaced with the specified tile **/
   void RemoveTile(WorldPos pos, TileRegistry::TileID replacementId);
 
-  /** Update the cache for the tile resources for every tile in the world. This
-   * function should not be called often.
-   *
-   * It should be called after generation of the world to cache the indices, as
-   * the world generation functions (Terrain::GenSetTile) does not update the
-   * indices.
-   */
-  void ReCacheResourceIndices();
+  /** Resize the terrain. This throws away all old data **/
+  void Resize(u32 width, u32 height);
 
   /** Returns whether a position is valid **/
   bool IsValidPosition(WorldPos pos);

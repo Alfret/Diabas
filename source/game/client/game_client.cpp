@@ -14,6 +14,9 @@
 // Client Implementation
 // ========================================================================== //
 
+#include <alflib/memory/memory_reader.hpp>
+#include <alflib/memory/memory_writer.hpp>
+
 namespace dib::game {
 
 GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
@@ -50,6 +53,7 @@ GameClient::Update(f64 delta)
     ShowItemDebug(*this);
     ShowTileDebug(*this);
     ShowWallDebug(*this);
+    ShowWorldDebug(*this);
     ShowNetworkDebug(*this);
     ShowPlayerDebug(*this);
   }

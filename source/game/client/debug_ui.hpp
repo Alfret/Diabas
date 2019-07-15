@@ -53,6 +53,12 @@ ShowItemDebug(GameClient& gameClient);
 
 // -------------------------------------------------------------------------- //
 
+/** Show debugging information about world **/
+void
+ShowWorldDebug(GameClient& gameClient);
+
+// -------------------------------------------------------------------------- //
+
 void
 ShowNetworkDebug(GameClient& gameClient);
 

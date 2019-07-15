@@ -195,16 +195,15 @@ Terrain::RemoveTile(WorldPos pos, TileRegistry::TileID replacementId)
 // -------------------------------------------------------------------------- //
 
 void
-Terrain::ReCacheResourceIndices()
+Terrain::Resize(u32 width, u32 height)
 {
-  for (u32 y = 0; y < mHeight; y++) {
-    for (u32 x = 0; x < mWidth; x++) {
-      WorldPos pos{ x, y };
-      for (auto& listener : mChangeListeners) {
-        listener->OnTileChanged(pos);
-        listener->OnWallChanged(pos);
-      }
-    }
+  delete mTerrainCells;
+  mWidth = width;
+  mHeight = height;
+  mTerrainCells = new Cell[mWidth * mHeight];
+  memset(mTerrainCells, 0, sizeof(Cell) * mWidth * mHeight);
+  for (auto& listener : mChangeListeners) {
+    listener->OnResize(width, height);
   }
 }
 

@@ -131,6 +131,15 @@ WorldRenderer::PickScreenTile(const graphics::Camera& camera,
 // -------------------------------------------------------------------------- //
 
 void
+WorldRenderer::OnResize(u32 width, u32 height)
+{
+  delete mDataCells;
+  mDataCells = new Cell[width * height];
+}
+
+// -------------------------------------------------------------------------- //
+
+void
 WorldRenderer::OnTileChanged(WorldPos pos)
 {
   TileRegistry::TileID id = mWorld.GetTerrain().GetTileID(pos);
@@ -163,4 +172,5 @@ WorldRenderer::GetCell(WorldPos pos)
 {
   return *(mDataCells + mWorld.GetTerrain().GetWidth() * pos.Y() + pos.X());
 }
+
 }

@@ -6,6 +6,8 @@
 // ========================================================================== //
 
 #include <string_view>
+#include <alflib/memory/memory_reader.hpp>
+#include <alflib/memory/memory_writer.hpp>
 
 #include "core/assert.hpp"
 #include "network/network.hpp"
@@ -35,6 +37,12 @@ public:
 
   Network<kSide>& GetNetwork() { return network_; }
 
+  /** Save world to path **/
+  bool Save(const Path& path, bool overwrite = false);
+
+  /** Load world from path **/
+  bool Load(const Path& path);
+
   /** Returns the terrain of the world **/
   Terrain& GetTerrain() { return mTerrain; }
 
@@ -45,6 +53,11 @@ public:
   dib::EntityManager& GetEntityManager();
 
   game::Chat& GetChat() { return chat_; }
+
+  bool ToBytes(alflib::MemoryWriter& writer) const;
+
+public:
+  static World FromBytes(alflib::MemoryReader& reader);
 
 private:
   /** Terrain **/

@@ -118,8 +118,6 @@ CoreContent::GenerateWorld(World& world)
   }
 #endif
 
-  world.GetTerrain().ReCacheResourceIndices();
-
   sw.Stop();
   f64 seconds = sw.fs();
   DLOG_VERBOSE("World generation (Core) finished in {:.3f}s", seconds);

@@ -443,6 +443,26 @@ ShowItemDebug(GameClient& gameClient)
 // -------------------------------------------------------------------------- //
 
 void
+ShowWorldDebug(GameClient& gameClient)
+{
+  if (ImGui::CollapsingHeader("World")) {
+    static char8 nameBuffer[512];
+    ImGui::InputText("File name", nameBuffer, 512);
+    ImGui::SameLine();
+    if (ImGui::Button("Save")) {
+      Path path = Path{ "./res" }.Join(Path{ nameBuffer });
+      gameClient.GetWorld().Save(path, true);
+    }
+    if (ImGui::Button("Load")) {
+      Path path = Path{ "./res" }.Join(Path{ nameBuffer });
+      gameClient.GetWorld().Load(path);
+    }
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
 ShowNetworkDebug(GameClient& gameClient)
 {
   World& world = gameClient.GetWorld();
