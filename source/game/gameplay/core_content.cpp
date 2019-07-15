@@ -109,6 +109,10 @@ CoreContent::SetupTiles(TileRegistry& tileRegistry)
   // Tile: Rock
   mTileRock = new Tile(ResourcePath{ Path{ "./res/tiles/rock.tga" } }, "rock");
   tileRegistry.RegisterTile(MOD_ID, "rock", mTileRock);
+
+  // Tile: Spikes
+  mTileSpikes = new Tile(ResourcePath{ Path{ "./res/tiles/spikes.tga" } }, "spikes");
+  tileRegistry.RegisterTile(MOD_ID, "spikes", mTileSpikes);
 }
 
 }

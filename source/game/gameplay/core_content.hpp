@@ -33,6 +33,8 @@ private:
   /** Rock tile **/
   Tile* mTileRock = nullptr;
 
+  Tile* mTileSpikes = nullptr;
+
   /** Chair tile **/
   TileChair* mTileChair = nullptr;
 

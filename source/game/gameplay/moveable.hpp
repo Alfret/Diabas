@@ -18,7 +18,6 @@ namespace dib::game {
  * This structure will be sent often over network. Contain the fast changing
  * variables of the moveable.
  */
-#pragma pack(push, 1)
 struct MoveableIncrement
 {
   f32 horizontal_velocity;
@@ -31,11 +30,9 @@ struct MoveableIncrement
 
   static MoveableIncrement FromBytes(alflib::RawMemoryReader& mr);
 };
-#pragma pack(pop)
 
 // ============================================================ //
 
-#pragma pack(push, 1)
 struct Moveable
 {
   /**
@@ -85,7 +82,6 @@ struct Moveable
 
   static Moveable FromBytes(alflib::RawMemoryReader& mr);
 };
-#pragma pack(pop)
 
 // ============================================================ //
 // Functions

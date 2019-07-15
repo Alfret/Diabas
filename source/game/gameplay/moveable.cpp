@@ -143,7 +143,8 @@ MoveSubTileOnCollision(const World& world, Moveable& moveable, Position col_pos)
 }
 
 static CollisionInfo
-MoveMoveable(const World& world, Moveable& moveable, const Position target)
+MoveMoveable(const World& world, Moveable& moveable, const Position target,
+             const entt::entity entity)
 {
   CollisionInfo col_info{};
 
@@ -174,6 +175,9 @@ MoveMoveable(const World& world, Moveable& moveable, const Position target)
                !col_info.VerticalCollision()) {
       moveable.position.y = col_pos.y;
     }
+    WorldPos col_tile = MeterPosToWorldPos(col_pos);
+    auto tile = world.GetTerrain().GetTile(col_tile);
+    //tile->OnCollision(col_tile, entity);
   } else {
     moveable.position = positions.back();
   }
@@ -185,7 +189,8 @@ MoveMoveable(const World& world, Moveable& moveable, const Position target)
  * Based on the current moveable values, simulate a step of size @delta.
  */
 static void
-SimulateMoveable(const World& world, const f64 delta, Moveable& moveable)
+SimulateMoveable(const World& world, const f64 delta, Moveable& moveable,
+                 const entt::entity entity)
 {
   const auto& terrain = world.GetTerrain();
   const bool on_ground = OnGround(world, moveable);
@@ -218,7 +223,8 @@ SimulateMoveable(const World& world, const f64 delta, Moveable& moveable)
   }
 
   if (moved_x || moved_y) {
-    const CollisionInfo col_info = MoveMoveable(world, moveable, new_position);
+    const CollisionInfo col_info = MoveMoveable(world, moveable, new_position,
+                                                entity);
 
     // x
     if (col_info.HorizontalCollision()) {
@@ -235,7 +241,8 @@ SimulateMoveable(const World& world, const f64 delta, Moveable& moveable)
 }
 
 static void
-UpdateMoveable(const World& world, const f64 delta, Moveable& moveable)
+UpdateMoveable(const World& world, const f64 delta, Moveable& moveable,
+               const entt::entity entity)
 {
   const bool on_ground = OnGround(world, moveable);
 
@@ -292,7 +299,7 @@ UpdateMoveable(const World& world, const f64 delta, Moveable& moveable)
     moveable.horizontal_velocity = 0.0f;
   }
 
-  SimulateMoveable(world, delta, moveable);
+  SimulateMoveable(world, delta, moveable, entity);
 }
 
 // ============================================================ //
@@ -308,7 +315,7 @@ UpdateMoveables(World& world, const f64 delta)
     for (const auto entity : view) {
       MICROPROFILE_SCOPEI("player", "simulate moveable", MP_PURPLE1);
       Moveable& moveable = view.get(entity);
-      UpdateMoveable(world, delta, moveable);
+      UpdateMoveable(world, delta, moveable, entity);
     }
   } else {
     auto view = registry.view<PlayerData, Moveable>();
@@ -321,7 +328,7 @@ UpdateMoveables(World& world, const f64 delta)
       MICROPROFILE_SCOPEI("player", "simulate moveable", MP_PURPLE1);
       Moveable& moveable = view.get<Moveable>(entity);
       // TODO do we need to simulate on server?
-      UpdateMoveable(world, delta, moveable);
+      UpdateMoveable(world, delta, moveable, entity);
       mw->Write(moveable.ToIncrement());
       mw->Write(view.get<PlayerData>(entity).uuid);
     }
