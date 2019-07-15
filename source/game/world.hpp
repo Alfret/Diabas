@@ -29,6 +29,10 @@ class World
 public:
   World();
 
+  World(World&& other);
+
+  World& operator=(World&& other);
+
   void Update();
 
   void OnCommandNetwork(const std::string_view input);
@@ -42,6 +46,9 @@ public:
 
   /** Load world from path **/
   bool Load(const Path& path);
+
+  /** Load world from memory reader **/
+  bool Load(alflib::MemoryReader& reader);
 
   /** Returns the terrain of the world **/
   Terrain& GetTerrain() { return mTerrain; }

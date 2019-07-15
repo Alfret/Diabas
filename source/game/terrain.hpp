@@ -66,7 +66,7 @@ public:
 
 private:
   /** World **/
-  World& mWorld;
+  World* mWorld;
 
   /** Width of terrain **/
   u32 mWidth;
@@ -81,10 +81,16 @@ private:
 
 public:
   /** Construct a world of the specified dimensions **/
-  Terrain(World& world, u32 width, u32 height);
+  Terrain(World* world, u32 width, u32 height);
 
   /** Construct a world of the specified size **/
-  Terrain(World& world, Size size);
+  Terrain(World* world, Size size);
+
+  /** Move-constructor **/
+  Terrain(Terrain&& other);
+
+  /** Move-assignment **/
+  Terrain& operator=(Terrain&& other);
 
   /** Returns the tile at the specified location in the world **/
   [[nodiscard]] Tile* GetTile(WorldPos pos) const;

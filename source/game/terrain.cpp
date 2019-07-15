@@ -14,7 +14,7 @@
 
 namespace dib::game {
 
-Terrain::Terrain(World& world, u32 width, u32 height)
+Terrain::Terrain(World* world, u32 width, u32 height)
   : mWorld(world)
   , mWidth(width)
   , mHeight(height)
@@ -25,7 +25,7 @@ Terrain::Terrain(World& world, u32 width, u32 height)
 
 // -------------------------------------------------------------------------- //
 
-Terrain::Terrain(World& world, Terrain::Size size)
+Terrain::Terrain(World* world, Terrain::Size size)
   : mWorld(world)
 {
   // Determine size
@@ -60,6 +60,34 @@ Terrain::Terrain(World& world, Terrain::Size size)
 
   // Initialize
   InitTerrain();
+}
+
+// -------------------------------------------------------------------------- //
+
+Terrain::Terrain(Terrain&& other)
+  : mWorld(other.mWorld)
+  , mWidth(other.mWidth)
+  , mHeight(other.mHeight)
+  , mTerrainCells(other.mTerrainCells)
+  , mChangeListeners(other.mChangeListeners)
+{
+  other.mTerrainCells = nullptr;
+}
+
+// -------------------------------------------------------------------------- //
+
+Terrain&
+Terrain::operator=(Terrain&& other)
+{
+  if (this != &other) {
+    mWorld = other.mWorld;
+    mWidth = other.mWidth;
+    mHeight = other.mHeight;
+    mTerrainCells = other.mTerrainCells;
+    mChangeListeners = other.mChangeListeners;
+    other.mTerrainCells = nullptr;
+  }
+  return *this;
 }
 
 // -------------------------------------------------------------------------- //
@@ -143,11 +171,11 @@ Terrain::GenSetTile(WorldPos pos,
 {
   Cell& cell = GetCell(pos);
   Tile* tile = TileRegistry::Instance().GetTile(cell.tile);
-  tile->OnDestroyed(mWorld, pos);
+  tile->OnDestroyed(*mWorld, pos);
 
   tile = TileRegistry::Instance().GetTile(id);
   cell.tile = id;
-  tile->OnPlaced(mWorld, pos);
+  tile->OnPlaced(*mWorld, pos);
   UpdateCachedTileIndices(pos, updateNeighbours);
 }
 
@@ -168,11 +196,11 @@ Terrain::GenSetWall(WorldPos pos,
 {
   Cell& cell = GetCell(pos);
   Wall* wall = WallRegistry::Instance().GetWall(cell.wall);
-  wall->OnDestroyed(mWorld, pos);
+  wall->OnDestroyed(*mWorld, pos);
 
   wall = WallRegistry::Instance().GetWall(id);
   cell.wall = id;
-  wall->OnPlaced(mWorld, pos);
+  wall->OnPlaced(*mWorld, pos);
   UpdateCachedWallIndices(pos, updateNeighbours);
 }
 
@@ -279,29 +307,29 @@ Terrain::SetTileAdvanced(WorldPos pos,
 
   // Notify old tile
   Tile* tile = TileRegistry::Instance().GetTile(cell.tile);
-  if (!ignoreReplaceCheck && !tile->CanBeReplaced(mWorld, pos)) {
+  if (!ignoreReplaceCheck && !tile->CanBeReplaced(*mWorld, pos)) {
     return false;
   }
-  if (tile->IsMultiTile(mWorld, pos)) {
-    const bool success = tile->KillMultiTile(mWorld, pos);
+  if (tile->IsMultiTile(*mWorld, pos)) {
+    const bool success = tile->KillMultiTile(*mWorld, pos);
     if (!success) {
       DLOG_WARNING("Failed to destroy multi-tile structure");
       return false;
     }
   }
-  tile->OnDestroyed(mWorld, pos);
+  tile->OnDestroyed(*mWorld, pos);
 
   // Set new tile
   tile = TileRegistry::Instance().GetTile(id);
   u32 oldId = cell.tile;
   cell.tile = id;
-  if (tile->IsMultiTile(mWorld, pos)) {
-    if (!tile->PlaceMultiTile(mWorld, pos)) {
+  if (tile->IsMultiTile(*mWorld, pos)) {
+    if (!tile->PlaceMultiTile(*mWorld, pos)) {
       cell.tile = oldId;
       return false;
     }
   }
-  tile->OnPlaced(mWorld, pos);
+  tile->OnPlaced(*mWorld, pos);
   UpdateCachedTileIndices(pos, updateNeighbour);
   return true;
 }
@@ -313,7 +341,7 @@ Terrain::SafeNeighbourTileUpdate(WorldPos pos)
 {
   if (IsValidPosition(pos)) {
     Tile* tile = GetTile(pos);
-    tile->OnNeighbourChange(mWorld, pos);
+    tile->OnNeighbourChange(*mWorld, pos);
     for (auto& listener : mChangeListeners) {
       listener->OnTileChanged(pos);
     }
@@ -355,15 +383,15 @@ Terrain::SetWallAdvanced(WorldPos pos,
 
   // Notify old tile
   Wall* wall = WallRegistry::Instance().GetWall(cell.wall);
-  if (!ignoreReplaceCheck && !wall->CanBeReplaced(mWorld, pos)) {
+  if (!ignoreReplaceCheck && !wall->CanBeReplaced(*mWorld, pos)) {
     return false;
   }
-  wall->OnDestroyed(mWorld, pos);
+  wall->OnDestroyed(*mWorld, pos);
 
   // Set new tile
   wall = WallRegistry::Instance().GetWall(id);
   cell.wall = id;
-  wall->OnPlaced(mWorld, pos);
+  wall->OnPlaced(*mWorld, pos);
   UpdateCachedWallIndices(pos, updateNeighbour);
   return true;
 }
@@ -375,7 +403,7 @@ Terrain::SafeNeighbourWallUpdate(WorldPos pos)
 {
   if (IsValidPosition(pos)) {
     Wall* wall = GetWall(pos);
-    wall->OnNeighbourChange(mWorld, pos);
+    wall->OnNeighbourChange(*mWorld, pos);
     for (auto& listener : mChangeListeners) {
       listener->OnWallChanged(pos);
     }

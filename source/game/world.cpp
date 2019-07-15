@@ -16,8 +16,31 @@
 namespace dib::game {
 
 World::World()
-  : mTerrain(*this, Terrain::Size::kHuge)
+  : mTerrain(this, Terrain::Size::kNormal)
 {}
+
+// -------------------------------------------------------------------------- //
+
+World::World(World&& other)
+  : mTerrain(std::move(other.mTerrain))
+  , entity_manager_(std::move(other.entity_manager_))
+  , network_(std::move(other.network_))
+  , chat_(std::move(other.chat_))
+{}
+
+// -------------------------------------------------------------------------- //
+
+World&
+World::operator=(World&& other)
+{
+  if (this != &other) {
+    mTerrain = std::move(other.mTerrain);
+    entity_manager_ = std::move(other.entity_manager_);
+    network_ = std::move(other.network_);
+    chat_ = std::move(other.chat_);
+  }
+  return *this;
+}
 
 // -------------------------------------------------------------------------- //
 
@@ -106,7 +129,20 @@ World::Load(const Path& path)
   }
 
   alflib::MemoryReader reader(buffer);
+  bool success = Load(reader);
 
+  sw.Stop();
+  f64 time = sw.fs();
+  DLOG_VERBOSE("World loading completed in {:.3f}s", time);
+
+  return success;
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+World::Load(alflib::MemoryReader& reader)
+{
   // Read tile table
   {
     u32 tileCount = reader.Read<u32>();
@@ -149,10 +185,15 @@ World::Load(const Path& path)
   const u8* source = reader.ReadBytes(terrainSize);
   memcpy(mTerrain.mTerrainCells, source, terrainSize);
 
-  sw.Stop();
-  f64 time = sw.fs();
-  DLOG_VERBOSE("World loading completed in {:.3f}s", time);
-
+  for (u32 y = 0; y < height; y++) {
+    for (u32 x = 0; x < width; x++) {
+      for (auto& listener : mTerrain.mChangeListeners) {
+        WorldPos pos{ x, y };
+        listener->OnTileChanged(pos);
+        listener->OnWallChanged(pos);
+      }
+    }
+  }
   return true;
 }
 
@@ -206,7 +247,9 @@ World::ToBytes(alflib::MemoryWriter& writer) const
 World
 World::FromBytes(alflib::MemoryReader& reader)
 {
-  return World();
+  World world;
+  world.Load(reader);
+  return world;
 }
 
 }
