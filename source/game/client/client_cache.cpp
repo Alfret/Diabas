@@ -16,8 +16,10 @@
 namespace dib::game {
 
 void
-ClientCache::BuildTileAtlas(const TileRegistry& tileRegistry)
+ClientCache::BuildTileAtlas()
 {
+  TileRegistry& tileRegistry = TileRegistry::Instance();
+
   // List of all images to pack and their keys
   alflib::ArrayList<alflib::Image> packImages;
   alflib::ArrayList<String> packNames;
@@ -64,7 +66,7 @@ ClientCache::BuildTileAtlas(const TileRegistry& tileRegistry)
   alflib::Image::Result result =
     mTileAtlas.GetImage().Save(Path{ "./res/tiles/atlas.tga" }, true);
   if (result != alflib::Image::Result::kSuccess) {
-    DLOG_WARNING("Failed to save item atlas (the game will still work)");
+    DLOG_WARNING("Failed to save tile atlas (the game will still work)");
   }
 
   // Retrieve and store regions in list
@@ -92,8 +94,91 @@ ClientCache::BuildTileAtlas(const TileRegistry& tileRegistry)
 // -------------------------------------------------------------------------- //
 
 void
-ClientCache::BuildItemAtlas(const ItemRegistry& itemRegistry)
+ClientCache::BuildWallAtlas()
 {
+  WallRegistry& wallRegistry = WallRegistry::Instance();
+
+  // List of all images to pack and their keys
+  alflib::ArrayList<alflib::Image> packImages;
+  alflib::ArrayList<String> packNames;
+
+  // Go through each registered wall
+  u32 wallIndex = 0;
+  for (const Wall* wall : wallRegistry.GetWalls()) {
+    // Load the resource
+    const ResourcePath& resourcePath = wall->GetResourcePath();
+    alflib::Image resourceImage;
+    resourceImage.Load(resourcePath.GetPath());
+
+    u32 border =
+      bool(resourcePath.GetFlags() & ResourcePath::Flag::kBorder1px) ? 1 : 0;
+
+    // Add image for each sub-resource
+    u32 resourceCountX = resourceImage.GetWidth() / WALL_SIZE;
+    u32 resourceCountY = resourceImage.GetHeight() / WALL_SIZE;
+    u32 wallSubIndex = 0;
+    for (u32 y = 0; y < resourceCountY; y++) {
+      for (u32 x = 0; x < resourceCountX; x++) {
+        alflib::Image subResourceImage;
+        subResourceImage.Create(WALL_SIZE, WALL_SIZE);
+        subResourceImage.Blit(resourceImage,
+                              0,
+                              0,
+                              border + x * (WALL_SIZE + border),
+                              border + y * (WALL_SIZE + border),
+                              WALL_SIZE,
+                              WALL_SIZE);
+        packImages.AppendEmplace(std::move(subResourceImage));
+        packNames.AppendEmplace(
+          CreateAtlasKey("wall", wallIndex, wallSubIndex));
+        wallSubIndex++;
+      }
+    }
+    std::vector<AtlasRegion> resourceVector;
+    resourceVector.resize(wallSubIndex);
+    mWallResources.emplace_back(std::move(resourceVector));
+    wallIndex++;
+  }
+
+  // Create atlas
+  u32 atlasDimension =
+    u32(std::ceil(alflib::SquareRoot(f32(packImages.GetSize())))) * WALL_SIZE;
+  mWallAtlas.Build(packImages, packNames, atlasDimension, atlasDimension);
+  alflib::Image::Result result =
+    mWallAtlas.GetImage().Save(Path{ "./res/walls/atlas.tga" }, true);
+  if (result != alflib::Image::Result::kSuccess) {
+    DLOG_WARNING("Failed to save wall atlas (the game will still work)");
+  }
+
+  // Retrieve and store regions in list
+  for (u32 index = 0; index < wallRegistry.GetWalls().size(); index++) {
+    u32 subResourceCount = mWallResources[index].size();
+    for (u32 subIndex = 0; subIndex < subResourceCount; subIndex++) {
+      AtlasRegion& region = mWallResources[index][subIndex];
+
+      String key = CreateAtlasKey("wall", index, subIndex);
+      alflib::ImageAtlasRegion imageRegion = mWallAtlas.GetRegion(key);
+      region.x = imageRegion.x;
+      region.y = imageRegion.y;
+      region.w = imageRegion.width;
+      region.h = imageRegion.height;
+    }
+  }
+
+  // Create atlas texture
+  mWallAtlasTexture = std::make_shared<graphics::Texture>("WallAtlas");
+  mWallAtlasTexture->Load(mWallAtlas.GetImage());
+  mInverseWallAtlasSize =
+    Vector2F(1.0f / mWallAtlas.GetWidth(), 1.0f / mWallAtlas.GetHeight());
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ClientCache::BuildItemAtlas()
+{
+  ItemRegistry& itemRegistry = ItemRegistry::Instance();
+
   // List of all images to pack and their keys
   alflib::ArrayList<alflib::Image> packImages;
   alflib::ArrayList<String> packNames;
@@ -199,6 +284,37 @@ ClientCache::GetTextureCoordinatesForTile(TileRegistry::TileID id,
                     f32(region.y) * mInverseTileAtlasSize.y);
   texMax = Vector2F(f32(region.x + region.w) * mInverseTileAtlasSize.x,
                     f32(region.y + region.h) * mInverseTileAtlasSize.y);
+}
+
+// -------------------------------------------------------------------------- //
+
+const std::vector<ClientCache::AtlasRegion>&
+ClientCache::GetWallSubResources(WallRegistry::WallID id)
+{
+  return mWallResources[id];
+}
+
+// -------------------------------------------------------------------------- //
+
+u32
+ClientCache::GetWallSubResourceCount(WallRegistry::WallID id)
+{
+  return mWallResources[id].size();
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+ClientCache::GetTextureCoordinatesForWall(WallRegistry::WallID id,
+                                          u32 resourceIndex,
+                                          Vector2F& texMin,
+                                          Vector2F& texMax)
+{
+  AtlasRegion& region = mWallResources[id][resourceIndex];
+  texMin = Vector2F(f32(region.x) * mInverseWallAtlasSize.x,
+                    f32(region.y) * mInverseWallAtlasSize.y);
+  texMax = Vector2F(f32(region.x + region.w) * mInverseWallAtlasSize.x,
+                    f32(region.y + region.h) * mInverseWallAtlasSize.y);
 }
 
 // -------------------------------------------------------------------------- //

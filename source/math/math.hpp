@@ -8,6 +8,16 @@
 #include "core/assert.hpp"
 
 // ========================================================================== //
+// Constants
+// ========================================================================== //
+
+namespace dib {
+
+static constexpr f32 DIB_PI = 3.14159265358979323846f;
+
+}
+
+// ========================================================================== //
 // Functions
 // ========================================================================== //
 
@@ -67,7 +77,7 @@ IsPowerOfTwo(u64 value)
 constexpr u64
 AlignPowerOfTwo(u64 base, u32 alignment)
 {
-  DIB_ASSERT(IsPowerOfTwo(alignment), "Alignment must be a power of two");
+  // DIB_ASSERT(IsPowerOfTwo(alignment), "Alignment must be a power of two");
   return (base + (alignment - 1)) & -alignment;
 }
 

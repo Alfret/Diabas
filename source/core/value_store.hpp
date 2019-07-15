@@ -55,6 +55,18 @@ public:
   // Member Variables //
 private:
   tsl::robin_map<String, Variant> map_;
+
+  /** Compare value-stores for equality **/
+  friend bool operator==(const ValueStore& lhs, const ValueStore& rhs)
+  {
+    return lhs.map_ == rhs.map_;
+  }
+
+  /** Compare value-stores for inequality **/
+  friend bool operator!=(const ValueStore& lhs, const ValueStore& rhs)
+  {
+    return lhs.map_ != rhs.map_;
+  }
 };
 
 // ============================================================ //

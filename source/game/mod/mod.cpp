@@ -143,30 +143,38 @@ Mod::LoadScript()
 Mod::Result
 Mod::InstantiateModClass()
 {
+  /*
   // List classes in assembly
   std::vector<MonoClass*> classes =
     MonoContext::ListClassesInAssembly(mAssembly);
   for (MonoClass* cls : classes) {
     // Retrieve mod attribute
-    MonoObject* mod = MonoContext::ModAttribute(cls);
+    MonoObject* mod =
+      MonoContext::GetClassAttribute(cls, MonoContext::GetModClass());
     if (mod) {
-      // Retrieve 'id' and 'name' fields
-      MonoClassField* fieldId = MonoContext::GetFieldModId();
-      MonoClassField* fieldName = MonoContext::GetFieldModName();
-      MonoObject* id =
-        mono_field_get_value_object(MonoContext::GetDomain(), fieldId, mod);
-      MonoObject* name =
-        mono_field_get_value_object(MonoContext::GetDomain(), fieldName, mod);
-
-      // Instantite class
+      // Create instance
       mModInstance = mono_object_new(MonoContext::GetDomain(), cls);
+
+      // Inject name and id
+      for (MonoClassField* field : MonoContext::ListFieldsInClass(cls)) {
+        if (MonoContext::GetFieldAttribute(
+              cls, field, MonoContext::GetModIdClass())) {
+          int yy = 0;
+        } else if (MonoContext::GetFieldAttribute(
+                     cls, field, MonoContext::GetModNameClass())) {
+          int yy = 1;
+        }
+      }
+
+      // Run constructor
       mono_runtime_object_init(mModInstance);
 
       break;
     }
   }
-
-  return Result::kAssemblyNotFound;
+*/
+  return Result::kSuccess;
+  // return Result::kAssemblyNotFound;
 }
 
 }

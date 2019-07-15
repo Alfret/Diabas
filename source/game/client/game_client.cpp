@@ -14,18 +14,22 @@
 // Client Implementation
 // ========================================================================== //
 
+#include <alflib/memory/memory_reader.hpp>
+#include <alflib/memory/memory_writer.hpp>
+
 namespace dib::game {
 
 GameClient::GameClient(const app::AppClient::Descriptor& descriptor)
   : AppClient(descriptor)
-  , mWorld(mTileRegistry)
   , mModLoader(Path{ "./mods" })
   , mCamera(GetWidth(), GetHeight())
+  , mWorldRenderer(mWorld, mClientCache)
 {
-  CoreContent::Setup(mItemRegistry, mTileRegistry);
+  CoreContent::Setup();
 
-  mClientCache.BuildTileAtlas(mTileRegistry);
-  mClientCache.BuildItemAtlas(mItemRegistry);
+  mClientCache.BuildItemAtlas();
+  mClientCache.BuildTileAtlas();
+  mClientCache.BuildWallAtlas();
 
   CoreContent::GenerateWorld(mWorld);
 }
@@ -52,8 +56,10 @@ GameClient::Update(f64 delta)
       ShowStatisticsDebug(*this, delta);
       ShowScriptDebug(*this);
       ShowModDebug(*this);
-      ShowTileDebug(*this);
       ShowItemDebug(*this);
+      ShowTileDebug(*this);
+      ShowWallDebug(*this);
+      ShowWorldDebug(*this);
       ShowNetworkDebug(*this);
       ShowPlayerDebug(*this);
       ImGui::Checkbox("show ImGui demo window", &demo_window);
@@ -76,7 +82,7 @@ GameClient::Render()
 {
   mRenderer.NewFrame();
 
-  RenderWorldTerrain(mRenderer, mCamera, *this);
+  mWorldRenderer.Render(mRenderer, mCamera);
   RenderEntities(mRenderer, mCamera, mWorld.GetEntityManager());
 }
 

@@ -6,6 +6,8 @@
 // ========================================================================== //
 
 #include <string_view>
+#include <alflib/memory/memory_reader.hpp>
+#include <alflib/memory/memory_writer.hpp>
 
 #include "core/assert.hpp"
 #include "network/network.hpp"
@@ -24,12 +26,12 @@ namespace dib::game {
 /** Class representing the game world **/
 class World
 {
-private:
-  /** Tile registry **/
-  const TileRegistry& mTileRegistry;
-
 public:
-  World(const TileRegistry& tileRegistry);
+  World();
+
+  World(World&& other);
+
+  World& operator=(World&& other);
 
   void Update(f64 delta);
 
@@ -38,6 +40,15 @@ public:
   void OnCommandBroadcast(const std::string_view input);
 
   Network<kSide>& GetNetwork() { return network_; }
+
+  /** Save world to path **/
+  bool Save(const Path& path, bool overwrite = false);
+
+  /** Load world from path **/
+  bool Load(const Path& path);
+
+  /** Load world from memory reader **/
+  bool Load(alflib::MemoryReader& reader);
 
   /** Returns the terrain of the world **/
   Terrain& GetTerrain() { return mTerrain; }
@@ -49,6 +60,11 @@ public:
   dib::EntityManager& GetEntityManager();
 
   game::Chat& GetChat() { return chat_; }
+
+  bool ToBytes(alflib::MemoryWriter& writer) const;
+
+public:
+  static World FromBytes(alflib::MemoryReader& reader);
 
 private:
   /** Terrain **/

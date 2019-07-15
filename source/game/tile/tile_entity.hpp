@@ -27,10 +27,10 @@ public:
   virtual void Update(){};
 
   /** Called when the tile entity should be loaded from a value-store **/
-  virtual void OnLoad(ValueStore& valueStore){};
+  virtual void OnLoad([[maybe_unused]] ValueStore& valueStore){};
 
   /** Called when the tile entity should be saved to a value-store **/
-  virtual void OnStore(ValueStore& valueStore){};
+  virtual void OnStore([[maybe_unused]] ValueStore& valueStore){};
 };
 
 }

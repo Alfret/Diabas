@@ -24,6 +24,15 @@ Item::OnActivated([[maybe_unused]] ItemStack& itemStack)
 
 // -------------------------------------------------------------------------- //
 
+Item*
+Item::SetMaxStackSize(u32 maxStackSize)
+{
+  mMaxStackSize = maxStackSize;
+  return this;
+}
+
+// -------------------------------------------------------------------------- //
+
 u32
 Item::GetResourceIndex([[maybe_unused]] ItemStack& itemStack)
 {

@@ -6,6 +6,6 @@
 
 namespace dib::game {
 
-TileEntity::TileEntity(WorldPos pos) {}
+TileEntity::TileEntity([[maybe_unused]] WorldPos pos) {}
 
 }

@@ -8,10 +8,10 @@ namespace dib::game {
 
 GameServer::GameServer(const AppServer::Descriptor& descriptor)
   : AppServer(descriptor)
-  , mWorld(mTileRegistry)
+  , mWorld()
   , mModLoader(Path{ "./mods" })
 {
-  CoreContent::Setup(mItemRegistry, mTileRegistry);
+  CoreContent::Setup();
 
   RegisterCommands();
 

@@ -10,5 +10,9 @@ uniform sampler2D u_sampler;
 void
 main()
 {
-    frag_color = v_tint * texture(u_sampler, v_uv);
+    vec4 color = texture(u_sampler, v_uv);
+    if (color.a <= 0.0){
+        discard;
+    }
+    frag_color = v_tint * color;
 }

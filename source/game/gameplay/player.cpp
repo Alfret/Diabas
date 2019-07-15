@@ -9,7 +9,7 @@
 namespace dib::game {
 
 void
-Player::Update(GameClient& game, const f64 delta)
+Player::Update(GameClient& game, [[maybe_unused]] const f64 delta)
 {
   if constexpr (kSide == Side::kClient) {
     MICROPROFILE_SCOPEI("player", "update", MP_GREEN);

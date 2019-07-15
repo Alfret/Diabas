@@ -22,9 +22,6 @@ if (WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 else ()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
-
-  # because Filip never uses his function arguments!
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
 endif ()
 
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDIB_DEBUG")
@@ -58,6 +55,7 @@ set(COMMON_SOURCE
   source/game/ecs/systems/npc_system.hpp
   source/game/gameplay/core_content.cpp
   source/game/gameplay/tile/tile_chair.cpp
+  source/game/gameplay/tile/tile_variant.cpp
   source/game/gameplay/player.cpp
   source/game/gameplay/player.hpp
   source/game/gameplay/moveable.cpp
@@ -68,8 +66,6 @@ set(COMMON_SOURCE
   source/game/terrain.hpp
   source/game/world.cpp
   source/game/world.hpp
-  source/game/entity/entity.cpp
-  source/game/entity/entity_registry.cpp
   source/game/item/item.cpp
   source/game/item/item_registry.cpp
   source/game/item/item_stack.cpp
@@ -79,6 +75,8 @@ set(COMMON_SOURCE
   source/game/tile/tile.cpp
   source/game/tile/tile_entity.cpp
   source/game/tile/tile_registry.cpp
+  source/game/wall/wall.cpp
+  source/game/wall/wall_registry.cpp
   source/network/network.cpp
   source/network/network.hpp
   source/network/server.cpp
@@ -122,6 +120,7 @@ set(CLIENT_SOURCE
   source/game/client/game_client.cpp
   source/game/client/world_renderer.cpp
   source/graphics/camera.cpp
+  source/graphics/debug_draw.cpp
   source/graphics/index_buffer.cpp
   source/graphics/renderer.cpp
   source/graphics/shader.cpp

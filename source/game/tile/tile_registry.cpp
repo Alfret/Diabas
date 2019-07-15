@@ -104,6 +104,15 @@ TileRegistry::GetTileID(Tile* tile) const
 
 // -------------------------------------------------------------------------- //
 
+TileRegistry&
+TileRegistry::Instance()
+{
+  static TileRegistry instance;
+  return instance;
+}
+
+// -------------------------------------------------------------------------- //
+
 String
 TileRegistry::CreateRegistryKey(const String& mod, const String& key)
 {
