@@ -60,6 +60,8 @@ set(COMMON_SOURCE
   source/game/ecs/systems/npc_system.hpp
   source/game/gameplay/core_content.cpp
   source/game/gameplay/tile/tile_chair.cpp
+  source/game/gameplay/player.cpp
+  source/game/gameplay/player.hpp
   source/game/resource.cpp
   source/game/resource.hpp
   source/game/terrain.cpp
@@ -119,8 +121,6 @@ set(CLIENT_SOURCE
   source/game/client/entity_render.cpp
   source/game/client/game_client.cpp
   source/game/client/world_renderer.cpp
-  source/game/client/player.cpp
-  source/game/client/player.hpp
   source/graphics/camera.cpp
   source/graphics/index_buffer.cpp
   source/graphics/renderer.cpp

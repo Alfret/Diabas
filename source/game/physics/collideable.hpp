@@ -9,7 +9,7 @@ namespace dib::game {
 
 /** Enumeration of collision types. This determines how entities collide with
  * the tile **/
-enum class CollisionType : u32
+enum class CollisionType : u8
 {
   /** No collision **/
   kNone = 0,
@@ -51,6 +51,7 @@ struct CollisionRectNoOffset
  * Typical use case, you look at the type and cast it into what it should be.
  */
 
+#pragma pack(push, 1)
 struct Collideable
 {
   CollisionType type;
@@ -71,15 +72,19 @@ struct Collideable
     return data;
   }
 };
+#pragma pack(pop)
 
+#pragma pack(push, 1)
 struct CollideableRect
 {
   CollisionType type;
   CollisionRectNoOffset rect;
   u8 padding[Collideable::kDataSize - sizeof(rect)];
 };
+#pragma pack(pop)
 static_assert(sizeof(Collideable) == sizeof(CollideableRect));
 
+#pragma pack(push, 1)
 struct CollideableRect2
 {
   CollisionType type;
@@ -87,6 +92,7 @@ struct CollideableRect2
   /** x and y are offsets from the collideables origo **/
   CollisionRect rect2;
 };
+#pragma pack(pop)
 static_assert(sizeof(Collideable) == sizeof(CollideableRect2));
 
 }
