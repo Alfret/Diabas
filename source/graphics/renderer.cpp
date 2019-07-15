@@ -20,6 +20,7 @@ Renderer::NewFrame()
                mClearColor.GetGreenF32(),
                mClearColor.GetBlueF32(),
                mClearColor.GetAlphaF32());
+  glClearDepth(1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
   // New frame

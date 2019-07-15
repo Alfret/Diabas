@@ -69,6 +69,25 @@ WorldRenderer::Render(graphics::Renderer& renderer,
     countY = terrain.GetHeight() - minY;
   }
 
+  // Render each tile
+  for (u32 y = minY; y < minY + countY + 2; y++) {
+    for (u32 x = minX; x < minX + countX + 2; x++) {
+      WorldPos worldPosition{ x, y };
+      Cell& cell = GetCell(worldPosition);
+      alflib::Color tint = alflib::Color::WHITE;
+
+      // Render tile
+      Vector3F renderPosition = Vector3F(
+        x * TILE_SIZE - cameraPos.x, y * TILE_SIZE - cameraPos.y, 0.0f);
+      spriteBatch.Submit(mClientCache.GetTileAtlasTexture(),
+                         renderPosition,
+                         Vector2F(TILE_SIZE, TILE_SIZE),
+                         tint,
+                         cell.texMinTile,
+                         cell.texMaxTile);
+    }
+  }
+
   // Render each wall
   // TODO(Filip Björklund): Implement zooming
   for (u32 y = minY; y < minY + countY + 2; y++) {
@@ -81,32 +100,13 @@ WorldRenderer::Render(graphics::Renderer& renderer,
       Vector3F renderPosWall =
         Vector3F(f32(x * WALL_SIZE) - cameraPos.x - (WALL_SIZE / 2.0f),
                  f32(y * WALL_SIZE) - cameraPos.y - (WALL_SIZE / 2.0f),
-                 0.5f);
+                 -0.5f);
       spriteBatch.Submit(mClientCache.GetWallAtlasTexture(),
                          renderPosWall,
                          Vector2F(WALL_SIZE * 2.0f, WALL_SIZE * 2.0f),
                          tint,
                          cell.texMinWall,
                          cell.texMaxWall);
-    }
-  }
-
-  // Render each tile
-  for (u32 y = minY; y < minY + countY + 2; y++) {
-    for (u32 x = minX; x < minX + countX + 2; x++) {
-      WorldPos worldPosition{ x, y };
-      Cell& cell = GetCell(worldPosition);
-      alflib::Color tint = alflib::Color::WHITE;
-
-      // Render tile
-      Vector3F renderPosition = Vector3F(
-        x * TILE_SIZE - cameraPos.x, y * TILE_SIZE - cameraPos.y, 0.5f);
-      spriteBatch.Submit(mClientCache.GetTileAtlasTexture(),
-                         renderPosition,
-                         Vector2F(TILE_SIZE, TILE_SIZE),
-                         tint,
-                         cell.texMinTile,
-                         cell.texMaxTile);
     }
   }
 

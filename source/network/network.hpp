@@ -40,6 +40,10 @@ class Network
 public:
   Network(game::World* world);
 
+  Network(Network&& other);
+
+  Network& operator=(Network&& other);
+
   ~Network();
 
   Network(const Network& other) = delete;
@@ -181,6 +185,32 @@ Network<side>::Network(game::World* world)
   } else {
     base_ = new Client(world);
   }
+}
+
+template<Side side>
+Network<side>::Network(Network&& other)
+  : base_(std::move(other.base_))
+  , packet_handler_(std::move(other.packet_handler_))
+  , packet_(std::move(other.packet_))
+  , world_(std::move(other.world_))
+{
+  other.base_ = nullptr;
+  other.world_ = nullptr;
+}
+
+template<Side side>
+Network<side>&
+Network<side>::operator=(Network&& other)
+{
+  if (this != &other) {
+    base_ = std::move(other.base_);
+    packet_handler_ = std::move(other.packet_handler_);
+    packet_ = std::move(other.packet_);
+    world_ = std::move(other.world_);
+    other.base_ = nullptr;
+    other.world_ = nullptr;
+  }
+  return *this;
 }
 
 template<Side side>

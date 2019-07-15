@@ -12,6 +12,7 @@
 #include "game/resource.hpp"
 #include "game/item/tool.hpp"
 #include "game/physics/collision.hpp"
+#include "game/ecs/entity_manager.hpp"
 
 // ========================================================================== //
 // Tile Declaration
@@ -119,7 +120,10 @@ public:
 
   /** Called when tile is activated (right-clicked on client). Returning true
    * means that the tile handled the activation **/
-  virtual bool OnActivated(World& world, WorldPos pos);
+  virtual bool OnActivated(World& world, WorldPos pos, Entity entity);
+
+  /** Called when an entity has collided with the tile **/
+  virtual bool OnCollision(World& world, WorldPos pos, Entity entity);
 
   /** Called when one of the neighbouring eight (8) tiles has changed **/
   virtual void OnNeighbourChange(World& world, WorldPos pos);

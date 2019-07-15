@@ -49,6 +49,12 @@ SpriteBatch::Begin(const Camera* camera)
 void
 SpriteBatch::End()
 {
+  // Don't render if there are nothing to render
+  if (mDataCount < 1) {
+    return;
+  }
+
+  // Assert precondition
   AlfAssert(mCamera != nullptr, "'Begin' must have been called before 'End'");
 
   glEnable(GL_BLEND);
@@ -62,6 +68,9 @@ SpriteBatch::End()
                                     mCamera->GetViewProjectMatrix());
   mShaderProgram->SetUniformS32("u_sampler", 0);
   glBindVertexArray(mVAO);
+
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL);
   glDrawElements(GL_TRIANGLES, mDataCount * 6, GL_UNSIGNED_INT, nullptr);
 
   mDrawCallCount++;

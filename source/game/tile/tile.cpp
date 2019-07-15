@@ -32,7 +32,19 @@ Tile::OnDestroyed([[maybe_unused]] World& world, [[maybe_unused]] WorldPos pos)
 // -------------------------------------------------------------------------- //
 
 bool
-Tile::OnActivated([[maybe_unused]] World& world, [[maybe_unused]] WorldPos pos)
+Tile::OnActivated([[maybe_unused]] World& world,
+                  [[maybe_unused]] WorldPos pos,
+                  [[maybe_unused]] Entity entity)
+{
+  return false;
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Tile::OnCollision([[maybe_unused]] World& world,
+                  [[maybe_unused]] WorldPos pos,
+                  [[maybe_unused]] Entity entity)
 {
   return false;
 }

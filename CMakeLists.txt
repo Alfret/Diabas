@@ -62,8 +62,6 @@ set(COMMON_SOURCE
   source/game/terrain.hpp
   source/game/world.cpp
   source/game/world.hpp
-  source/game/entity/entity.cpp
-  source/game/entity/entity_registry.cpp
   source/game/item/item.cpp
   source/game/item/item_registry.cpp
   source/game/item/item_stack.cpp
@@ -120,6 +118,7 @@ set(CLIENT_SOURCE
   source/game/client/player.cpp
   source/game/client/player.hpp
   source/graphics/camera.cpp
+  source/graphics/debug_draw.cpp
   source/graphics/index_buffer.cpp
   source/graphics/renderer.cpp
   source/graphics/shader.cpp
