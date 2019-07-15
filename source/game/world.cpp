@@ -1,5 +1,5 @@
 #include "world.hpp"
-#include "game/physics/moveable.hpp"
+#include "game/gameplay/moveable.hpp"
 #include <dutil/stopwatch.hpp>
 #include <microprofile/microprofile.h>
 

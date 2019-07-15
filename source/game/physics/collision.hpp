@@ -4,7 +4,7 @@
 #include "core/types.hpp"
 #include "game/physics/units.hpp"
 #include "game/physics/collideable.hpp"
-#include "game/physics/moveable.hpp"
+#include "game/gameplay/moveable.hpp"
 #include <vector>
 
 namespace dib::game {

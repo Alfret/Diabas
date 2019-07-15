@@ -6,7 +6,7 @@
 
 #include "game/physics/units.hpp"
 #include "game/client/render_component.hpp"
-#include "game/physics/moveable.hpp"
+#include "game/gameplay/moveable.hpp"
 
 // ========================================================================== //
 // Functions

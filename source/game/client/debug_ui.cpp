@@ -13,7 +13,7 @@
 #include "game/client/world_renderer.hpp"
 #include "game/tile/tile_registry.hpp"
 #include "game/ecs/systems/generic_system.hpp"
-#include "game/physics/moveable.hpp"
+#include "game/gameplay/moveable.hpp"
 
 // ========================================================================== //
 // DebugUI Implementation

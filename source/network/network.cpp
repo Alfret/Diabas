@@ -9,7 +9,7 @@
 #include "game/ecs/components/npc_data_component.hpp"
 #include "game/ecs/components/projectile_data_component.hpp"
 #include "game/ecs/components/tile_data_component.hpp"
-#include "game/physics/moveable.hpp"
+#include "game/gameplay/moveable.hpp"
 #include "game/world.hpp"
 #include <limits>
 #include "game/chat/chat.hpp"

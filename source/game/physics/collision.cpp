@@ -1,7 +1,6 @@
 #include "collision.hpp"
 #include "game/world.hpp"
 #include <dutil/misc.hpp>
-#include "game/physics/moveable.hpp"
 #include <cmath>
 
 namespace dib::game {

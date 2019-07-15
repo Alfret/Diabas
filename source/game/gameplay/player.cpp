@@ -2,7 +2,7 @@
 
 #include "game/physics/units.hpp"
 #include "game/client/game_client.hpp"
-#include "game/physics/moveable.hpp"
+#include "game/gameplay/moveable.hpp"
 #include <microprofile/microprofile.h>
 #include <dutil/stopwatch.hpp>
 
