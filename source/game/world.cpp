@@ -1,4 +1,7 @@
 #include "world.hpp"
+#include "game/gameplay/moveable.hpp"
+#include <dutil/stopwatch.hpp>
+#include <microprofile/microprofile.h>
 
 // ========================================================================== //
 // Headers
@@ -45,9 +48,11 @@ World::operator=(World&& other)
 // -------------------------------------------------------------------------- //
 
 void
-World::Update()
+World::Update(const f64 delta)
 {
+  MICROPROFILE_SCOPEI("world", "update", MP_BLUE);
   network_.Update();
+  UpdateMoveables(*this, delta);
 }
 
 // -------------------------------------------------------------------------- //

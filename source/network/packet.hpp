@@ -21,6 +21,7 @@ class Packet;
 struct MemoryWriter
 {
   MemoryWriter(Packet* packet);
+  ~MemoryWriter();
 
   alflib::RawMemoryWriter* operator->() { return &mw_; }
   alflib::RawMemoryWriter* operator*() { return &mw_; }
@@ -33,6 +34,7 @@ struct MemoryWriter
 private:
   alflib::RawMemoryWriter mw_;
   Packet* packet_;
+  bool did_finalize;
 };
 
 // ============================================================ //
@@ -120,11 +122,6 @@ public:
   // ============================================================ //
 public:
   /**
-   * Clear the packet, will not write anything to the container.
-   */
-  void Clear();
-
-  /**
    * Get how many bytes are unused in the packet.
    */
   std::size_t GetBytesLeft() const
@@ -193,6 +190,11 @@ public:
   // Payload
   // ============================================================ //
 public:
+  /**
+   * Clear the packet, will not write anything to the container.
+   */
+  void ClearPayload();
+
   /**
    * Get used bytes by the payload.
    */

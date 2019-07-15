@@ -33,7 +33,7 @@ public:
 
   World& operator=(World&& other);
 
-  void Update();
+  void Update(f64 delta);
 
   void OnCommandNetwork(const std::string_view input);
 

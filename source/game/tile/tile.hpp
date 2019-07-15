@@ -88,7 +88,7 @@ protected:
   f32 mOpacity = 1.0f;
 
   /** Collision type **/
-  CollisionType mCollisionType = CollisionType::kFull;
+  CollisionType mCollisionType = CollisionType::kFullTile;
 
   /** Hardness of the tile **/
   f32 mHardness = 1.0f;

@@ -16,6 +16,7 @@
 #include "core/macros.hpp"
 #include "core/uuid.hpp"
 #include "game/ecs/components/player_data_component.hpp"
+#include <entt/entt.hpp>
 
 // ========================================================================== //
 // Forward Declarations
@@ -55,10 +56,10 @@ public:
 public:
   static constexpr u16 kPort = 24812;
 
-  static constexpr s64 kNetTicksPerSec = 32;
+  static constexpr f64 kNetTicksPerSec = 64;
 
   // ============================================================ //
-  // Public Methods
+  // Shared Methods
   // ============================================================ //
 public:
   void Update();
@@ -76,19 +77,9 @@ public:
   void PacketBroadcastExclude(const Packet& packet,
                               const ConnectionId exclude_connection) const;
 
-  /**
-   * Client only
-   */
-  void ConnectToServer(u32 ip, u16 port);
-  void ConnectToServer(const String& addr);
-  void ConnectToServer(const char8* addr);
+  void NetworkInfo(const std::string_view message) const;
 
-  void Disconnect();
-
-  /**
-   * Server only
-   */
-  void StartServer();
+  void Broadcast(const std::string_view message) const;
 
   /**
    * Server always returns kConnected
@@ -96,23 +87,7 @@ public:
   ConnectionState GetConnectionState() const;
 
   /**
-   * Client only
-   */
-  std::optional<u32> GetOurPlayerEntity() const;
-
-  /**
-   * Client only
-   */
-  std::optional<PlayerData*> GetOurPlayerData() const;
-
-  /**
-   * Server only, (client always return std::nullopt)
-   */
-  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus(
-    const ConnectionId connection_id) const;
-
-  /**
-   * Client only, (server always returns std::nullopt)
+   * Server always returns std::nullopt
    */
   std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus()
     const;
@@ -120,11 +95,32 @@ public:
   PacketHandler& GetPacketHandler() { return packet_handler_; }
 
   // ============================================================ //
-  // TMP
+  // Client Only Methods
   // ============================================================ //
-  void NetworkInfo(const std::string_view message) const;
 
-  void Broadcast(const std::string_view message) const;
+  void ConnectToServer(u32 ip, u16 port);
+  void ConnectToServer(const String& addr);
+  void ConnectToServer(const char8* addr);
+
+  void Disconnect();
+
+  std::optional<entt::entity> GetOurPlayerEntity() const;
+
+  std::optional<PlayerData*> GetOurPlayerData() const;
+
+  // ============================================================ //
+  // Server Only Methods
+  // ============================================================ //
+
+  void StartServer();
+
+  /**
+   * Server only, (client always return std::nullopt)
+   */
+  std::optional<SteamNetworkingQuickConnectionStatus> GetConnectionStatus(
+    const ConnectionId connection_id) const;
+
+  std::optional<entt::entity> EntityFromConnection(ConnectionId con) const;
 
   // ============================================================ //
   // Private Methods
@@ -147,7 +143,7 @@ private:
 
   void SendPlayerList(const ConnectionId connection_id) const;
 
-  void SetOurPlayerEntity(const std::optional<u32> maybe_entity);
+  void SetOurPlayerEntity(const std::optional<entt::entity> maybe_entity);
 
   // ============================================================ //
   // Member Variables

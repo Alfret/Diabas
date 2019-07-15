@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/types.hpp"
+
 // ========================================================================== //
 // WorldPos Declaration
 // ========================================================================== //
@@ -58,6 +60,13 @@ public:
 
   /** Returns the Y position **/
   const u32& Y() const { return mY; }
+
+  bool operator==(const WorldPos& other) const
+  {
+    return X() == other.X() && Y() == other.Y();
+  }
+
+  bool operator!=(const WorldPos& other) const { return !(operator==(other)); }
 };
 
 }

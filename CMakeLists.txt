@@ -21,7 +21,7 @@ include_directories(SYSTEM
 if (WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 else ()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-parameter -Wpedantic")
 endif ()
 
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDIB_DEBUG")
@@ -56,6 +56,10 @@ set(COMMON_SOURCE
   source/game/gameplay/core_content.cpp
   source/game/gameplay/tile/tile_chair.cpp
   source/game/gameplay/tile/tile_variant.cpp
+  source/game/gameplay/player.cpp
+  source/game/gameplay/player.hpp
+  source/game/gameplay/moveable.cpp
+  source/game/gameplay/moveable.hpp
   source/game/resource.cpp
   source/game/resource.hpp
   source/game/terrain.cpp
@@ -115,8 +119,6 @@ set(CLIENT_SOURCE
   source/game/client/entity_render.cpp
   source/game/client/game_client.cpp
   source/game/client/world_renderer.cpp
-  source/game/client/player.cpp
-  source/game/client/player.hpp
   source/graphics/camera.cpp
   source/graphics/debug_draw.cpp
   source/graphics/index_buffer.cpp
