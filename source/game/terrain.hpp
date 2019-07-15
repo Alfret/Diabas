@@ -87,10 +87,13 @@ public:
   Terrain(World* world, Size size);
 
   /** Move-constructor **/
-  Terrain(Terrain&& other);
+  Terrain(Terrain&& other) noexcept;
+
+  /** Destruct **/
+  ~Terrain();
 
   /** Move-assignment **/
-  Terrain& operator=(Terrain&& other);
+  Terrain& operator=(Terrain&& other) noexcept;
 
   /** Returns the tile at the specified location in the world **/
   [[nodiscard]] Tile* GetTile(WorldPos pos) const;

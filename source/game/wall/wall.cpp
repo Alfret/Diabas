@@ -59,19 +59,20 @@ Wall::Wall(ResourcePath resourcePath, String translationKey)
 // -------------------------------------------------------------------------- //
 
 void
-Wall::OnPlaced(World& world, WorldPos pos)
+Wall::OnPlaced([[maybe_unused]] World& world, [[maybe_unused]] WorldPos pos)
 {}
 
 // -------------------------------------------------------------------------- //
 
 void
-Wall::OnDestroyed(World& world, WorldPos pos)
+Wall::OnDestroyed([[maybe_unused]] World& world, [[maybe_unused]] WorldPos pos)
 {}
 
 // -------------------------------------------------------------------------- //
 
 void
-Wall::OnNeighbourChange(World& world, WorldPos pos)
+Wall::OnNeighbourChange([[maybe_unused]] World& world,
+                        [[maybe_unused]] WorldPos pos)
 {}
 
 // -------------------------------------------------------------------------- //

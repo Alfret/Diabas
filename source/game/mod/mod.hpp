@@ -49,7 +49,7 @@ private:
   /** Assembly **/
   MonoAssembly* mAssembly = nullptr;
   /** Mod object **/
-  MonoObject* mModInstance;
+  // MonoObject* mModInstance;
 
 public:
   /** Construct a mod from the path to the subdirectory of the mod **/

@@ -104,7 +104,7 @@ SpriteBatch::Submit(const Sprite& sprite)
 
   const Vector3F& position = sprite.GetPosition();
   const Vector2F& size = sprite.GetSize();
-  const Vector2F& anchor = sprite.GetAnchor();
+  // const Vector2F& anchor = sprite.GetAnchor();
   const Vector2F& texMin = sprite.GetTexMin();
   const Vector2F& texMax = sprite.GetTexMax();
 

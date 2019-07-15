@@ -21,7 +21,8 @@ TileChair::TileChair(const ResourcePath& resourcePath,
 // -------------------------------------------------------------------------- //
 
 bool
-TileChair::IsMultiTile(World& world, WorldPos pos)
+TileChair::IsMultiTile([[maybe_unused]] World& world,
+                       [[maybe_unused]] WorldPos pos)
 {
   return true;
 }

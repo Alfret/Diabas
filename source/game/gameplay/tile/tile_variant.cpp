@@ -104,7 +104,7 @@ TileVariant::GetResourceIndex(World& world, WorldPos pos)
 u32
 TileVariant::LookupResourceIndex(u8 mask)
 {
-  static u32 resourceTable[255u];
+  static u32 resourceTable[256u];
 
   // 0.
   resourceTable[0] = 15;

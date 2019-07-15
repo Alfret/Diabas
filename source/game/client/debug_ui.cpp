@@ -51,7 +51,7 @@ ShowStatisticsDebug(GameClient& gameClient, f32 delta)
 // -------------------------------------------------------------------------- //
 
 void
-ShowScriptDebug(GameClient& gameClient)
+ShowScriptDebug([[maybe_unused]] GameClient& gameClient)
 {
   /*
   if (ImGui::CollapsingHeader("Script")) {
@@ -95,7 +95,7 @@ ShowScriptDebug(GameClient& gameClient)
 // -------------------------------------------------------------------------- //
 
 void
-ShowModDebug(GameClient& gameClient)
+ShowModDebug([[maybe_unused]] GameClient& gameClient)
 {
   /*
   if (ImGui::CollapsingHeader("Mods")) {

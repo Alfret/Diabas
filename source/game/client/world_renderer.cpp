@@ -31,6 +31,7 @@ WorldRenderer::WorldRenderer(World& world, ClientCache& clientCache)
 WorldRenderer::~WorldRenderer()
 {
   mWorld.GetTerrain().UnregisterChangeListener(this);
+  delete mDataCells;
 }
 
 // -------------------------------------------------------------------------- //
@@ -121,8 +122,9 @@ WorldRenderer::PickScreenTile(const graphics::Camera& camera,
                               Vector2F mousePosition)
 {
   // TODO(Filip Björklund): Implement support for zoom
-  WorldPos pos{ u32(mousePosition.x / TILE_SIZE),
-                u32(mousePosition.y / TILE_SIZE) };
+  const Vector3F& cameraPos = camera.GetPosition();
+  WorldPos pos{ u32((cameraPos.x + mousePosition.x) / TILE_SIZE),
+                u32((cameraPos.y + mousePosition.y) / TILE_SIZE) };
   pos.X() = alflib::Clamp(pos.X(), 0u, mWorld.GetTerrain().GetWidth());
   pos.Y() = alflib::Clamp(pos.Y(), 0u, mWorld.GetTerrain().GetHeight());
   return pos;

@@ -64,20 +64,27 @@ Terrain::Terrain(World* world, Terrain::Size size)
 
 // -------------------------------------------------------------------------- //
 
-Terrain::Terrain(Terrain&& other)
+Terrain::Terrain(Terrain&& other) noexcept
   : mWorld(other.mWorld)
   , mWidth(other.mWidth)
   , mHeight(other.mHeight)
   , mTerrainCells(other.mTerrainCells)
-  , mChangeListeners(other.mChangeListeners)
+  , mChangeListeners(std::move(other.mChangeListeners))
 {
   other.mTerrainCells = nullptr;
 }
 
 // -------------------------------------------------------------------------- //
 
+Terrain::~Terrain()
+{
+  delete mTerrainCells;
+}
+
+// -------------------------------------------------------------------------- //
+
 Terrain&
-Terrain::operator=(Terrain&& other)
+Terrain::operator=(Terrain&& other) noexcept
 {
   if (this != &other) {
     mWorld = other.mWorld;

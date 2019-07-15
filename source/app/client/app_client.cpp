@@ -388,15 +388,15 @@ AppClient::ResizeCallback(GLFWwindow* window, int width, int height)
 // -------------------------------------------------------------------------- //
 
 void
-AppClient::DebugCallbackGL(GLenum source,
+AppClient::DebugCallbackGL([[maybe_unused]] GLenum source,
                            GLenum type,
-                           GLuint id,
-                           GLenum severity,
-                           GLsizei length,
+                           [[maybe_unused]] GLuint id,
+                           [[maybe_unused]] GLenum severity,
+                           [[maybe_unused]] GLsizei length,
                            const GLchar* message,
-                           void* userParam)
+                           [[maybe_unused]] void* userParam)
 {
-  auto app = static_cast<AppClient*>(userParam);
+  // auto app = static_cast<AppClient*>(userParam);
   if (type == GL_DEBUG_TYPE_ERROR) {
     DLOG_ERROR("OpenGL: {}", message);
   } else if (type == GL_DEBUG_TYPE_PERFORMANCE ||

@@ -51,10 +51,7 @@ private:
   } mMod;
 
   /** 'Tile' and 'TileRegistry' related objects **/
-  struct
-  {
-
-  } mTile;
+  // struct {} mTile;
 
 public:
   /** Destruct context **/

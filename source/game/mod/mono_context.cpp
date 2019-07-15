@@ -167,9 +167,9 @@ MonoContext::GetClassAttribute(MonoClass* cls, MonoClass* attributeClass)
 // -------------------------------------------------------------------------- //
 
 MonoObject*
-MonoContext::GetFieldAttribute(MonoClass* cls,
-                               MonoClassField* field,
-                               MonoClass* attributeClass)
+MonoContext::GetFieldAttribute([[maybe_unused]] MonoClass* cls,
+                               [[maybe_unused]] MonoClassField* field,
+                               [[maybe_unused]] MonoClass* attributeClass)
 {
 
   return nullptr;
