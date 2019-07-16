@@ -7,6 +7,7 @@
 #include "app/client/app_client.hpp"
 #include "game/world.hpp"
 #include "game/client/client_cache.hpp"
+#include "game/client/world_renderer.hpp"
 #include "game/gameplay/player.hpp"
 #include "game/gameplay/core_content.hpp"
 #include "game/mod/mod_loader.hpp"
@@ -23,10 +24,6 @@ namespace dib::game {
 class GameClient : public app::AppClient
 {
 private:
-  /** Item registry **/
-  ItemRegistry mItemRegistry;
-  /** Tile registry **/
-  TileRegistry mTileRegistry;
   /** Game world **/
   World mWorld;
 
@@ -41,6 +38,11 @@ private:
   /** Client resource cache **/
   ClientCache mClientCache;
 
+  /** World renderer **/
+  WorldRenderer mWorldRenderer;
+
+  Player mPlayer{};
+
 public:
   /** Construct game client **/
   explicit GameClient(const AppClient::Descriptor& descriptor);
@@ -52,18 +54,6 @@ public:
   void Render() override;
 
   void OnWindowResize(u32 width, u32 height) override;
-
-  /** Returns the item registry **/
-  ItemRegistry& GetItemRegistry() { return mItemRegistry; }
-
-  /** Returns the item registry **/
-  const ItemRegistry& GetItemRegistry() const { return mItemRegistry; }
-
-  /** Returns the tile registry **/
-  TileRegistry& GetTileRegistry() { return mTileRegistry; }
-
-  /** Returns the tile registry **/
-  const TileRegistry& GetTileRegistry() const { return mTileRegistry; }
 
   /** Returns the world **/
   World& GetWorld() { return mWorld; }
@@ -94,6 +84,12 @@ public:
 
   /** Returns the client cache **/
   const ClientCache& GetCache() const { return mClientCache; }
+
+  /** Returns the world renderer **/
+  WorldRenderer& GetWorldRenderer() { return mWorldRenderer; }
+
+  /** Returns the world renderer **/
+  const WorldRenderer& GetWorldRenderer() const { return mWorldRenderer; }
 
 private:
   /** Update the game camera **/

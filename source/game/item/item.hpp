@@ -16,9 +16,23 @@ namespace dib::game {
 
 DIB_FORWARD_DECLARE_CLASS(ItemStack);
 
-/** Class representing an item **/
+/** Class representing an item that can appear in item-stacks, that are in turn
+ * located in inventories. The item themselves do not have any data, but rather
+ * the item-stacks are responsible for holding that.
+ *
+ * Items have a set of properties that are common to all items of the same type.
+ *
+ * Properties:
+ * - MaxStackSize: This property determines the maximum number of items of this
+ *   type that can be stored in an item-stack at the same time.
+ *
+ * **/
 class Item
 {
+public:
+  /** Default max stack size **/
+  static constexpr u32 DEFAULT_MAX_STACK_SIZE = 999;
+
 protected:
   /** Resource path **/
   ResourcePath mResourcePath;
@@ -26,6 +40,9 @@ protected:
   Vector2I mSubResourceCount;
   /** Translation key **/
   String mTranslationKey;
+
+  /** Max stack size **/
+  u32 mMaxStackSize = DEFAULT_MAX_STACK_SIZE;
 
 public:
   /** Construct item by specifying the path to the resource. This resource is
@@ -50,6 +67,12 @@ public:
    * activation are also given.
    */
   virtual bool OnActivated(ItemStack& itemStack /** , Entity& entity**/);
+
+  /** Set the max stack size **/
+  virtual Item* SetMaxStackSize(u32 maxStackSize);
+
+  /** Returns the max stack size **/
+  [[nodiscard]] virtual u32 GetMaxStackSize() const { return mMaxStackSize; }
 
   /** Returns the index of the resource for the item in the given item stack **/
   [[nodiscard]] virtual u32 GetResourceIndex(ItemStack& itemStack);

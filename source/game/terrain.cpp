@@ -14,12 +14,8 @@
 
 namespace dib::game {
 
-Terrain::Terrain(const TileRegistry& tileRegistry,
-                 World& world,
-                 u32 width,
-                 u32 height)
-  : mTileRegistry(tileRegistry)
-  , mWorld(world)
+Terrain::Terrain(World* world, u32 width, u32 height)
+  : mWorld(world)
   , mWidth(width)
   , mHeight(height)
 {
@@ -29,14 +25,16 @@ Terrain::Terrain(const TileRegistry& tileRegistry,
 
 // -------------------------------------------------------------------------- //
 
-Terrain::Terrain(const TileRegistry& tileRegistry,
-                 World& world,
-                 Terrain::Size size)
-  : mTileRegistry(tileRegistry)
-  , mWorld(world)
+Terrain::Terrain(World* world, Terrain::Size size)
+  : mWorld(world)
 {
   // Determine size
   switch (size) {
+    case Size::kTiny: {
+      mWidth = 2100;
+      mHeight = 600;
+      break;
+    }
     case Size::kSmall: {
       mWidth = 4200;
       mHeight = 1200;
@@ -66,10 +64,45 @@ Terrain::Terrain(const TileRegistry& tileRegistry,
 
 // -------------------------------------------------------------------------- //
 
+Terrain::Terrain(Terrain&& other) noexcept
+  : mWorld(other.mWorld)
+  , mWidth(other.mWidth)
+  , mHeight(other.mHeight)
+  , mTerrainCells(other.mTerrainCells)
+  , mChangeListeners(std::move(other.mChangeListeners))
+{
+  other.mTerrainCells = nullptr;
+}
+
+// -------------------------------------------------------------------------- //
+
+Terrain::~Terrain()
+{
+  delete mTerrainCells;
+}
+
+// -------------------------------------------------------------------------- //
+
+Terrain&
+Terrain::operator=(Terrain&& other) noexcept
+{
+  if (this != &other) {
+    mWorld = other.mWorld;
+    mWidth = other.mWidth;
+    mHeight = other.mHeight;
+    mTerrainCells = other.mTerrainCells;
+    mChangeListeners = other.mChangeListeners;
+    other.mTerrainCells = nullptr;
+  }
+  return *this;
+}
+
+// -------------------------------------------------------------------------- //
+
 Tile*
 Terrain::GetTile(WorldPos pos) const
 {
-  return mTileRegistry.GetTile(GetTileID(pos));
+  return TileRegistry::Instance().GetTile(GetTileID(pos));
 }
 
 // -------------------------------------------------------------------------- //
@@ -82,10 +115,26 @@ Terrain::GetTileID(WorldPos pos) const
 
 // -------------------------------------------------------------------------- //
 
+Wall*
+Terrain::GetWall(WorldPos pos) const
+{
+  return WallRegistry::Instance().GetWall(GetWallID(pos));
+}
+
+// -------------------------------------------------------------------------- //
+
+WallRegistry::WallID
+Terrain::GetWallID(WorldPos pos) const
+{
+  return (mTerrainCells + mWidth * pos.Y() + pos.X())->wall;
+}
+
+// -------------------------------------------------------------------------- //
+
 bool
 Terrain::SetTile(WorldPos pos, Tile* tile)
 {
-  return SetTile(pos, mTileRegistry.GetTileID(tile));
+  return SetTile(pos, TileRegistry::Instance().GetTileID(tile));
 }
 
 // -------------------------------------------------------------------------- //
@@ -98,10 +147,26 @@ Terrain::SetTile(WorldPos pos, TileRegistry::TileID id)
 
 // -------------------------------------------------------------------------- //
 
+bool
+Terrain::SetWall(WorldPos pos, Wall* wall)
+{
+  return SetWall(pos, WallRegistry::Instance().GetWallID(wall));
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Terrain::SetWall(WorldPos pos, WallRegistry::WallID id)
+{
+  return SetWallAdvanced(pos, id);
+}
+
+// -------------------------------------------------------------------------- //
+
 void
 Terrain::GenSetTile(WorldPos pos, Tile* tile, bool updateNeighbours)
 {
-  GenSetTile(pos, mTileRegistry.GetTileID(tile), updateNeighbours);
+  GenSetTile(pos, TileRegistry::Instance().GetTileID(tile), updateNeighbours);
 }
 
 // -------------------------------------------------------------------------- //
@@ -112,13 +177,38 @@ Terrain::GenSetTile(WorldPos pos,
                     bool updateNeighbours)
 {
   Cell& cell = GetCell(pos);
-  Tile* tile = mTileRegistry.GetTile(cell.tile);
-  tile->OnDestroyed(mWorld, pos);
+  Tile* tile = TileRegistry::Instance().GetTile(cell.tile);
+  tile->OnDestroyed(*mWorld, pos);
 
-  tile = mTileRegistry.GetTile(id);
+  tile = TileRegistry::Instance().GetTile(id);
   cell.tile = id;
-  tile->OnPlaced(mWorld, pos);
-  UpdateCachedIndices(pos, updateNeighbours);
+  tile->OnPlaced(*mWorld, pos);
+  UpdateCachedTileIndices(pos, updateNeighbours);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::GenSetWall(WorldPos pos, Wall* wall, bool updateNeighbours)
+{
+  GenSetWall(pos, WallRegistry::Instance().GetWallID(wall), updateNeighbours);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::GenSetWall(WorldPos pos,
+                    WallRegistry::WallID id,
+                    bool updateNeighbours)
+{
+  Cell& cell = GetCell(pos);
+  Wall* wall = WallRegistry::Instance().GetWall(cell.wall);
+  wall->OnDestroyed(*mWorld, pos);
+
+  wall = WallRegistry::Instance().GetWall(id);
+  cell.wall = id;
+  wall->OnPlaced(*mWorld, pos);
+  UpdateCachedWallIndices(pos, updateNeighbours);
 }
 
 // -------------------------------------------------------------------------- //
@@ -126,7 +216,7 @@ Terrain::GenSetTile(WorldPos pos,
 void
 Terrain::RemoveTile(WorldPos pos, Tile* replacementTile)
 {
-  RemoveTile(pos, mTileRegistry.GetTileID(replacementTile));
+  RemoveTile(pos, TileRegistry::Instance().GetTileID(replacementTile));
 }
 
 // -------------------------------------------------------------------------- //
@@ -140,15 +230,15 @@ Terrain::RemoveTile(WorldPos pos, TileRegistry::TileID replacementId)
 // -------------------------------------------------------------------------- //
 
 void
-Terrain::ReCacheResourceIndices()
+Terrain::Resize(u32 width, u32 height)
 {
-  for (u32 y = 0; y < mHeight; y++) {
-    for (u32 x = 0; x < mWidth; x++) {
-      WorldPos pos{ x, y };
-      Tile* tile = GetTile(pos);
-      Cell& cell = GetCell(pos);
-      cell.cachedTileSubResource = tile->GetResourceIndex(mWorld, pos);
-    }
+  delete mTerrainCells;
+  mWidth = width;
+  mHeight = height;
+  mTerrainCells = new Cell[mWidth * mHeight];
+  memset(mTerrainCells, 0, sizeof(Cell) * mWidth * mHeight);
+  for (auto& listener : mChangeListeners) {
+    listener->OnResize(width, height);
   }
 }
 
@@ -174,6 +264,25 @@ void
 Terrain::SetMetadata(WorldPos pos, u8 metadata)
 {
   GetCell(pos).metadata = metadata;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::RegisterChangeListener(Terrain::ChangeListener* changeListener)
+{
+  mChangeListeners.push_back(changeListener);
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::UnregisterChangeListener(Terrain::ChangeListener* changeListener)
+{
+  mChangeListeners.erase(std::remove(mChangeListeners.begin(),
+                                     mChangeListeners.end(),
+                                     changeListener),
+                         mChangeListeners.end());
 }
 
 // -------------------------------------------------------------------------- //
@@ -204,67 +313,130 @@ Terrain::SetTileAdvanced(WorldPos pos,
   Cell& cell = GetCell(pos);
 
   // Notify old tile
-  Tile* tile = mTileRegistry.GetTile(cell.tile);
-  if (!ignoreReplaceCheck && !tile->CanBeReplaced(mWorld, pos)) {
+  Tile* tile = TileRegistry::Instance().GetTile(cell.tile);
+  if (!ignoreReplaceCheck && !tile->CanBeReplaced(*mWorld, pos)) {
     return false;
   }
-  if (tile->IsMultiTile(mWorld, pos)) {
-    const bool success = tile->KillMultiTile(mWorld, pos);
+  if (tile->IsMultiTile(*mWorld, pos)) {
+    const bool success = tile->KillMultiTile(*mWorld, pos);
     if (!success) {
       DLOG_WARNING("Failed to destroy multi-tile structure");
       return false;
     }
   }
-  tile->OnDestroyed(mWorld, pos);
+  tile->OnDestroyed(*mWorld, pos);
 
   // Set new tile
-  tile = mTileRegistry.GetTile(id);
+  tile = TileRegistry::Instance().GetTile(id);
   u32 oldId = cell.tile;
   cell.tile = id;
-  if (tile->IsMultiTile(mWorld, pos)) {
-    if (!tile->PlaceMultiTile(mWorld, pos)) {
+  if (tile->IsMultiTile(*mWorld, pos)) {
+    if (!tile->PlaceMultiTile(*mWorld, pos)) {
       cell.tile = oldId;
       return false;
     }
   }
-  tile->OnPlaced(mWorld, pos);
-  UpdateCachedIndices(pos, updateNeighbour);
+  tile->OnPlaced(*mWorld, pos);
+  UpdateCachedTileIndices(pos, updateNeighbour);
   return true;
 }
 
 // -------------------------------------------------------------------------- //
 
 void
-Terrain::SafeNeighbourUpdate(WorldPos pos)
+Terrain::SafeNeighbourTileUpdate(WorldPos pos)
 {
   if (IsValidPosition(pos)) {
     Tile* tile = GetTile(pos);
-    tile->OnNeighbourChange(mWorld, pos);
-    Cell& cell = GetCell(pos);
-    cell.cachedTileSubResource = tile->GetResourceIndex(mWorld, pos);
+    tile->OnNeighbourChange(*mWorld, pos);
+    for (auto& listener : mChangeListeners) {
+      listener->OnTileChanged(pos);
+    }
   }
 }
 
 // -------------------------------------------------------------------------- //
 
 void
-Terrain::UpdateCachedIndices(WorldPos pos, bool updateNeighbours)
+Terrain::UpdateCachedTileIndices(WorldPos pos, bool updateNeighbours)
 {
   // Update center tile
-  Tile* centerTile = GetTile(pos);
-  Cell& centerCell = GetCell(pos);
-  centerCell.cachedTileSubResource = centerTile->GetResourceIndex(mWorld, pos);
+  for (auto& listener : mChangeListeners) {
+    listener->OnTileChanged(pos);
+  }
 
   // Update neighbours
   if (updateNeighbours) {
-    SafeNeighbourUpdate(pos.TopLeft());
-    SafeNeighbourUpdate(pos.Top());
-    SafeNeighbourUpdate(pos.TopRight());
-    SafeNeighbourUpdate(pos.Left());
-    SafeNeighbourUpdate(pos.Right());
-    SafeNeighbourUpdate(pos.BottomLeft());
-    SafeNeighbourUpdate(pos.Bottom());
-    SafeNeighbourUpdate(pos.BottomRight());
+    SafeNeighbourTileUpdate(pos.TopLeft());
+    SafeNeighbourTileUpdate(pos.Top());
+    SafeNeighbourTileUpdate(pos.TopRight());
+    SafeNeighbourTileUpdate(pos.Left());
+    SafeNeighbourTileUpdate(pos.Right());
+    SafeNeighbourTileUpdate(pos.BottomLeft());
+    SafeNeighbourTileUpdate(pos.Bottom());
+    SafeNeighbourTileUpdate(pos.BottomRight());
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Terrain::SetWallAdvanced(WorldPos pos,
+                         WallRegistry::WallID id,
+                         bool ignoreReplaceCheck,
+                         bool updateNeighbour)
+{
+  Cell& cell = GetCell(pos);
+
+  // Notify old tile
+  Wall* wall = WallRegistry::Instance().GetWall(cell.wall);
+  if (!ignoreReplaceCheck && !wall->CanBeReplaced(*mWorld, pos)) {
+    return false;
+  }
+  wall->OnDestroyed(*mWorld, pos);
+
+  // Set new tile
+  wall = WallRegistry::Instance().GetWall(id);
+  cell.wall = id;
+  wall->OnPlaced(*mWorld, pos);
+  UpdateCachedWallIndices(pos, updateNeighbour);
+  return true;
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::SafeNeighbourWallUpdate(WorldPos pos)
+{
+  if (IsValidPosition(pos)) {
+    Wall* wall = GetWall(pos);
+    wall->OnNeighbourChange(*mWorld, pos);
+    for (auto& listener : mChangeListeners) {
+      listener->OnWallChanged(pos);
+    }
+  }
+}
+
+// -------------------------------------------------------------------------- //
+
+void
+Terrain::UpdateCachedWallIndices(WorldPos pos, bool updateNeighbours)
+{
+  // Update center tile
+  for (auto& listener : mChangeListeners) {
+    listener->OnWallChanged(pos);
+  }
+
+  // Update neighbours
+  if (updateNeighbours) {
+    SafeNeighbourWallUpdate(pos.TopLeft());
+    SafeNeighbourWallUpdate(pos.Top());
+    SafeNeighbourWallUpdate(pos.TopRight());
+    SafeNeighbourWallUpdate(pos.Left());
+    SafeNeighbourWallUpdate(pos.Right());
+    SafeNeighbourWallUpdate(pos.BottomLeft());
+    SafeNeighbourWallUpdate(pos.Bottom());
+    SafeNeighbourWallUpdate(pos.BottomRight());
   }
 }
 

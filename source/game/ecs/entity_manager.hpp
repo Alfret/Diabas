@@ -4,6 +4,9 @@
 #include <entt/entt.hpp>
 
 namespace dib {
+
+using Entity = entt::entity;
+
 class EntityManager
 {
 public:

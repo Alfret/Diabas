@@ -53,24 +53,31 @@ public:
   bool RegisterItem(const String& registryKey, Item* item);
 
   /** Returns an item given its ID **/
-  Item* GetItem(ItemID id) const;
+  [[nodiscard]] Item* GetItem(ItemID id) const;
 
   /** Returns an item given its registry key **/
-  Item* GetItem(const String& registryKey) const;
+  [[nodiscard]] Item* GetItem(const String& registryKey) const;
 
   /** Returns an item ID given its registry key **/
-  ItemID GetItemID(const String& registryKey) const;
+  [[nodiscard]] ItemID GetItemID(const String& registryKey) const;
 
   /** Returns an item ID given the item itself **/
-  ItemID GetItemID(Item* item) const;
+  [[nodiscard]] ItemID GetItemID(Item* item) const;
 
   /** Returns the list of registered items **/
-  const std::vector<Item*> GetItems() const { return mItems; }
+  [[nodiscard]] const std::vector<Item*>& GetItems() const { return mItems; }
 
   /** Returns the item registry map **/
-  const tsl::robin_map<String, ItemID> GetRegistryMap() const;
+  [[nodiscard]] const tsl::robin_map<String, ItemID>& GetRegistryMap() const;
+
+  /** Returns the invalid item **/
+  [[nodiscard]] Item* GetInvalidItem() const { return mBuiltin.itemInvalid; }
+
+  /** Returns the invalid item **/
+  [[nodiscard]] ItemRegistry::ItemID GetInvalidItemID() const;
 
 public:
+  static ItemRegistry& Instance();
   /** Create registry key **/
   static String CreateRegistryKey(const String& modId, const String& key);
 };

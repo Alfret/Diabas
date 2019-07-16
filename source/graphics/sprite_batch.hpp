@@ -27,12 +27,18 @@ DIB_FORWARD_DECLARE_CLASS(Sprite);
 class SpriteBatch
 {
 public:
-  static constexpr u32 MAX_SPRITES = 100000;
+  /** Max number of sprites that can be batched together **/
+  static constexpr u32 MAX_SPRITES = 50000;
+  /** Max number of vertices **/
   static constexpr u32 MAX_VERTICES = MAX_SPRITES * 4;
+  /** Max number of indices **/
   static constexpr u32 MAX_INDICES = MAX_SPRITES * 6;
 
+  /** Index of position attribute **/
   static constexpr u32 VERTEX_ATTRIBUTE_POS = 0;
+  /** Index of tint attribute **/
   static constexpr u32 VERTEX_ATTRIBUTE_TINT = 1;
+  /** Index of texture-coordinate attribute **/
   static constexpr u32 VERTEX_ATTRIBUTE_UV = 2;
 
 private:

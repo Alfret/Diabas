@@ -99,10 +99,27 @@ ItemRegistry::GetItemID(Item* item) const
 
 // -------------------------------------------------------------------------- //
 
-const tsl::robin_map<String, ItemRegistry::ItemID>
+const tsl::robin_map<String, ItemRegistry::ItemID>&
 ItemRegistry::GetRegistryMap() const
 {
   return mItemRegistryMap;
+}
+
+// -------------------------------------------------------------------------- //
+
+ItemRegistry::ItemID
+ItemRegistry::GetInvalidItemID() const
+{
+  return mItemMap.at(mBuiltin.itemInvalid);
+}
+
+// -------------------------------------------------------------------------- //
+
+ItemRegistry&
+ItemRegistry::Instance()
+{
+  static ItemRegistry instance;
+  return instance;
 }
 
 // -------------------------------------------------------------------------- //

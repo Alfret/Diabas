@@ -49,6 +49,12 @@ SpriteBatch::Begin(const Camera* camera)
 void
 SpriteBatch::End()
 {
+  // Don't render if there are nothing to render
+  if (mDataCount < 1) {
+    return;
+  }
+
+  // Assert precondition
   AlfAssert(mCamera != nullptr, "'Begin' must have been called before 'End'");
 
   glEnable(GL_BLEND);
@@ -62,6 +68,9 @@ SpriteBatch::End()
                                     mCamera->GetViewProjectMatrix());
   mShaderProgram->SetUniformS32("u_sampler", 0);
   glBindVertexArray(mVAO);
+
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL);
   glDrawElements(GL_TRIANGLES, mDataCount * 6, GL_UNSIGNED_INT, nullptr);
 
   mDrawCallCount++;
@@ -82,6 +91,11 @@ SpriteBatch::Flush()
 void
 SpriteBatch::Submit(const Sprite& sprite)
 {
+  // Flush if max limix reached
+  if (mDataCount >= MAX_SPRITES) {
+    Flush();
+  }
+
   // Flush if different texture
   if (mCurrentTexture && mCurrentTexture != sprite.GetTexture()) {
     Flush();
@@ -90,7 +104,7 @@ SpriteBatch::Submit(const Sprite& sprite)
 
   const Vector3F& position = sprite.GetPosition();
   const Vector2F& size = sprite.GetSize();
-  const Vector2F& anchor = sprite.GetAnchor();
+  // const Vector2F& anchor = sprite.GetAnchor();
   const Vector2F& texMin = sprite.GetTexMin();
   const Vector2F& texMax = sprite.GetTexMax();
 
@@ -136,6 +150,11 @@ SpriteBatch::Submit(const std::shared_ptr<Texture>& texture,
                     Vector2F texMin,
                     Vector2F texMax)
 {
+  // Flush if max limix reached
+  if (mDataCount >= MAX_SPRITES) {
+    Flush();
+  }
+
   // Flush if different texture
   if (mCurrentTexture && mCurrentTexture != texture) {
     Flush();

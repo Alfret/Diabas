@@ -10,6 +10,7 @@
 #include "core/types.hpp"
 #include "game/item/item_registry.hpp"
 #include "game/tile/tile_registry.hpp"
+#include "game/wall/wall_registry.hpp"
 #include "graphics/texture.hpp"
 
 // ========================================================================== //
@@ -43,6 +44,16 @@ private:
   /** Inverse Tile atlas size **/
   Vector2F mInverseTileAtlasSize;
 
+  /** Wall atlas **/
+  alflib::ImageAtlas<> mWallAtlas;
+  /** List of regions for wall resources. The outer index is the wall ID and the
+   * inner index is the resource index **/
+  std::vector<std::vector<AtlasRegion>> mWallResources;
+  /** Wall atlas texture **/
+  std::shared_ptr<graphics::Texture> mWallAtlasTexture;
+  /** Inverse wall atlas size **/
+  Vector2F mInverseWallAtlasSize;
+
   /** Item atlas **/
   alflib::ImageAtlas<> mItemAtlas;
   /** List of regions for item resources. The outer index is the item ID and the
@@ -58,10 +69,13 @@ public:
   ClientCache() = default;
 
   /** Build the tile atlas **/
-  void BuildTileAtlas(const TileRegistry& tileRegistry);
+  void BuildTileAtlas();
+
+  /** Build the wall atlas **/
+  void BuildWallAtlas();
 
   /** Build the item atlas **/
-  void BuildItemAtlas(const ItemRegistry& itemRegistry);
+  void BuildItemAtlas();
 
   /** Returns the list of sub-resources for a tile ID **/
   const std::vector<AtlasRegion>& GetTileSubResources(TileRegistry::TileID id);
@@ -77,9 +91,30 @@ public:
                                     Vector2F& texMax);
 
   /** Return the tile atlas texture **/
-  const std::shared_ptr<graphics::Texture>& GetTileAtlasTexture() const
+  [[nodiscard]] const std::shared_ptr<graphics::Texture>& GetTileAtlasTexture()
+    const
   {
     return mTileAtlasTexture;
+  }
+
+  /** Returns the list of sub-resources for a wall ID **/
+  const std::vector<AtlasRegion>& GetWallSubResources(WallRegistry::WallID id);
+
+  /** Returns the number of wall sub-resources for a wall ID **/
+  u32 GetWallSubResourceCount(WallRegistry::WallID id);
+
+  /** Retrieves the texture coordinates for a wall ID with a given sub-resource
+   * index **/
+  void GetTextureCoordinatesForWall(WallRegistry::WallID id,
+                                    u32 resourceIndex,
+                                    Vector2F& texMin,
+                                    Vector2F& texMax);
+
+  /** Return the wall atlas texture **/
+  [[nodiscard]] const std::shared_ptr<graphics::Texture>& GetWallAtlasTexture()
+    const
+  {
+    return mWallAtlasTexture;
   }
 
   /** Returns the list of sub-resources for an item ID **/
@@ -96,7 +131,8 @@ public:
                                     Vector2F& texMax);
 
   /** Return the item atlas texture **/
-  const std::shared_ptr<graphics::Texture>& GetItemAtlasTexture() const
+  [[nodiscard]] const std::shared_ptr<graphics::Texture>& GetItemAtlasTexture()
+    const
   {
     return mItemAtlasTexture;
   }

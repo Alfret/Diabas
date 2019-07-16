@@ -21,10 +21,6 @@ namespace dib::game {
 class GameServer : public app::AppServer
 {
 private:
-  /** Tile registry **/
-  TileRegistry mTileRegistry;
-  /** Item registry **/
-  ItemRegistry mItemRegistry;
   /** Game world **/
   World mWorld;
 
