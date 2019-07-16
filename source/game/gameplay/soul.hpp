@@ -16,14 +16,18 @@ class Soul
 
   // ============================================================ //
 
-  s32 GetHP() { return hp_; }
+  s32 GetHP() const { return hp_; }
 
   /**
    * @return If we could apply the damage to the soul.
    */
   bool ApplyDamage(s32 damage);
 
-  s32 GetDefense() { return defense_; }
+  s32 GetDefense() const { return defense_; }
+
+  f32 GetDamageTimeout() const { return damage_timeout_; }
+
+  void DamageTimeoutUpdate(const f32 delta);
 
   // ============================================================ //
 
@@ -32,7 +36,7 @@ class Soul
   {
     mw.Write(hp_);
     mw.Write(defense_);
-    mw.Write(damage_timeout_);
+    return mw.Write(damage_timeout_);
   }
 
   static Soul FromBytes(alflib::RawMemoryReader& mr)
@@ -49,8 +53,13 @@ class Soul
 private:
   s32 hp_;
   s32 defense_;
-  float damage_timeout_;
+  f32 damage_timeout_;
 };
+
+
+class World;
+
+void UpdateSoul(World& world, f64 delta);
 
 }
 

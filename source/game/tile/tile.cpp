@@ -164,8 +164,16 @@ Tile::SetOpacity(f32 opacity)
 
 // -------------------------------------------------------------------------- //
 
+Collideable
+Tile::GetCollideable([[maybe_unused]]const World& world, [[maybe_unused]]WorldPos pos) const
+{
+  return {};
+}
+
+// -------------------------------------------------------------------------- //
+
 CollisionType
-Tile::GetCollision([[maybe_unused]] const World& world,
+Tile::GetCollisionType([[maybe_unused]] const World& world,
                    [[maybe_unused]] WorldPos pos) const
 {
   return mCollisionType;
@@ -178,6 +186,23 @@ Tile::SetCollisionType(CollisionType collisionType)
 {
   mCollisionType = collisionType;
   return this;
+}
+
+// -------------------------------------------------------------------------- //
+
+bool
+Tile::GetCollisionIsSolid() const
+{
+  return mCollisionIsSolid;
+}
+
+// --------------------------------------------------------------------------
+// //
+
+void
+Tile::SetCollisionIsSolid(bool isSolid)
+{
+  mCollisionIsSolid = isSolid;
 }
 
 // -------------------------------------------------------------------------- //

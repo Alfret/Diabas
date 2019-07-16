@@ -176,9 +176,9 @@ CoreContent::SetupTiles()
   tileRegistry.RegisterTile(MOD_ID, "rock", mTiles.rock);
 
   // Tile: Spikes
-  mTileSpikes =
-    new Tile(ResourcePath{ Path{ "./res/tiles/spikes.tga" } }, "spikes");
-  tileRegistry.RegisterTile(MOD_ID, "spikes", mTileSpikes);
+  mTiles.spikes =
+    new TileSpikes(ResourcePath{ Path{ "./res/tiles/spikes.tga" } }, "spikes");
+  tileRegistry.RegisterTile(MOD_ID, "spikes", mTiles.spikes);
 
   // Tile: Dungeon wall
   mTiles.dungeon = new TileVariant(

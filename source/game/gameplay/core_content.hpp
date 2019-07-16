@@ -9,6 +9,7 @@
 #include "game/wall/wall_registry.hpp"
 #include "game/gameplay/tile/tile_chair.hpp"
 #include "game/gameplay/tile/tile_variant.hpp"
+#include "game/gameplay/tile/tile_spikes.hpp"
 #include "game/world.hpp"
 
 // ========================================================================== //
@@ -45,7 +46,7 @@ private:
     /** Rock **/
     Tile* rock = nullptr;
 
-    Tile* mTileSpikes = nullptr;
+    TileSpikes* spikes = nullptr;
 
     /** Dungeon wall **/
     TileVariant* dungeon = nullptr;

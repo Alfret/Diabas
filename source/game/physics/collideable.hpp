@@ -19,8 +19,6 @@ enum class CollisionType : u8
   kRect,
   /** Rectangular collision with two rectangles **/
   kRect2,
-  /** Stairs collision **/
-  kStairs,
   /** Custom collision. 'Tile::GetAABB()' is called to determine collision **/
   kCustom
 };

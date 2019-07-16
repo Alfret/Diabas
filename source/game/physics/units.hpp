@@ -14,17 +14,22 @@ class World;
 using Velocity = f32;
 
 /**
- * Rate of change of velocity.
- */
-using Acceleration = f32;
-
-/**
  * Position of something, specified in meters.
  */
 using Position = Vector2F;
 
+struct Force
+{
+  // horizontal
+  Velocity h_vel;
+  // vertical
+  Velocity v_vel;
+  // duration the force will be used, negative number means the duration
+  // has passed.
+  f32 duration_s;
+};
+
 constexpr f32 kStandardGravity = 9.80665f;
-constexpr f32 kMaxAccelerationModifier = 3.0f;
 
 constexpr f32 kTileInPixels = 16.0f;
 constexpr f32 kDoorHeightInTiles = 3.0f;

@@ -11,11 +11,18 @@ class TileSpikes : public Tile
 {
  public:
   TileSpikes(const ResourcePath& resource_path, const String& translation_key);
-  void OnCollision(World& world, WorldPos tile_pos, entt::entity entity) override;
+  bool OnCollision(World& world, WorldPos tile_pos, Entity entity) override;
+
+  CollisionType GetCollisionType(const World& world, WorldPos pos) const override;
+
+  Collideable GetCollideable(const World& world, WorldPos pos) const override;
 
  private:
-
+  CollisionRectNoOffset col_rect_{};
 };
+
+
+
 }
 
 #endif//TILE_SPIKES_HPP_

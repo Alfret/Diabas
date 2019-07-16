@@ -8,7 +8,6 @@
 #include "game/world.hpp"
 #include "game/client/client_cache.hpp"
 #include "game/client/world_renderer.hpp"
-#include "game/gameplay/player.hpp"
 #include "game/gameplay/core_content.hpp"
 #include "game/mod/mod_loader.hpp"
 #include "graphics/camera.hpp"
@@ -40,8 +39,6 @@ private:
 
   /** World renderer **/
   WorldRenderer mWorldRenderer;
-
-  Player mPlayer{};
 
 public:
   /** Construct game client **/

@@ -55,11 +55,13 @@ set(COMMON_SOURCE
   source/game/ecs/systems/npc_system.hpp
   source/game/gameplay/core_content.cpp
   source/game/gameplay/tile/tile_chair.cpp
+  source/game/gameplay/tile/tile_spikes.cpp
   source/game/gameplay/tile/tile_variant.cpp
   source/game/gameplay/player.cpp
   source/game/gameplay/player.hpp
   source/game/gameplay/moveable.cpp
   source/game/gameplay/moveable.hpp
+  source/game/gameplay/soul.cpp
   source/game/resource.cpp
   source/game/resource.hpp
   source/game/terrain.cpp

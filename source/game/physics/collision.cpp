@@ -18,16 +18,16 @@ AABBCollisionDetection(const CollisionRect& a, const CollisionRect& b)
 /**
  * Does the @rect collide with any tile in @tiles?
  */
-static bool
+static std::optional<WorldPos>
 CollidesOnTiles(const World& world,
                 const CollisionRect& rect,
                 const std::vector<WorldPos>& tiles)
 {
-  bool colliding = false;
+  std::optional<WorldPos> res = std::nullopt;
 
   for (const auto tile : tiles) {
     const auto tileptr = world.GetTerrain().GetTile(tile);
-    const auto collision = tileptr->GetCollision(world, tile);
+    const auto collision = tileptr->GetCollisionType(world, tile);
 
     if (collision == CollisionType::kNone) {
       continue;
@@ -37,17 +37,31 @@ CollidesOnTiles(const World& world,
                                      kTileInMeters,
                                      kTileInMeters };
       if (AABBCollisionDetection(rect, tile_rect)) {
-        colliding = true;
+        res = tile;
         break;
       }
-    } else if (collision == CollisionType::kStairs) {
-      AlfAssert(false, "cannot handle collision type Stairs for tile");
+    } else if (collision == CollisionType::kRect) {
+      const Collideable col = tileptr->GetCollideable(world, tile);
+      AlfAssert(col.type == CollisionType::kRect, "col type must be rect");
+      const CollideableRect* colrect =
+        reinterpret_cast<const CollideableRect*>(&col);
+      const CollisionRect rect { TileToMeter(tile.X()),
+                                 TileToMeter(tile.Y()),
+                                 colrect->rect.width,
+                                 colrect->rect.height};
+      if (AABBCollisionDetection(rect, rect)) {
+        res = tile;
+        break;
+      }
+    } else if (collision == CollisionType::kRect2) {
+      // TODO
+      AlfAssert(false, "todo");
     } else {
       AlfAssert(false, "cannot handle collision type for tile");
     }
   }
 
-  return colliding;
+  return res;
 }
 
 /**
@@ -101,7 +115,7 @@ GenerateTiles(const World& world,
       dutil::Clamp(origo.y + d * (rows - 1) + remainy, 0.0f, maxy) }));
 }
 
-static bool
+static std::optional<WorldPos>
 CollidesOnPosition(const World& world,
                    const CollideableRect* collideable,
                    const Position position)
@@ -114,7 +128,7 @@ CollidesOnPosition(const World& world,
   return CollidesOnTiles(world, rect, tiles);
 }
 
-static bool
+static std::optional<WorldPos>
 CollidesOnPosition(const World& world,
                    const CollideableRect2* collideable,
                    const Position position)
@@ -124,20 +138,22 @@ CollidesOnPosition(const World& world,
     position.x, position.y, collideable->rect1.width, collideable->rect1.height
   };
   GenerateTiles(world, rect1, position, tiles);
-  if (!CollidesOnTiles(world, rect1, tiles)) {
 
+  auto maybe_tile = CollidesOnTiles(world, rect1, tiles);
+  if (!maybe_tile) {
     tiles.clear();
     const CollisionRect rect2{ position.x + collideable->rect2.x,
                                position.y + collideable->rect2.y,
                                collideable->rect2.width,
                                collideable->rect2.height };
     GenerateTiles(world, rect2, position, tiles);
-    return CollidesOnTiles(world, rect2, tiles);
+    maybe_tile = CollidesOnTiles(world, rect2, tiles);
   }
-  return true;
+
+  return maybe_tile;
 }
 
-bool
+std::optional<WorldPos>
 CollidesOnPosition(const World& world,
                    const Collideable& collideable,
                    const Position position)
@@ -150,7 +166,7 @@ CollidesOnPosition(const World& world,
     return CollidesOnPosition(world, c, position);
   } else {
     AlfAssert(false, "cannot check CollidesOnPosition for given CollisionType");
-    return false;
+    return std::nullopt;
   }
 }
 
@@ -160,7 +176,10 @@ OnGround(const World& world, const Moveable& moveable)
   // check @offset pixel(s) below us
   constexpr f32 offset = kPixelInMeter * 1;
   const Position pos_under(moveable.position.x, moveable.position.y - offset);
-  return CollidesOnPosition(world, moveable.collideable, pos_under);
+  auto maybe_pos =
+      CollidesOnPosition(world, moveable.collideable, pos_under);
+  return maybe_pos &&
+      world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid();
 }
 
 /**

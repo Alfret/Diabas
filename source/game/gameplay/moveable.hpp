@@ -22,6 +22,7 @@ struct MoveableIncrement
 {
   f32 horizontal_velocity;
   f32 vertical_velocity;
+  Force force;
   u8 jumping : 1;
   Position position;
   PlayerInput input;
@@ -36,20 +37,22 @@ struct MoveableIncrement
 struct Moveable
 {
   /**
-   * negative -> left
+   * negative -> left_
    * positive -> right
    */
-  f32 horizontal_velocity;
+  Velocity horizontal_velocity;
 
   /**
    * negative -> down
    * positive -> up
    */
-  f32 vertical_velocity;
+  Velocity vertical_velocity;
 
-  f32 velocity_input;
-  f32 velocity_max;
-  f32 velocity_jump;
+  Force force;
+
+  Velocity velocity_input;
+  Velocity velocity_max;
+  Velocity velocity_jump;
   u8 jumping : 1;
 
   /**
@@ -94,11 +97,10 @@ void
 UpdateMoveables(World& world, f64 delta);
 
 /**
- * Apply a force to a moveable. This means, instantly, modifying the entities
- * velocity.
+ *
  */
 void
-ForceOnMoveable(Moveable& moveable, f32 horizontal_force, f32 vertical_force);
+ForceOnMoveable(Moveable& moveable, Force force);
 
 /**
  * Apply the incremental update to the given moveable.
@@ -117,6 +119,7 @@ MoveableMakeDefault()
   Moveable m{};
   m.width = game::kTileInMeters * 1.5f;
   m.height = game::kTileInMeters * 2.9f;
+  m.force.duration_s = -1.0f;
   m.velocity_input = 20.0f;
   m.velocity_max = 10.0f;
   m.velocity_jump = 14.0f;

@@ -9,6 +9,7 @@
 #include "game/client/world_renderer.hpp"
 #include "game/client/entity_render.hpp"
 #include "game/client/debug_ui.hpp"
+#include "game/gameplay/player.hpp"
 
 // ========================================================================== //
 // Client Implementation

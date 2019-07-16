@@ -12,6 +12,9 @@ MoveableIncrement::ToBytes(alflib::RawMemoryWriter& mw) const
 {
   mw.Write(horizontal_velocity);
   mw.Write(vertical_velocity);
+  mw.Write(force.h_vel);
+  mw.Write(force.v_vel);
+  mw.Write(force.duration_s);
   mw.Write(jumping);
   mw.Write(position.x);
   mw.Write(position.y);
@@ -24,6 +27,9 @@ MoveableIncrement::FromBytes(alflib::RawMemoryReader& mr)
   MoveableIncrement data{};
   data.horizontal_velocity = mr.Read<f32>();
   data.vertical_velocity = mr.Read<f32>();
+  data.force.h_vel = mr.Read<Velocity>();
+  data.force.v_vel = mr.Read<Velocity>();
+  data.force.duration_s = mr.Read<f32>();
   data.jumping = mr.Read<u8>();
   data.position.x = mr.Read<f32>();
   data.position.y = mr.Read<f32>();
@@ -39,6 +45,7 @@ Moveable::ToIncrement() const
   MoveableIncrement m{};
   m.horizontal_velocity = horizontal_velocity;
   m.vertical_velocity = vertical_velocity;
+  m.force = force;
   m.jumping = jumping;
   m.position = position;
   m.input = input;
@@ -50,6 +57,7 @@ Moveable::FromIncrement(const MoveableIncrement& m)
 {
   horizontal_velocity = m.horizontal_velocity;
   vertical_velocity = m.vertical_velocity;
+  force = m.force;
   jumping = m.jumping;
   position = m.position;
   input = m.input;
@@ -60,6 +68,9 @@ Moveable::ToBytes(alflib::RawMemoryWriter& mw) const
 {
   mw.Write(horizontal_velocity);
   mw.Write(vertical_velocity);
+  mw.Write(force.h_vel);
+  mw.Write(force.v_vel);
+  mw.Write(force.duration_s);
   mw.Write(velocity_input);
   mw.Write(velocity_max);
   mw.Write(velocity_jump);
@@ -78,6 +89,9 @@ Moveable::FromBytes(alflib::RawMemoryReader& mr)
   Moveable data{};
   data.horizontal_velocity = mr.Read<f32>();
   data.vertical_velocity = mr.Read<f32>();
+  data.force.h_vel = mr.Read<decltype(force.h_vel)>();
+  data.force.v_vel = mr.Read<decltype(force.v_vel)>();
+  data.force.duration_s = mr.Read<decltype(force.duration_s)>();
   data.velocity_input = mr.Read<f32>();
   data.velocity_max = mr.Read<f32>();
   data.velocity_jump = mr.Read<decltype(velocity_jump)>();
@@ -99,16 +113,17 @@ Moveable::FromBytes(alflib::RawMemoryReader& mr)
 static CollisionInfo
 MoveSubTileOnCollision(const World& world, Moveable& moveable, Position col_pos)
 {
-  // @PERF this function has lots to gain
-
   std::vector<Position> positions;
   GeneratePositions(moveable.position, col_pos, positions, kPixelInMeter);
 
   // make ok_pos and col_pos distance differ in only one kPixelInMeter
   bool colliding = false;
   Position ok_pos = moveable.position;
+  std::optional<WorldPos> maybe_pos;
   for (u32 i = 0; i < positions.size(); i++) {
-    if (CollidesOnPosition(world, moveable.collideable, positions[i])) {
+    maybe_pos = CollidesOnPosition(world, moveable.collideable, positions[i]);
+    if (maybe_pos &&
+        world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid()) {
       colliding = true;
       col_pos = positions[i];
       if (i > 0) {
@@ -126,16 +141,24 @@ MoveSubTileOnCollision(const World& world, Moveable& moveable, Position col_pos)
   const Position right{ ok_pos.x + kPixelInMeter, ok_pos.y };
   const Position up{ ok_pos.x, ok_pos.y + kPixelInMeter };
   const Position down{ ok_pos.x, ok_pos.y - kPixelInMeter };
-  if (CollidesOnPosition(world, moveable.collideable, left)) {
+  if (maybe_pos = CollidesOnPosition(world, moveable.collideable, left);
+      maybe_pos &&
+      world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid()) {
     col_info.x -= 1.0f;
   }
-  if (CollidesOnPosition(world, moveable.collideable, right)) {
+  if (maybe_pos = CollidesOnPosition(world, moveable.collideable, right);
+      maybe_pos &&
+      world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid()) {
     col_info.x += 1.0f;
   }
-  if (CollidesOnPosition(world, moveable.collideable, up)) {
+  if (maybe_pos = CollidesOnPosition(world, moveable.collideable, up);
+      maybe_pos &&
+      world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid()) {
     col_info.y += 1.0f;
   }
-  if (CollidesOnPosition(world, moveable.collideable, down)) {
+  if (maybe_pos = CollidesOnPosition(world, moveable.collideable, down);
+      maybe_pos &&
+      world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid()) {
     col_info.y -= 1.0f;
   }
 
@@ -143,7 +166,7 @@ MoveSubTileOnCollision(const World& world, Moveable& moveable, Position col_pos)
 }
 
 static CollisionInfo
-MoveMoveable(const World& world, Moveable& moveable, const Position target,
+MoveMoveable(World& world, Moveable& moveable, const Position target,
              const entt::entity entity)
 {
   CollisionInfo col_info{};
@@ -155,29 +178,42 @@ MoveMoveable(const World& world, Moveable& moveable, const Position target,
   bool colliding = false;
   Position ok_pos = moveable.position;
   Position col_pos;
+  WorldPos tile_col_pos;
+  Tile* tile_col_tile = nullptr;
+  std::optional<WorldPos> maybe_tile_col_pos;
   for (u32 i = 0; i < positions.size(); i++) {
-    if (CollidesOnPosition(world, moveable.collideable, positions[i])) {
+    maybe_tile_col_pos =
+        CollidesOnPosition(world, moveable.collideable, positions[i]);
+    if (maybe_tile_col_pos) {
       colliding = true;
       col_pos = positions[i];
       if (i > 0) {
         ok_pos = positions[i - 1];
       }
-      break;
+      tile_col_pos = *maybe_tile_col_pos;
+      tile_col_tile = world.GetTerrain().GetTile(tile_col_pos);
+      tile_col_tile->OnCollision(world, tile_col_pos, entity);
+      if (tile_col_tile->GetCollisionIsSolid()) {
+        break;
+      }
     }
   }
 
   if (colliding) {
-    moveable.position = ok_pos;
-    col_info = MoveSubTileOnCollision(world, moveable, col_pos);
-    if (col_info.VerticalCollision() && !col_info.HorizontalCollision()) {
-      moveable.position.x = col_pos.x;
-    } else if (col_info.HorizontalCollision() &&
-               !col_info.VerticalCollision()) {
-      moveable.position.y = col_pos.y;
+    if (tile_col_tile->GetCollisionIsSolid()) {
+      // Move as close as possible to colliding tile
+      moveable.position = ok_pos;
+      col_info = MoveSubTileOnCollision(world, moveable, col_pos);
+      if (col_info.VerticalCollision() && !col_info.HorizontalCollision()) {
+        moveable.position.x = col_pos.x;
+      } else if (col_info.HorizontalCollision() &&
+                 !col_info.VerticalCollision()) {
+        moveable.position.y = col_pos.y;
+      }
+    } else {
+      // Move to target, since not solid
+      moveable.position = target;
     }
-    WorldPos col_tile = MeterPosToWorldPos(col_pos);
-    auto tile = world.GetTerrain().GetTile(col_tile);
-    //tile->OnCollision(col_tile, entity);
   } else {
     moveable.position = positions.back();
   }
@@ -189,7 +225,7 @@ MoveMoveable(const World& world, Moveable& moveable, const Position target,
  * Based on the current moveable values, simulate a step of size @delta.
  */
 static void
-SimulateMoveable(const World& world, const f64 delta, Moveable& moveable,
+SimulateMoveable(World& world, const f64 delta, Moveable& moveable,
                  const entt::entity entity)
 {
   const auto& terrain = world.GetTerrain();
@@ -241,14 +277,14 @@ SimulateMoveable(const World& world, const f64 delta, Moveable& moveable,
 }
 
 static void
-UpdateMoveable(const World& world, const f64 delta, Moveable& moveable,
+UpdateMoveable(World& world, const f64 delta, Moveable& moveable,
                const entt::entity entity)
 {
   const bool on_ground = OnGround(world, moveable);
 
   f32 h_vel = 0.0f;
   f32 v_vel = 0.0f;
-  // f32 v_vel = 0.0f;
+
   if (moveable.input.Left()) {
     h_vel -= moveable.velocity_input;
   }
@@ -256,8 +292,8 @@ UpdateMoveable(const World& world, const f64 delta, Moveable& moveable,
     h_vel += moveable.velocity_input;
   }
   if (moveable.input.Jump()) {
-    if (on_ground && moveable.vertical_velocity == 0) {
-      ForceOnMoveable(moveable, 0.0f, moveable.velocity_jump);
+    if (on_ground && alflib::FloatEqual(moveable.vertical_velocity, 0.0f)) {
+      moveable.vertical_velocity += moveable.velocity_jump;
     }
     moveable.jumping = 1;
   } else {
@@ -268,16 +304,16 @@ UpdateMoveable(const World& world, const f64 delta, Moveable& moveable,
   if (!on_ground) {
     if (moveable.vertical_velocity > 0.0f) {
       if (moveable.jumping) {
-        moveable.vertical_velocity -= (v_vel + kStandardGravity * 3) * delta;
+        moveable.vertical_velocity += (v_vel - (kStandardGravity * 3)) * delta;
       } else {
-        moveable.vertical_velocity = 0;
+        moveable.vertical_velocity = v_vel;
       }
     } else {
       // falling feels better if faster than rising
-      moveable.vertical_velocity -= (v_vel + kStandardGravity * 5) * delta;
+      moveable.vertical_velocity += (v_vel - (kStandardGravity * 5)) * delta;
     }
   } else if (v_vel > 0.0f) {
-    moveable.vertical_velocity = v_vel * delta;
+    moveable.vertical_velocity = v_vel;
   }
   moveable.jumping = 0;
 
@@ -290,13 +326,18 @@ UpdateMoveable(const World& world, const f64 delta, Moveable& moveable,
     moveable.horizontal_velocity = 0.0f;
   } else if (std::abs(h_vel) > 0.0f) {
     moveable.horizontal_velocity = dutil::Clamp(
-        moveable.horizontal_velocity + h_vel * static_cast<f32>(delta) -
-        moveable.horizontal_velocity * static_cast<f32>(delta),
+        moveable.horizontal_velocity + h_vel,
         -moveable.velocity_max,
         moveable.velocity_max);
   } else if (on_ground) {
     // instantly stop if no input
     moveable.horizontal_velocity = 0.0f;
+  }
+
+  if (moveable.force.duration_s > static_cast<f32>(delta)) {
+    moveable.horizontal_velocity += moveable.force.h_vel;
+    moveable.vertical_velocity += moveable.force.v_vel;
+    moveable.force.duration_s -= delta;
   }
 
   SimulateMoveable(world, delta, moveable, entity);
@@ -340,12 +381,9 @@ UpdateMoveables(World& world, const f64 delta)
 }
 
 void
-ForceOnMoveable(Moveable& moveable,
-                const f32 horizontal_force,
-                const f32 vertical_force)
+ForceOnMoveable(Moveable& moveable, const Force force)
 {
-  moveable.horizontal_velocity += horizontal_force;
-  moveable.vertical_velocity += vertical_force;
+  moveable.force = force;
 }
 
 void

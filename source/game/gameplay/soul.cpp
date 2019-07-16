@@ -3,6 +3,7 @@
 #include <dutil/misc.hpp>
 #include <limits>
 #include <dlog.hpp>
+#include "game/world.hpp"
 
 namespace dib::game
 {
@@ -19,4 +20,24 @@ Soul::ApplyDamage(s32 damage)
   return false;
 }
 
+void
+Soul::DamageTimeoutUpdate(const f32 delta)
+{
+  if (damage_timeout_ > 0.0f) {
+    damage_timeout_ -= delta;
+  }
+}
+
+// ============================================================ //
+
+void
+UpdateSoul(World& world, f64 delta)
+{
+  auto& registry = world.GetEntityManager().GetRegistry();
+  auto view = registry.view<Soul>();
+  for (const auto entity : view) {
+    Soul& soul = view.get(entity);
+    soul.DamageTimeoutUpdate(static_cast<f32>(delta));
+  }
+}
 }
