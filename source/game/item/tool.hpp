@@ -22,6 +22,6 @@ enum class ToolType : u32
   kCustom = Bit(3),
   kAll = kPickaxe | kAxe | kSpade | kCustom
 };
-DIB_ENUM_CLASS_OPERATORS(inline, ToolType, u32);
+DIB_ENUM_CLASS_OPERATORS(inline, ToolType, u32)
 
 }

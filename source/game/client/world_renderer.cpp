@@ -52,13 +52,7 @@ WorldRenderer::Render(graphics::Renderer& renderer,
   // Calculate first tile in camera
   const Vector3F& cameraPos = camera.GetPosition();
   u32 minX = std::floor(camera.GetPosition().x / TILE_SIZE);
-  if (minX < 0) {
-    minX = 0;
-  }
   u32 minY = std::floor(camera.GetPosition().y / TILE_SIZE);
-  if (minY < 0) {
-    minY = 0;
-  }
 
   // Calculate number of tiles in camera
   u32 countX = std::ceil(camera.GetWidth() / TILE_SIZE);

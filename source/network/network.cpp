@@ -10,6 +10,7 @@
 #include "game/ecs/components/projectile_data_component.hpp"
 #include "game/ecs/components/tile_data_component.hpp"
 #include "game/gameplay/moveable.hpp"
+#include "game/gameplay/soul.hpp"
 #include "game/world.hpp"
 #include <limits>
 #include "game/chat/chat.hpp"
@@ -283,13 +284,16 @@ Network<Side::kServer>::SendPlayerList(const ConnectionId connection_id) const
 
   world_->GetEntityManager()
     .GetRegistry()
-    .view<PlayerData, game::Moveable>()
-    .each([&](const PlayerData& player_data, const game::Moveable& moveable) {
+    .view<PlayerData, game::Moveable, game::Soul>()
+    .each([&](const PlayerData& player_data,
+              const game::Moveable& moveable,
+              const game::Soul& soul) {
       if (connection_id != player_data.connection_id) {
         packet.ClearPayload();
         auto mw = packet.GetMemoryWriter();
         mw->Write(player_data);
         mw->Write(moveable);
+        mw->Write(soul);
         mw.Finalize();
         auto server = GetServer();
         server->PacketUnicast(
@@ -348,6 +352,10 @@ Network<Side::kClient>::SetupPacketHandler()
       game::Moveable moveable = game::MoveableMakeDefault();
       system::Assign(registry, *maybe_entity, moveable);
 
+      // 3.3 Set our soul
+      game::Soul soul{};
+      system::Assign(registry, *maybe_entity, soul);
+
       // 4. Send kPlayerJoin packet
       Packet player_join_packet{};
       packet_handler_.BuildPacketHeader(player_join_packet,
@@ -355,6 +363,7 @@ Network<Side::kClient>::SetupPacketHandler()
       auto mw = player_join_packet.GetMemoryWriter();
       mw->Write(my_player_data);
       mw->Write(moveable);
+      mw->Write(soul);
       mw.Finalize();
       client->PacketSend(player_join_packet, SendStrategy::kUnreliableNoNagle);
     }
@@ -382,6 +391,7 @@ Network<Side::kClient>::SetupPacketHandler()
     auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
     auto moveable = mr.Read<game::Moveable>();
+    auto soul = mr.Read<game::Soul>();
     auto& registry = world_->GetEntityManager().GetRegistry();
 
     // 2. create entity and fill with PlayerData
@@ -393,18 +403,21 @@ Network<Side::kClient>::SetupPacketHandler()
       return;
     }
 
-    // 3. add RenderComponent
+    // 3.1 add RenderComponent
 #if !defined(DIB_IS_SERVER)
-    auto texture = std::make_shared<graphics::Texture>("Wizard");
-    texture->Load(Path{ "./res/entity/wizard.tga" });
+    auto texture = std::make_shared<graphics::Texture>("Pale Man");
+    texture->Load(Path{ "./res/entity/pale_man.tga" });
     game::RenderComponent renderComponent{ texture };
     system::Assign(registry, *maybe_entity, renderComponent);
 #endif
 
-    // 4. add Moveable (and Collideable)
+    // 3.2 add Moveable (and Collideable)
     system::Assign(registry, *maybe_entity, moveable);
 
-    // 5. display all connections
+    // 3.3 add soul
+    system::Assign(registry, *maybe_entity, soul);
+
+    // 4. display all connections
     DLOG_INFO("All active connections:");
     std::string_view _{};
     NetworkInfo(_);
@@ -644,6 +657,7 @@ Network<Side::kServer>::SetupPacketHandler()
     auto mr = packet.GetMemoryReader();
     auto player_data = mr.Read<PlayerData>();
     auto moveable = mr.Read<game::Moveable>();
+    auto soul = mr.Read<game::Soul>();
     player_data.connection_id = packet.GetFromConnection();
 
     // Does the player exist
@@ -663,6 +677,7 @@ Network<Side::kServer>::SetupPacketHandler()
       const auto maybe_entity = system::SafeCreate(registry, player_data);
       if (maybe_entity) {
         registry.assign<game::Moveable>(*maybe_entity, moveable);
+        registry.assign<game::Soul>(*maybe_entity, soul);
         server->PacketBroadcastExclude(
           packet, SendStrategy::kUnreliableNoNagle, packet.GetFromConnection());
         SendPlayerList(packet.GetFromConnection());

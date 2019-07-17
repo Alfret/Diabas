@@ -14,6 +14,7 @@
 #include "game/tile/tile_registry.hpp"
 #include "game/ecs/systems/generic_system.hpp"
 #include "game/gameplay/moveable.hpp"
+#include "game/gameplay/soul.hpp"
 
 // ========================================================================== //
 // DebugUI Implementation
@@ -770,6 +771,16 @@ ShowPlayerDebug(GameClient& gameClient)
         "velocity jump", &m.velocity_jump, 0.0f, 1000.0f, "%.2f");
       ImGui::InputFloat("x position (meter)", &m.position.x);
       ImGui::InputFloat("y position (meter)", &m.position.y);
+
+      const Soul& s =
+        world.GetEntityManager().GetRegistry().get<Soul>(*maybe_entity);
+      std::string soul = dlog::Format("hp: {}\ndefense: {}\ndamage timeout: "
+                                      "{:.2f}",
+                                      s.GetHP(),
+                                      s.GetDefense(),
+                                      s.GetDamageTimeout());
+      ImGui::TextUnformatted(soul.c_str());
+
     } else {
       ImGui::TextUnformatted("Connect to server to see player information.");
     }

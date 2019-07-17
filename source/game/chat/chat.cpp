@@ -9,7 +9,8 @@
 namespace dib::game {
 
 Chat::Chat(World* world)
-  : world_(world){};
+  : world_(world)
+{}
 
 bool
 Chat::SendMessage(ChatMessage msg) const

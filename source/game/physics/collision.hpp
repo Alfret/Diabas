@@ -6,6 +6,7 @@
 #include "game/physics/collideable.hpp"
 #include "game/gameplay/moveable.hpp"
 #include <vector>
+#include <optional>
 
 namespace dib::game {
 
@@ -30,8 +31,9 @@ struct CollisionInfo
 
 /**
  * Is the @collidable colliding with any tiles when on @position?
+ * @return The position of the first colliding tile, or nullopt.
  */
-bool
+std::optional<WorldPos>
 CollidesOnPosition(const World& world,
                    const Collideable& collideable,
                    Position position);

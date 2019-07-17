@@ -55,11 +55,13 @@ set(COMMON_SOURCE
   source/game/ecs/systems/npc_system.hpp
   source/game/gameplay/core_content.cpp
   source/game/gameplay/tile/tile_chair.cpp
+  source/game/gameplay/tile/tile_spikes.cpp
   source/game/gameplay/tile/tile_variant.cpp
   source/game/gameplay/player.cpp
   source/game/gameplay/player.hpp
   source/game/gameplay/moveable.cpp
   source/game/gameplay/moveable.hpp
+  source/game/gameplay/soul.cpp
   source/game/resource.cpp
   source/game/resource.hpp
   source/game/terrain.cpp
@@ -176,9 +178,9 @@ include_directories(SYSTEM thirdparty/miniaudio)
 
 # Steam Sockets
 if (WIN32)
-  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if (CMAKE_BUILD_TYPE MATCHES "Debug")
     link_directories(${CMAKE_SOURCE_DIR}/lib/gamenetworkingsockets/lib/debug)
-  elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+  elseif (CMAKE_BUILD_TYPE MATCHES "RelWithDebInfo")
     link_directories(${CMAKE_SOURCE_DIR}/lib/gamenetworkingsockets/lib/relwithdebinfo)
   else ()
     link_directories(${CMAKE_SOURCE_DIR}/lib/gamenetworkingsockets/lib/release)

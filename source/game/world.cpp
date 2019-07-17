@@ -1,5 +1,6 @@
 #include "world.hpp"
 #include "game/gameplay/moveable.hpp"
+#include "game/gameplay/soul.hpp"
 #include <dutil/stopwatch.hpp>
 #include <microprofile/microprofile.h>
 
@@ -53,6 +54,7 @@ World::Update(const f64 delta)
   MICROPROFILE_SCOPEI("world", "update", MP_BLUE);
   network_.Update();
   UpdateMoveables(*this, delta);
+  UpdateSoul(*this, delta);
 }
 
 // -------------------------------------------------------------------------- //

@@ -100,6 +100,8 @@ protected:
   bool mIsDestructible = true;
   /** Whether the tile can be replaced **/
   bool mCanBeReplaced = false;
+  /** On collision, will you be stopped, or can you move through it? **/
+  bool mCollisionIsSolid = true;
 
 public:
   /** Construct a tile by specifying the path to the resource. This resource
@@ -175,13 +177,22 @@ public:
    * (used for chaining) **/
   virtual Tile* SetOpacity(f32 opacity);
 
+  /**
+   * Get the collision information.
+   */
+  virtual Collideable GetCollideable(const World& world, WorldPos pos) const;
+
   /** Returns the collision type of the tile at the specified location in the
    * world **/
-  [[nodiscard]] virtual CollisionType GetCollision(const World& world,
-                                                   WorldPos pos) const;
+  [[nodiscard]] virtual CollisionType GetCollisionType(const World& world,
+                                                       WorldPos pos) const;
 
   /** Sets the collision type of the tile **/
   virtual Tile* SetCollisionType(CollisionType collisionType);
+
+  virtual bool GetCollisionIsSolid() const;
+
+  virtual void SetCollisionIsSolid(bool isSolid);
 
   /** Returns the hardness of the tile at the given position in the world **/
   [[nodiscard]] virtual f32 GetHardness(World& world, WorldPos pos);
