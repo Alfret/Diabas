@@ -108,6 +108,9 @@ Moveable::FromBytes(alflib::RawMemoryReader& mr)
 // ============================================================ //
 
 /**
+ * Move the moveable in increments of a single pixel until we collide.
+ * Then figure out if we collided left, right, up or down.
+ *
  * @pre col_pos must be a colliding position for moveable.
  */
 static CollisionInfo
@@ -137,29 +140,18 @@ MoveSubTileOnCollision(const World& world, Moveable& moveable, Position col_pos)
 
   // what direction did we collide in?
   CollisionInfo col_info{};
-  const Position left{ ok_pos.x - kPixelInMeter, ok_pos.y };
-  const Position right{ ok_pos.x + kPixelInMeter, ok_pos.y };
-  const Position up{ ok_pos.x, ok_pos.y + kPixelInMeter };
-  const Position down{ ok_pos.x, ok_pos.y - kPixelInMeter };
-  if (maybe_pos = CollidesOnPosition(world, moveable.collideable, left);
+  const Position horizontal { col_pos.x, ok_pos.y };
+  const Position vertical { ok_pos.x, col_pos.y};
+
+  if (maybe_pos = CollidesOnPosition(world, moveable.collideable, horizontal);
       maybe_pos &&
       world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid()) {
-    col_info.x -= 1.0f;
+    col_info.x += col_pos.x - ok_pos.x;
   }
-  if (maybe_pos = CollidesOnPosition(world, moveable.collideable, right);
+  if (maybe_pos = CollidesOnPosition(world, moveable.collideable, vertical);
       maybe_pos &&
       world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid()) {
-    col_info.x += 1.0f;
-  }
-  if (maybe_pos = CollidesOnPosition(world, moveable.collideable, up);
-      maybe_pos &&
-      world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid()) {
-    col_info.y += 1.0f;
-  }
-  if (maybe_pos = CollidesOnPosition(world, moveable.collideable, down);
-      maybe_pos &&
-      world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid()) {
-    col_info.y -= 1.0f;
+    col_info.y += col_pos.y - ok_pos.y;
   }
 
   return col_info;
