@@ -178,9 +178,9 @@ include_directories(SYSTEM thirdparty/miniaudio)
 
 # Steam Sockets
 if (WIN32)
-  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if (CMAKE_BUILD_TYPE MATCHES "Debug")
     link_directories(${CMAKE_SOURCE_DIR}/lib/gamenetworkingsockets/lib/debug)
-  elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+  elseif (CMAKE_BUILD_TYPE MATCHES "RelWithDebInfo")
     link_directories(${CMAKE_SOURCE_DIR}/lib/gamenetworkingsockets/lib/relwithdebinfo)
   else ()
     link_directories(${CMAKE_SOURCE_DIR}/lib/gamenetworkingsockets/lib/release)

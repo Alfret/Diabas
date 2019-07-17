@@ -3,11 +3,11 @@
 #include "game/gameplay/moveable.hpp"
 #include <dlog.hpp>
 
-namespace dib::game
-{
+namespace dib::game {
 
-TileSpikes::TileSpikes(const ResourcePath& resource_path, const String& translation_key)
-    : Tile(resource_path, translation_key)
+TileSpikes::TileSpikes(const ResourcePath& resource_path,
+                       const String& translation_key)
+  : Tile(resource_path, translation_key)
 {
   col_rect_.width = kTileInMeters;
   col_rect_.height = kPixelInMeter * 6;
@@ -15,7 +15,8 @@ TileSpikes::TileSpikes(const ResourcePath& resource_path, const String& translat
 }
 
 bool
-TileSpikes::OnCollision(World& world, const WorldPos tile_pos,
+TileSpikes::OnCollision(World& world,
+                        const WorldPos tile_pos,
                         const entt::entity entity)
 {
   (void)tile_pos;
@@ -37,15 +38,15 @@ TileSpikes::OnCollision(World& world, const WorldPos tile_pos,
 }
 
 CollisionType
-TileSpikes::GetCollisionType([[maybe_unused]]const World& world,
-                             [[maybe_unused]]WorldPos pos) const
+TileSpikes::GetCollisionType([[maybe_unused]] const World& world,
+                             [[maybe_unused]] WorldPos pos) const
 {
   return CollisionType::kRect;
 }
 
 Collideable
-TileSpikes::GetCollideable([[maybe_unused]]const World& world,
-                           [[maybe_unused]]WorldPos pos) const
+TileSpikes::GetCollideable([[maybe_unused]] const World& world,
+                           [[maybe_unused]] WorldPos pos) const
 {
   Collideable c{};
   CollideableRect* r = reinterpret_cast<CollideableRect*>(&c);

@@ -5,14 +5,15 @@
 #include <alflib/memory/raw_memory_writer.hpp>
 #include <alflib/memory/raw_memory_reader.hpp>
 
-namespace dib::game
-{
+namespace dib::game {
 
 class Soul
 {
- public:
-
-  Soul() : hp_(100), defense_(1), damage_timeout_(-1.0f) {};
+public:
+  Soul()
+    : hp_(100)
+    , defense_(1)
+    , damage_timeout_(-1.0f){};
 
   // ============================================================ //
 
@@ -31,7 +32,7 @@ class Soul
 
   // ============================================================ //
 
- public:
+public:
   bool ToBytes(alflib::RawMemoryWriter& mw) const
   {
     mw.Write(hp_);
@@ -56,11 +57,11 @@ private:
   f32 damage_timeout_;
 };
 
-
 class World;
 
-void UpdateSoul(World& world, f64 delta);
+void
+UpdateSoul(World& world, f64 delta);
 
 }
 
-#endif//SOUL_HPP_
+#endif // SOUL_HPP_

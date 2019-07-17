@@ -5,8 +5,7 @@
 #include <dlog.hpp>
 #include "game/world.hpp"
 
-namespace dib::game
-{
+namespace dib::game {
 
 bool
 Soul::ApplyDamage(s32 damage)

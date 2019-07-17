@@ -165,7 +165,8 @@ Tile::SetOpacity(f32 opacity)
 // -------------------------------------------------------------------------- //
 
 Collideable
-Tile::GetCollideable([[maybe_unused]]const World& world, [[maybe_unused]]WorldPos pos) const
+Tile::GetCollideable([[maybe_unused]] const World& world,
+                     [[maybe_unused]] WorldPos pos) const
 {
   return {};
 }
@@ -174,7 +175,7 @@ Tile::GetCollideable([[maybe_unused]]const World& world, [[maybe_unused]]WorldPo
 
 CollisionType
 Tile::GetCollisionType([[maybe_unused]] const World& world,
-                   [[maybe_unused]] WorldPos pos) const
+                       [[maybe_unused]] WorldPos pos) const
 {
   return mCollisionType;
 }

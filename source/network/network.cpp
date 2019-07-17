@@ -284,9 +284,10 @@ Network<Side::kServer>::SendPlayerList(const ConnectionId connection_id) const
 
   world_->GetEntityManager()
     .GetRegistry()
-      .view<PlayerData, game::Moveable, game::Soul>()
-      .each([&](const PlayerData& player_data, const game::Moveable& moveable,
-                const game::Soul& soul) {
+    .view<PlayerData, game::Moveable, game::Soul>()
+    .each([&](const PlayerData& player_data,
+              const game::Moveable& moveable,
+              const game::Soul& soul) {
       if (connection_id != player_data.connection_id) {
         packet.ClearPayload();
         auto mw = packet.GetMemoryWriter();

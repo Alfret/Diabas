@@ -166,7 +166,9 @@ MoveSubTileOnCollision(const World& world, Moveable& moveable, Position col_pos)
 }
 
 static CollisionInfo
-MoveMoveable(World& world, Moveable& moveable, const Position target,
+MoveMoveable(World& world,
+             Moveable& moveable,
+             const Position target,
              const entt::entity entity)
 {
   CollisionInfo col_info{};
@@ -183,7 +185,7 @@ MoveMoveable(World& world, Moveable& moveable, const Position target,
   std::optional<WorldPos> maybe_tile_col_pos;
   for (u32 i = 0; i < positions.size(); i++) {
     maybe_tile_col_pos =
-        CollidesOnPosition(world, moveable.collideable, positions[i]);
+      CollidesOnPosition(world, moveable.collideable, positions[i]);
     if (maybe_tile_col_pos) {
       colliding = true;
       col_pos = positions[i];
@@ -225,11 +227,12 @@ MoveMoveable(World& world, Moveable& moveable, const Position target,
  * Based on the current moveable values, simulate a step of size @delta.
  */
 static void
-SimulateMoveable(World& world, const f64 delta, Moveable& moveable,
+SimulateMoveable(World& world,
+                 const f64 delta,
+                 Moveable& moveable,
                  const entt::entity entity)
 {
   const auto& terrain = world.GetTerrain();
-  const bool on_ground = OnGround(world, moveable);
   Position new_position = moveable.position;
 
   // calculate x position
@@ -259,8 +262,8 @@ SimulateMoveable(World& world, const f64 delta, Moveable& moveable,
   }
 
   if (moved_x || moved_y) {
-    const CollisionInfo col_info = MoveMoveable(world, moveable, new_position,
-                                                entity);
+    const CollisionInfo col_info =
+      MoveMoveable(world, moveable, new_position, entity);
 
     // x
     if (col_info.HorizontalCollision()) {
@@ -269,15 +272,15 @@ SimulateMoveable(World& world, const f64 delta, Moveable& moveable,
 
     // y
     if (col_info.VerticalCollision()) {
-      if (on_ground) {
-        moveable.vertical_velocity = 0.0f;
-      }
+      moveable.vertical_velocity = 0.0f;
     }
   }
 }
 
 static void
-UpdateMoveable(World& world, const f64 delta, Moveable& moveable,
+UpdateMoveable(World& world,
+               const f64 delta,
+               Moveable& moveable,
                const entt::entity entity)
 {
   const bool on_ground = OnGround(world, moveable);
@@ -318,17 +321,16 @@ UpdateMoveable(World& world, const f64 delta, Moveable& moveable,
   moveable.jumping = 0;
 
   // horizontal velocity
-  if ((on_ground &&
-       std::abs(moveable.horizontal_velocity) > 0.1f &&
-         std::abs(std::copysignf(1.0f, moveable.horizontal_velocity) +
-                       std::copysignf(1.0f, h_vel)) < 1.0f)) {
+  if ((on_ground && std::abs(moveable.horizontal_velocity) > 0.1f &&
+       std::abs(std::copysignf(1.0f, moveable.horizontal_velocity) +
+                std::copysignf(1.0f, h_vel)) < 1.0f)) {
     // instantly stop if changing direction while moving.
     moveable.horizontal_velocity = 0.0f;
   } else if (std::abs(h_vel) > 0.0f) {
-    moveable.horizontal_velocity = dutil::Clamp(
-        moveable.horizontal_velocity + h_vel,
-        -moveable.velocity_max,
-        moveable.velocity_max);
+    moveable.horizontal_velocity =
+      dutil::Clamp(moveable.horizontal_velocity + h_vel,
+                   -moveable.velocity_max,
+                   moveable.velocity_max);
   } else if (on_ground) {
     // instantly stop if no input
     moveable.horizontal_velocity = 0.0f;

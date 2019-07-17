@@ -247,7 +247,7 @@ Terrain::Resize(u32 width, u32 height)
 bool
 Terrain::IsValidPosition(WorldPos pos)
 {
-  return pos.X() >= 0 && pos.X() < mWidth && pos.Y() >= 0 && pos.Y() < mHeight;
+  return pos.X() < mWidth && pos.Y() < mHeight;
 }
 
 // -------------------------------------------------------------------------- //

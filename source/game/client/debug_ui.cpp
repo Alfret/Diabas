@@ -772,7 +772,8 @@ ShowPlayerDebug(GameClient& gameClient)
       ImGui::InputFloat("x position (meter)", &m.position.x);
       ImGui::InputFloat("y position (meter)", &m.position.y);
 
-      const Soul& s = world.GetEntityManager().GetRegistry().get<Soul>(*maybe_entity);
+      const Soul& s =
+        world.GetEntityManager().GetRegistry().get<Soul>(*maybe_entity);
       std::string soul = dlog::Format("hp: {}\ndefense: {}\ndamage timeout: "
                                       "{:.2f}",
                                       s.GetHP(),

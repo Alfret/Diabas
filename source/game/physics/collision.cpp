@@ -45,10 +45,10 @@ CollidesOnTiles(const World& world,
       AlfAssert(col.type == CollisionType::kRect, "col type must be rect");
       const CollideableRect* colrect =
         reinterpret_cast<const CollideableRect*>(&col);
-      const CollisionRect rect { TileToMeter(tile.X()),
-                                 TileToMeter(tile.Y()),
-                                 colrect->rect.width,
-                                 colrect->rect.height};
+      const CollisionRect rect{ TileToMeter(tile.X()),
+                                TileToMeter(tile.Y()),
+                                colrect->rect.width,
+                                colrect->rect.height };
       if (AABBCollisionDetection(rect, rect)) {
         res = tile;
         break;
@@ -176,10 +176,9 @@ OnGround(const World& world, const Moveable& moveable)
   // check @offset pixel(s) below us
   constexpr f32 offset = kPixelInMeter * 1;
   const Position pos_under(moveable.position.x, moveable.position.y - offset);
-  auto maybe_pos =
-      CollidesOnPosition(world, moveable.collideable, pos_under);
+  auto maybe_pos = CollidesOnPosition(world, moveable.collideable, pos_under);
   return maybe_pos &&
-      world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid();
+         world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid();
 }
 
 /**
