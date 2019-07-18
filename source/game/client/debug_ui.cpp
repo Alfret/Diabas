@@ -787,4 +787,20 @@ ShowPlayerDebug(GameClient& gameClient)
   }
 }
 
+void
+ShowMisc(GameClient& gameClient)
+{
+  World& world = gameClient.GetWorld();
+
+  if (ImGui::CollapsingHeader("Misc")) {
+    static bool demo_window = false;
+    if (demo_window) {
+      ImGui::ShowTestWindow();
+    }
+    ImGui::Checkbox("show ImGui demo window", &demo_window);
+
+    ImGui::Checkbox("Draw Collision",
+                    &gameClient.GetRenderer().GetDebugDrawCollision());
+  }
+}
 }

@@ -47,10 +47,6 @@ GameClient::Update(f64 delta)
 
   {
     MICROPROFILE_SCOPEI("game client", "ImGui", MP_CYAN1);
-    static bool demo_window = false;
-    if (demo_window) {
-      ImGui::ShowTestWindow();
-    }
 
     // ImGui
     if (ImGui::Begin("Diabas - Debug")) {
@@ -63,7 +59,7 @@ GameClient::Update(f64 delta)
       ShowWorldDebug(*this);
       ShowNetworkDebug(*this);
       ShowPlayerDebug(*this);
-      ImGui::Checkbox("show ImGui demo window", &demo_window);
+      ShowMisc(*this);
     }
     ImGui::End();
   }

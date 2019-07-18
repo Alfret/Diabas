@@ -40,6 +40,27 @@ RenderEntities(graphics::Renderer& renderer,
 
   // Done
   renderer.GetSpriteBatch().End();
+
+  if (renderer.GetDebugDrawCollision()) {
+    renderer.GetDebugDraw().Begin(&camera);
+    graphics::DebugDraw::Rect rect{};
+    for (const auto entity : view) {
+      Moveable& moveable = view.get<Moveable>(entity);
+      Collideable& col = moveable.collideable;
+
+      if (col.type == CollisionType::kRect) {
+        auto* colrect = reinterpret_cast<const CollideableRect*>(&col);
+        rect.position.x = MeterToPixel(moveable.position.x);
+        rect.position.y = MeterToPixel(moveable.position.y);
+        rect.size.x = MeterToPixel(colrect->rect.width);
+        rect.size.y = MeterToPixel(colrect->rect.height);
+        rect.color = alflib::Color{ 255, 20, 240 };
+        rect.color.Alpha() = 255;
+      }
+      renderer.GetDebugDraw().Submit(rect);
+    }
+    renderer.GetDebugDraw().End();
+  }
 }
 
 }

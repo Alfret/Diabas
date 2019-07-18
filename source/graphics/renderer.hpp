@@ -30,6 +30,8 @@ private:
   /** Debug draw **/
   DebugDraw mDebugDraw;
 
+  bool mDebugDrawCollision = false;
+
 public:
   /** Construct renderer **/
   Renderer();
@@ -57,6 +59,9 @@ public:
 
   /** Set the color to clear back buffers to on new frame **/
   void SetClearColor(Color color) { mClearColor = color; }
+
+  bool& GetDebugDrawCollision() { return mDebugDrawCollision; }
+  bool GetDebugDrawCollision() const { return mDebugDrawCollision; }
 };
 
 }
