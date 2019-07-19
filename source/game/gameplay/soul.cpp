@@ -10,10 +10,10 @@ namespace dib::game {
 bool
 Soul::ApplyDamage(s32 damage)
 {
-  if (damage_timeout_ < 0.0f) {
-    hp_ = dutil::Clamp(hp_ + damage, 0, std::numeric_limits<s32>::max());
-    damage_timeout_ = 2.0f;
-    DLOG_VERBOSE("applied {} damage, current hp: {}", damage, hp_);
+  if (damage_timeout < 0.0f) {
+    hp = dutil::Clamp(hp + damage, 0, std::numeric_limits<s32>::max());
+    damage_timeout = 2.0f;
+    DLOG_VERBOSE("applied {} damage, current hp: {}", damage, hp);
     return true;
   }
   return false;
@@ -22,8 +22,8 @@ Soul::ApplyDamage(s32 damage)
 void
 Soul::DamageTimeoutUpdate(const f32 delta)
 {
-  if (damage_timeout_ > 0.0f) {
-    damage_timeout_ -= delta;
+  if (damage_timeout > 0.0f) {
+    damage_timeout -= delta;
   }
 }
 

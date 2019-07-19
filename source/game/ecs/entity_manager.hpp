@@ -13,6 +13,7 @@ public:
   EntityManager();
 
   entt::registry& GetRegistry() { return registry_; }
+  const entt::registry& GetRegistry() const { return registry_; }
 
 private:
   entt::registry registry_{};

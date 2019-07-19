@@ -206,14 +206,6 @@ World::Load(alflib::MemoryReader& reader)
 
 // -------------------------------------------------------------------------- //
 
-dib::EntityManager&
-World::GetEntityManager()
-{
-  return entity_manager_;
-}
-
-// -------------------------------------------------------------------------- //
-
 bool
 World::ToBytes(alflib::MemoryWriter& writer) const
 {

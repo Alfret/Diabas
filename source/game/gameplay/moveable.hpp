@@ -56,7 +56,7 @@ struct Moveable
   u8 jumping : 1;
 
   /**
-   * position is specified in meters
+   * Unit: position is specified in meters
    * position origin is at middle x, bottom y, (right at the toes), of the
    * character
    */
@@ -65,10 +65,11 @@ struct Moveable
   PlayerInput input;
 
   /**
-   * Visual width and height
+   * Visual width and height.
+   * Unit: pixels
    */
-  f32 width;
-  f32 height;
+  s32 width;
+  s32 height;
 
   /**
    * Physical footprint of the moveable.
@@ -117,8 +118,8 @@ inline Moveable
 MoveableMakeDefault()
 {
   Moveable m{};
-  m.width = game::kTileInMeters * 1.5f;
-  m.height = game::kTileInMeters * 2.9f;
+  m.width = 24;
+  m.height = 48;
   m.force.duration_s = -1.0f;
   m.velocity_input = 20.0f;
   m.velocity_max = 10.0f;

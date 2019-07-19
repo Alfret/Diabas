@@ -87,21 +87,21 @@ Moveable
 Moveable::FromBytes(alflib::RawMemoryReader& mr)
 {
   Moveable data{};
-  data.horizontal_velocity = mr.Read<f32>();
-  data.vertical_velocity = mr.Read<f32>();
+  data.horizontal_velocity = mr.Read<decltype(horizontal_velocity)>();
+  data.vertical_velocity = mr.Read<decltype(vertical_velocity)>();
   data.force.h_vel = mr.Read<decltype(force.h_vel)>();
   data.force.v_vel = mr.Read<decltype(force.v_vel)>();
   data.force.duration_s = mr.Read<decltype(force.duration_s)>();
-  data.velocity_input = mr.Read<f32>();
-  data.velocity_max = mr.Read<f32>();
+  data.velocity_input = mr.Read<decltype(velocity_input)>();
+  data.velocity_max = mr.Read<decltype(velocity_max)>();
   data.velocity_jump = mr.Read<decltype(velocity_jump)>();
   data.jumping = mr.Read<decltype(jumping)>();
-  data.position.x = mr.Read<f32>();
-  data.position.y = mr.Read<f32>();
-  data.input = mr.Read<PlayerInput>();
-  data.width = mr.Read<f32>();
-  data.height = mr.Read<f32>();
-  data.collideable = mr.Read<Collideable>();
+  data.position.x = mr.Read<decltype(position.x)>();
+  data.position.y = mr.Read<decltype(position.y)>();
+  data.input = mr.Read<decltype(input)>();
+  data.width = mr.Read<decltype(width)>();
+  data.height = mr.Read<decltype(height)>();
+  data.collideable = mr.Read<decltype(collideable)>();
   return data;
 }
 
@@ -368,6 +368,8 @@ UpdateMoveables(World& world, const f64 delta)
       mw->Write(view.get<PlayerData>(entity).uuid);
     }
     mw.Finalize();
+
+    // TODO update npc's
 
     dutil::FixedTimeUpdate(
       60, [&]() { world.GetNetwork().PacketBroadcast(packet); });

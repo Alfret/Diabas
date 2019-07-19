@@ -16,6 +16,7 @@
 #include "game/terrain.hpp"
 #include "game/chat/chat.hpp"
 #include "game/tile/tile_registry.hpp"
+#include "game/npc/npc_registry.hpp"
 
 // ========================================================================== //
 // World Declaration
@@ -57,9 +58,14 @@ public:
   const Terrain& GetTerrain() const { return mTerrain; }
 
   /** Returns the entity manager **/
-  dib::EntityManager& GetEntityManager();
+  auto& GetEntityManager() { return entity_manager_; }
+  const auto& GetEntityManager() const { return entity_manager_; }
 
-  game::Chat& GetChat() { return chat_; }
+  auto& GetChat() { return chat_; }
+  const auto& GetChat() const { return chat_; }
+
+  auto& GetNpcRegistry() { return npc_registry_; }
+  const auto& GetNpcRegistry() const { return npc_registry_; }
 
   bool ToBytes(alflib::MemoryWriter& writer) const;
 
@@ -70,11 +76,13 @@ private:
   /** Terrain **/
   Terrain mTerrain;
 
-  dib::EntityManager entity_manager_{};
+  EntityManager entity_manager_{};
 
   Network<kSide> network_{ this };
 
-  game::Chat chat_{ this };
+  Chat chat_{ this };
+
+  NpcRegistry npc_registry_{};
 };
 }
 

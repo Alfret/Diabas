@@ -61,7 +61,12 @@ set(COMMON_SOURCE
   source/game/gameplay/player.hpp
   source/game/gameplay/moveable.cpp
   source/game/gameplay/moveable.hpp
+  source/game/gameplay/npc/npc_slime.cpp
   source/game/gameplay/soul.cpp
+  source/game/npc/npc.cpp
+  source/game/npc/npc_id.cpp
+  source/game/npc/npc_registry.cpp
+  source/game/npc/npc_spawn.cpp
   source/game/resource.cpp
   source/game/resource.hpp
   source/game/terrain.cpp

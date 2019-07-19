@@ -7,7 +7,9 @@
 #include <alflib/memory/raw_memory_reader.hpp>
 #include <alflib/memory/raw_memory_writer.hpp>
 
+#if !defined(DIB_IS_SERVER)
 #include "graphics/texture.hpp"
+#endif
 
 // ========================================================================== //
 // RenderComponent Declaration
@@ -18,12 +20,16 @@ namespace dib::game {
 /** Component to be attached to entities that can be rendered **/
 struct RenderComponent
 {
+#if !defined(DIB_IS_SERVER)
   std::shared_ptr<graphics::Texture> texture;
 
   /** Construct render component from a texture **/
   explicit RenderComponent(std::shared_ptr<graphics::Texture> texture)
     : texture(std::move(texture))
   {}
+
+  /** default construct, remember to init texture before it gets used **/
+  RenderComponent() = default;
 
   /** Write the component to a memory writer **/
   bool ToBytes(alflib::RawMemoryWriter& writer) const
@@ -42,6 +48,7 @@ struct RenderComponent
     RenderComponent component{ texture };
     return component;
   }
+#endif
 };
 
 }

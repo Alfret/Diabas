@@ -5,6 +5,7 @@
 #include "game/gameplay/moveable.hpp"
 #include <microprofile/microprofile.h>
 #include <dutil/stopwatch.hpp>
+#include "game/npc/npc_spawn.hpp"
 
 namespace dib::game {
 
@@ -30,6 +31,13 @@ Player::Update(GameClient& game, [[maybe_unused]] const f64 delta)
       }
       if (game.IsKeyDown(Key::kKeySpace)) {
         moveable.input.ActionJump();
+      }
+      if (game.IsKeyDown(Key::kKey1)) {
+        static dutil::Stopwatch spawn_timer{};
+        if (spawn_timer.now_ms() > 100) {
+          spawn_timer.Start();
+          NpcSpawn<kSide>(world, 0, moveable.position);
+        }
       }
 
       dutil::FixedTimeUpdate(60, [&]() {

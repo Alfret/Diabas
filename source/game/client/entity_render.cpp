@@ -34,8 +34,8 @@ RenderEntities(graphics::Renderer& renderer,
       Vector3F{ MeterToPixel(movableComponent.position.x),
                 MeterToPixel(movableComponent.position.y),
                 0.5f },
-      Vector2F{ MeterToPixel(movableComponent.width),
-                MeterToPixel(movableComponent.height) });
+      Vector2F{ movableComponent.width,
+                movableComponent.height });
   }
 
   // Done
@@ -61,6 +61,42 @@ RenderEntities(graphics::Renderer& renderer,
     }
     renderer.GetDebugDraw().End();
   }
+}
+
+void RenderNpcs(graphics::Renderer& renderer,
+                const graphics::Camera& camera,
+                NpcRegistry& npc_registry)
+{
+  // renderer.GetSpriteBatch().Begin(&camera);
+  // for (auto& it : npc_registry.GetNpcs()) {
+  //   Moveable& m = it.second->GetMoveable();
+  //   renderer.GetSpriteBatch().Submit(
+  //     it.second->GetRenderComponent().texture,
+  //     Vector3F{ MeterToPixel(m.position.x), MeterToPixel(m.position.y), 0.5f },
+  //     Vector2F{ m.width, m.height });
+  // }
+  // renderer.GetSpriteBatch().End();
+
+  // if (renderer.GetDebugDrawCollision()) {
+  //   renderer.GetDebugDraw().Begin(&camera);
+  //   graphics::DebugDraw::Rect rect{};
+  //   for (auto& it : npc_registry.GetNpcs()) {
+  //     Moveable& m = it.second->GetMoveable();
+  //     Collideable& col = m.collideable;
+
+  //     if (col.type == CollisionType::kRect) {
+  //       auto* colrect = reinterpret_cast<const CollideableRect*>(&col);
+  //       rect.position.x = MeterToPixel(m.position.x);
+  //       rect.position.y = MeterToPixel(m.position.y);
+  //       rect.size.x = MeterToPixel(colrect->rect.width);
+  //       rect.size.y = MeterToPixel(colrect->rect.height);
+  //       rect.color = alflib::Color{ 255, 20, 240 };
+  //       rect.color.Alpha() = 255;
+  //     }
+  //     renderer.GetDebugDraw().Submit(rect);
+  //   }
+  //   renderer.GetDebugDraw().End();
+  // }
 }
 
 }

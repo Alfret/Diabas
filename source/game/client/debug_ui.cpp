@@ -32,8 +32,11 @@ ShowStatisticsDebug(GameClient& gameClient, f32 delta)
                       gameClient.GetRenderer().GetDrawCallCount());
     ImGui::BulletText("Sprites drawn: %i",
                       gameClient.GetRenderer().GetDrawSpriteCount());
+    ImGui::BulletText(
+        "Moveable Entities: %lu",
+        gameClient.GetWorld().GetEntityManager().GetRegistry().size<Moveable>());
 
-    static u32 maxFps = 0;
+      static u32 maxFps = 0;
     if (u32(1.0f / delta) > maxFps) {
       maxFps = u32(1.0f / delta);
     }
@@ -748,7 +751,7 @@ ShowPlayerDebug(GameClient& gameClient)
         "1 tile is {:.3f} meter\n1 pixel is {:.3f} meter\n"
         "meter: ({:<6.1f}, {:<6.1f})\npixels: ({:<6.1f}, {:<6.1f})\n"
         "tiles: ({:<6}, {:<6})\nh velocity: {}\nv velocity: {}\n"
-        "width,height: {:.2f},{:.2f}",
+        "width,height: {},{}",
         game::kTileInMeters,
         game::kPixelInMeter,
         m.position.x,
@@ -776,9 +779,9 @@ ShowPlayerDebug(GameClient& gameClient)
         world.GetEntityManager().GetRegistry().get<Soul>(*maybe_entity);
       std::string soul = dlog::Format("hp: {}\ndefense: {}\ndamage timeout: "
                                       "{:.2f}",
-                                      s.GetHP(),
-                                      s.GetDefense(),
-                                      s.GetDamageTimeout());
+                                      s.hp,
+                                      s.defense,
+                                      s.damage_timeout);
       ImGui::TextUnformatted(soul.c_str());
 
     } else {

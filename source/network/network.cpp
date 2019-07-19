@@ -11,6 +11,9 @@
 #include "game/ecs/components/tile_data_component.hpp"
 #include "game/gameplay/moveable.hpp"
 #include "game/gameplay/soul.hpp"
+#include "game/npc/npc_id.hpp"
+#include "game/npc/npc.hpp"
+#include "game/npc/npc_spawn.hpp"
 #include "game/world.hpp"
 #include <limits>
 #include "game/chat/chat.hpp"
@@ -540,6 +543,30 @@ Network<Side::kClient>::SetupPacketHandler()
 
   // ============================================================ //
 
+  const auto NpcSpawnCb = [this](const Packet& packet) {
+    // 1. Parse the packet
+    auto mr = packet.GetMemoryReader();
+    auto type = mr.Read<game::NpcType>();
+    auto id = mr.Read<game::NpcID>();
+
+    auto& npc_registry = world_->GetNpcRegistry();
+    npc_registry.Add(world_->GetEntityManager(), id, type);
+    game::Npc* npc = npc_registry.Get(id);
+    if (npc != nullptr) {
+      npc->Load(world_->GetEntityManager(), mr);
+      DLOG_VERBOSE("spawned npc");
+    } else {
+      DLOG_ERROR("failed to add npc");
+      return;
+    }
+
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kNpcSpawn, "npc spawn", NpcSpawnCb);
+  AlfAssert(ok, "could not add packet type npc spawn");
+
+  // ============================================================ //
+
   const auto ItemUpdateCb = [this](const Packet& packet) {
     auto& registry = world_->GetEntityManager().GetRegistry();
     auto mr = packet.GetMemoryReader();
@@ -853,6 +880,23 @@ Network<Side::kServer>::SetupPacketHandler()
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kPlayerInput, "player input", PlayerInputCb);
   AlfAssert(ok, "could not add packet type player input");
+
+  // ============================================================ //
+
+  const auto NpcSpawnCb = [this](const Packet& packet) {
+    // 1. Parse the packet
+    auto mr = packet.GetMemoryReader();
+    auto type = mr.Read<game::NpcType>();
+    game::Position p{mr.Read<decltype(p.x)>(), mr.Read<decltype(p.y)>()};
+
+    // TODO do we want to verify the spawn request somehow?
+
+    // 2. Spawn the npc (and broadcast the new npc).
+    game::NpcSpawn<kSide>(*world_, type, p);
+  };
+  ok = packet_handler_.AddStaticPacketType(
+    PacketHeaderStaticTypes::kNpcSpawn, "npc spawn", NpcSpawnCb);
+  AlfAssert(ok, "could not add packet type npc spawn");
 
   // ============================================================ //
 

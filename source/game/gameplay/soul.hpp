@@ -10,23 +10,17 @@ namespace dib::game {
 class Soul
 {
 public:
-  Soul()
-    : hp_(100)
-    , defense_(1)
-    , damage_timeout_(-1.0f){};
+
+  s32 hp = 100;
+  s32 defense = 1;
+  f32 damage_timeout = -1.0f;
 
   // ============================================================ //
-
-  s32 GetHP() const { return hp_; }
 
   /**
    * @return If we could apply the damage to the soul.
    */
   bool ApplyDamage(s32 damage);
-
-  s32 GetDefense() const { return defense_; }
-
-  f32 GetDamageTimeout() const { return damage_timeout_; }
 
   void DamageTimeoutUpdate(const f32 delta);
 
@@ -35,26 +29,19 @@ public:
 public:
   bool ToBytes(alflib::RawMemoryWriter& mw) const
   {
-    mw.Write(hp_);
-    mw.Write(defense_);
-    return mw.Write(damage_timeout_);
+    mw.Write(hp);
+    mw.Write(defense);
+    return mw.Write(damage_timeout);
   }
 
   static Soul FromBytes(alflib::RawMemoryReader& mr)
   {
     Soul data{};
-    data.hp_ = mr.Read<decltype(hp_)>();
-    data.defense_ = mr.Read<decltype(defense_)>();
-    data.damage_timeout_ = mr.Read<decltype(damage_timeout_)>();
+    data.hp = mr.Read<decltype(hp)>();
+    data.defense = mr.Read<decltype(defense)>();
+    data.damage_timeout = mr.Read<decltype(damage_timeout)>();
     return data;
   }
-
-  // ============================================================ //
-
-private:
-  s32 hp_;
-  s32 defense_;
-  f32 damage_timeout_;
 };
 
 class World;

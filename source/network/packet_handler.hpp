@@ -68,6 +68,11 @@ enum class PacketHeaderStaticTypes : std::size_t
   kPlayerInput,
 
   /**
+   * Hold information about when a npc spawns.
+   */
+  kNpcSpawn,
+
+  /**
    * An item was created, or its state was changed.
    */
   kItemUpdate,
@@ -186,13 +191,13 @@ public:
   {
     kSuccess = 0,
 
-    // we have fewer packet type's than other
+    /// we have fewer packet type's than other
     kMissingPacketType,
 
-    // we have more packet type's than other
+    /// we have more packet type's than other
     kExtraPacketType,
 
-    // some packet_meta's have same hash, but different names.
+    /// some packet_meta's have same hash, but different names.
     kNameMissmatch
   };
 
