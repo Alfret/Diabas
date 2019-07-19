@@ -353,6 +353,7 @@ UpdateMoveables(World& world, const f64 delta)
       UpdateMoveable(world, delta, moveable, entity);
     }
   } else {
+    // prepare player packet
     auto view = registry.view<PlayerData, Moveable>();
     Packet packet{};
     world.GetNetwork().GetPacketHandler().BuildPacketHeader(
@@ -363,11 +364,14 @@ UpdateMoveables(World& world, const f64 delta)
       MICROPROFILE_SCOPEI("player", "simulate moveable", MP_PURPLE1);
       Moveable& moveable = view.get<Moveable>(entity);
       // TODO do we need to simulate on server?
-      UpdateMoveable(world, delta, moveable, entity);
+      //UpdateMoveable(world, delta, moveable, entity);
       mw->Write(moveable.ToIncrement());
       mw->Write(view.get<PlayerData>(entity).uuid);
     }
     mw.Finalize();
+
+    // prepare npc packet
+
 
     // TODO update npc's
 

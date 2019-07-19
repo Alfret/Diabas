@@ -141,7 +141,12 @@ private:
    */
   static void ShutdownNetwork();
 
+  /**
+   * Make a collection of all our connections and send them.
+   */
   void SendPlayerList(const ConnectionId connection_id) const;
+
+  void SendNpcList(const ConnectionId connection_id) const;
 
   void SetOurPlayerEntity(const std::optional<entt::entity> maybe_entity);
 

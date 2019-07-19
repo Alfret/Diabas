@@ -16,7 +16,6 @@ NpcSpawn<Side::kServer>(World& world,
   Npc* npc = npc_registry.Get(id);
   if (npc != nullptr) {
     world.GetEntityManager().GetRegistry().get<Moveable>(npc->GetEntity()).position = position;
-    DLOG_VERBOSE("spawned a npc");
   } else {
     DLOG_ERROR("failed to find npc after adding");
     return;
@@ -27,12 +26,13 @@ NpcSpawn<Side::kServer>(World& world,
   Packet packet{};
   packet_handler.BuildPacketHeader(packet, PacketHeaderStaticTypes::kNpcSpawn);
   auto mw = packet.GetMemoryWriter();
+  const u32 size = 1;
+  mw->Write(size);
   mw->Write(type);
   mw->Write(id);
   npc->Store(world.GetEntityManager(), *(*mw));
   mw.Finalize();
   network.PacketBroadcast(packet);
-  DLOG_VERBOSE("broadcasted spawned npc");
 }
 
 template<>
@@ -52,7 +52,6 @@ NpcSpawn<Side::kClient>(World& world,
   mw->Write(position.y);
   mw.Finalize();
   network.PacketBroadcast(packet);
-  DLOG_VERBOSE("sent spawn request");
 }
 
 }

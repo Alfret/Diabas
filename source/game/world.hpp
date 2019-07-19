@@ -36,6 +36,8 @@ public:
 
   void Update(f64 delta);
 
+  void OnDisconnect();
+
   void OnCommandNetwork(const std::string_view input);
 
   void OnCommandBroadcast(const std::string_view input);

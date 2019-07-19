@@ -13,19 +13,19 @@ NpcRegistry::NpcRegistry()
 
 NpcRegistry::~NpcRegistry() {}
 
-void
-NpcRegistry::Add(NpcID id, Npc* npc)
-{
-  AlfAssert(npcs_.find(id) == npcs_.end(),
-            "NpcID is not unique");
-  npcs_.insert({id, npc});
-}
+// void
+// NpcRegistry::Add(NpcID id, Npc* npc)
+// {
+//   AlfAssert(npcs_.find(id) == npcs_.end(),
+//             "NpcID is not unique");
+//   npcs_.insert({id, npc});
+// }
 
 void
 NpcRegistry::Add(EntityManager& em, NpcID id, NpcType type)
 {
   if (auto f_it = npc_factories_.find(type); f_it != npc_factories_.end()) {
-    Npc* npc = f_it->second(em, id);
+    Npc* npc = f_it->second(em, id, type);
     if (npcs_.find(id) == npcs_.end()) {
       npcs_.insert({ id, npc });
     } else {
@@ -34,6 +34,14 @@ NpcRegistry::Add(EntityManager& em, NpcID id, NpcType type)
   } else {
     DLOG_ERROR("failed to add npc of type [{}] with id [{}]", type, id);
   }
+}
+
+void
+NpcRegistry::Add(EntityManager& em, NpcID id, String type_name)
+{
+  AlfAssert(npc_type_names_.find(type_name) != npc_type_names_.end(),
+            "failed to find npc type [{}]", type_name);
+  Add(em, id, npc_type_names_[type_name]);
 }
 
 void
@@ -57,10 +65,15 @@ NpcRegistry::Get(const NpcID id)
 void
 NpcRegistry::RegisterNpcType(const String& type_name, NpcFactoryFunction fn)
 {
-  static NpcType type_num = 0;
-  npc_type_names_.insert({ type_num, type_name });
-  npc_factories_.insert({ type_num, fn });
-  ++type_num;
+  npc_type_names_.insert({ type_name, type_counter_ });
+  npc_factories_.insert({ type_counter_, fn });
+  ++type_counter_;
+}
+
+void
+NpcRegistry::Clear()
+{
+  npcs_.clear();
 }
 
 }

@@ -34,7 +34,7 @@ NpcSlime::Load(EntityManager& em, alflib::RawMemoryReader& mr)
 }
 
 Npc*
-SlimeFactory(EntityManager& em, NpcID id)
+SlimeFactory(EntityManager& em, NpcID id, NpcType type)
 {
   Moveable m{};
   m.velocity_input = 10.0f;
@@ -61,7 +61,7 @@ SlimeFactory(EntityManager& em, NpcID id)
   RenderComponent rc{};
 #endif
 
-  NpcSlime* npc = new NpcSlime{em, id, std::move(m), std::move(s), std::move(rc)};
+  NpcSlime* npc = new NpcSlime{em, id, type, std::move(m), std::move(s), std::move(rc)};
   return npc;
 }
 

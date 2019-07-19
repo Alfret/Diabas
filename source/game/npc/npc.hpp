@@ -18,13 +18,9 @@ class NpcRegistry;
 
 class Npc
 {
- private:
-  /// construct but defer creation of render component
-  //Npc(EntityManager& em, NpcID id, Moveable m, Soul s);
-
  public:
 
-  Npc(EntityManager& em, NpcID id, Moveable m, Soul s, RenderComponent rc);
+  Npc(EntityManager& em, NpcID id, NpcType type, Moveable m, Soul s, RenderComponent rc);
 
   virtual ~Npc() = default;
 
@@ -35,7 +31,11 @@ class Npc
 
   virtual void OnDeath(World& world);
 
+  auto GetID() const { return id_; }
+
   auto GetEntity() const { return entity_; }
+
+  auto GetType() const { return type_; }
 
   /// Store all data via the memory writer.
   /// NOTE: Must call this base method from derived methods.
@@ -46,7 +46,9 @@ class Npc
   virtual void Load(EntityManager& em, alflib::RawMemoryReader& mr);
 
 protected:
+
   NpcID id_;
+  NpcType type_;
   Entity entity_;
 };
 }

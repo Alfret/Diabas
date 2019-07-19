@@ -4,17 +4,8 @@
 namespace dib::game
 {
 
-// Npc::Npc(EntityManager& em, NpcID id, Moveable m, Soul s)
-//   : id_(id)
-// {
-//   auto& registry = em.GetRegistry();
-//   Entity e = registry.create();
-//   registry.assign<Moveable>(e, m);
-//   registry.assign<Soul>(e, s);
-// }
-
-Npc::Npc(EntityManager& em, NpcID id, Moveable m, Soul s, RenderComponent rc)
-    : id_(id)
+Npc::Npc(EntityManager& em, NpcID id, NpcType type, Moveable m, Soul s, RenderComponent rc)
+    : id_(id), type_(type)
 {
   auto& registry = em.GetRegistry();
   entity_ = registry.create();
@@ -39,6 +30,7 @@ bool
 Npc::Store(const EntityManager& em, alflib::RawMemoryWriter& mw) const
 {
   mw.Write(id_);
+  mw.Write(type_);
   mw.Write(em.GetRegistry().get<Moveable>(entity_));
   return mw.Write(em.GetRegistry().get<Soul>(entity_));
 }
@@ -47,9 +39,8 @@ void
 Npc::Load(EntityManager& em, alflib::RawMemoryReader& mr)
 {
   id_ = mr.Read<decltype(id_)>();
-  em.GetRegistry().assign_or_replace<Moveable>(entity_) =
-      mr.Read<Moveable>();
+  type_ = mr.Read<decltype(type_)>();
+  em.GetRegistry().assign_or_replace<Moveable>(entity_) = mr.Read<Moveable>();
   em.GetRegistry().assign_or_replace<Soul>(entity_) = mr.Read<Soul>();
 }
-
 }

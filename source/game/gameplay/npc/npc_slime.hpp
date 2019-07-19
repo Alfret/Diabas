@@ -8,8 +8,8 @@ namespace dib::game
 class NpcSlime : public Npc
 {
  public:
-   NpcSlime(EntityManager& em, NpcID id, Moveable m, Soul s, RenderComponent rc)
-       : Npc(em, id, m, s, rc)
+  NpcSlime(EntityManager& em, NpcID id, NpcType type, Moveable m, Soul s, RenderComponent rc)
+      : Npc(em, id, type, m, s, rc)
    {}
 
    void Update(World& world, f64 delta) final;
@@ -27,7 +27,7 @@ class NpcSlime : public Npc
 };
 
 Npc*
-SlimeFactory(EntityManager& em, NpcID id);
+SlimeFactory(EntityManager& em, NpcID id, NpcType type);
 }
 
 #endif//NPC_SLIME_HPP_

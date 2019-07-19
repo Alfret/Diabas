@@ -15,6 +15,9 @@ public:
   entt::registry& GetRegistry() { return registry_; }
   const entt::registry& GetRegistry() const { return registry_; }
 
+  /// Wipe out all data in our registry.
+  void Clear();
+
 private:
   entt::registry registry_{};
 };

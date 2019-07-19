@@ -60,6 +60,15 @@ World::Update(const f64 delta)
 // -------------------------------------------------------------------------- //
 
 void
+World::OnDisconnect()
+{
+  GetNpcRegistry().Clear();
+  GetEntityManager().Clear();
+}
+
+// -------------------------------------------------------------------------- //
+
+void
 World::OnCommandNetwork(const std::string_view input)
 {
   network_.NetworkInfo(input);

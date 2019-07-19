@@ -14,7 +14,7 @@ namespace dib::game
  * This factory function should allocate memory for a npc type, and
  * initialize it with default values.
  */
-using NpcFactoryFunction = Npc* (*)(EntityManager&, NpcID);
+using NpcFactoryFunction = Npc* (*)(EntityManager&, NpcID, NpcType);
 
 /**
  * Keeps track of what npc's currently exists, and what npc's could
@@ -28,12 +28,13 @@ public:
 
   /// Add a npc with the given id.
   /// @param npc Takes ownership.
-  void Add(NpcID id, Npc* npc);
+  //void Add(NpcID id, Npc* npc);
 
   /// Add a npc by default constructing the given npc type.
   /// @type The type to default construct
   /// @return Iterator to the newly created npc.
   void Add(EntityManager& em, NpcID id, NpcType type);
+  void Add(EntityManager& em, NpcID id, String type_name);
 
   /// Remove a npc via its id.
   void Remove(NpcID id);
@@ -48,6 +49,9 @@ public:
 
   const auto& GetNpcTypeNames() const { return npc_type_names_; }
 
+  /// Clear all data we have.
+  void Clear();
+
 private:
   /// Collection of all NPC's.
   /// PERF: it would better to store similar npc together. As of now, they
@@ -56,10 +60,13 @@ private:
 
   /// Stores a name with the npc type. This is useful for synchronizing
   /// between server client to ensure consistent types.
-  tsl::robin_map<NpcType, String> npc_type_names_;
+  tsl::robin_map<String, NpcType> npc_type_names_;
 
   /// From a serialized npc type, a factory function for it exists.
   tsl::robin_map<NpcType, NpcFactoryFunction> npc_factories_;
+
+  /// Internal
+  NpcType type_counter_ = 0;
 };
 }
 

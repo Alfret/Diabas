@@ -58,7 +58,8 @@ enum class PacketHeaderStaticTypes : std::size_t
   kPlayerUpdateRejected,
 
   /**
-   * Contains the players last MoveableIncrement.
+   * Client sender: Holds its incremental update.
+   * Server sender: Holds x amount of player incremental updates.
    */
   kPlayerIncrement,
 
@@ -68,29 +69,20 @@ enum class PacketHeaderStaticTypes : std::size_t
   kPlayerInput,
 
   /**
-   * Hold information about when a npc spawns.
+   * Client sender: Request to spawn a npc.
+   * Server sender: Hold information about x amount of newly spawned npc.
    */
   kNpcSpawn,
 
   /**
-   * An item was created, or its state was changed.
+   * Incremental update for an npc.
    */
-  kItemUpdate,
+  kNpcIncrement,
 
   /**
-   * A npc was created, or its state was changed.
+   * TODO
    */
   kNpcUpdate,
-
-  /**
-   * A projectile was created, or its state was changed.
-   */
-  kProjectileUpdate,
-
-  /**
-   * A tile was created, or its state was changed.
-   */
-  kTileUpdate,
 
   // ============================================================ //
   // Must be last, used to count number of elements in the enum

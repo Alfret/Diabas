@@ -128,6 +128,7 @@ Network<Side::kClient>::Disconnect()
 {
   auto client = GetClient();
   client->CloseConnection();
+  world_->OnDisconnect();
 }
 
 template<>
@@ -294,9 +295,9 @@ Network<Side::kServer>::SendPlayerList(const ConnectionId connection_id) const
       if (connection_id != player_data.connection_id) {
         packet.ClearPayload();
         auto mw = packet.GetMemoryWriter();
-        mw->Write(player_data);
-        mw->Write(moveable);
-        mw->Write(soul);
+        AlfAssert(mw->Write(player_data), "write failed");
+        AlfAssert(mw->Write(moveable), "write failed");
+        AlfAssert(mw->Write(soul), "write failed");
         mw.Finalize();
         auto server = GetServer();
         server->PacketUnicast(
@@ -310,6 +311,39 @@ void
 Network<Side::kClient>::SendPlayerList(const ConnectionId) const
 {
   AlfAssert(false, "cannot send player list from client");
+}
+
+template <>
+void
+Network<Side::kServer>::SendNpcList(const ConnectionId connection_id) const
+{
+  Packet packet{};
+  packet_handler_.BuildPacketHeader(packet, PacketHeaderStaticTypes::kNpcSpawn);
+  auto& npc_registry = world_->GetNpcRegistry();
+  auto& em = world_->GetEntityManager();
+  const u32 size = npc_registry.GetNpcs().size();
+  packet.SetPacketCapacity(
+    256 + size * (sizeof(game::Moveable) + sizeof(game::Soul) +
+                  sizeof(game::NpcID) + sizeof(game::NpcType)));
+
+  auto mw = packet.GetMemoryWriter();
+  AlfAssert(mw->Write(size), "write failed");
+
+  for (const auto it : npc_registry.GetNpcs()) {
+    AlfAssert(mw->Write(it.second->GetType()), "write failed");
+    AlfAssert(mw->Write(it.second->GetID()), "write failed");
+    AlfAssert(it.second->Store(em, *(*mw)), "write failed");
+  }
+  mw.Finalize();
+  auto server = GetServer();
+  server->PacketUnicast(packet, SendStrategy::kUnreliableNoDelay, connection_id);
+}
+
+template<>
+void
+Network<Side::kClient>::SendNpcList(const ConnectionId connection_id) const
+{
+  AlfAssert(false, "cannot send npc list from client");
 }
 
 // ============================================================ //
@@ -364,9 +398,9 @@ Network<Side::kClient>::SetupPacketHandler()
       packet_handler_.BuildPacketHeader(player_join_packet,
                                         PacketHeaderStaticTypes::kPlayerJoin);
       auto mw = player_join_packet.GetMemoryWriter();
-      mw->Write(my_player_data);
-      mw->Write(moveable);
-      mw->Write(soul);
+      AlfAssert(mw->Write(my_player_data), "write failed");
+      AlfAssert(mw->Write(moveable), "write failed");
+      AlfAssert(mw->Write(soul), "write failed");
       mw.Finalize();
       client->PacketSend(player_join_packet, SendStrategy::kUnreliableNoNagle);
     }
@@ -544,43 +578,29 @@ Network<Side::kClient>::SetupPacketHandler()
   // ============================================================ //
 
   const auto NpcSpawnCb = [this](const Packet& packet) {
-    // 1. Parse the packet
     auto mr = packet.GetMemoryReader();
-    auto type = mr.Read<game::NpcType>();
-    auto id = mr.Read<game::NpcID>();
+    auto size = mr.Read<u32>();
 
+    game::NpcType type;
+    game::NpcID id;
+    game::Npc* npc;
     auto& npc_registry = world_->GetNpcRegistry();
-    npc_registry.Add(world_->GetEntityManager(), id, type);
-    game::Npc* npc = npc_registry.Get(id);
-    if (npc != nullptr) {
-      npc->Load(world_->GetEntityManager(), mr);
-      DLOG_VERBOSE("spawned npc");
-    } else {
-      DLOG_ERROR("failed to add npc");
-      return;
-    }
-
-  };
-  ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kNpcSpawn, "npc spawn", NpcSpawnCb);
-  AlfAssert(ok, "could not add packet type npc spawn");
-
-  // ============================================================ //
-
-  const auto ItemUpdateCb = [this](const Packet& packet) {
-    auto& registry = world_->GetEntityManager().GetRegistry();
-    auto mr = packet.GetMemoryReader();
-    auto item_data = mr.Read<ItemData>();
-
-    if (!system::Replace(registry, item_data)) {
-      if (!system::SafeCreate(registry, item_data)) {
-        AlfAssert(false, "could not replace, or create ItemData");
+    for (u32 i=0; i<size; i++) {
+      type = mr.Read<game::NpcType>();
+      id = mr.Read<game::NpcID>();
+      npc_registry.Add(world_->GetEntityManager(), id, type);
+      npc = npc_registry.Get(id);
+      if (npc != nullptr) {
+        npc->Load(world_->GetEntityManager(), mr);
+      } else {
+        DLOG_ERROR("failed to add npc");
+        return;
       }
     }
   };
   ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kItemUpdate, "item update", ItemUpdateCb);
-  AlfAssert(ok, "could not add packet type item update");
+    PacketHeaderStaticTypes::kNpcSpawn, "npc spawn", NpcSpawnCb);
+  AlfAssert(ok, "could not add packet type npc spawn");
 
   // ============================================================ //
 
@@ -598,42 +618,6 @@ Network<Side::kClient>::SetupPacketHandler()
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kNpcUpdate, "npc update", NpcUpdateCb);
   AlfAssert(ok, "could not add packet type npc update");
-
-  // ============================================================ //
-
-  const auto ProjectileUpdateCb = [this](const Packet& packet) {
-    auto& registry = world_->GetEntityManager().GetRegistry();
-    auto mr = packet.GetMemoryReader();
-    auto projectile_data = mr.Read<ProjectileData>();
-
-    if (!system::Replace(registry, projectile_data)) {
-      if (!system::SafeCreate(registry, projectile_data)) {
-        AlfAssert(false, "could not replace, or create ProjectileData");
-      }
-    }
-  };
-  ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kProjectileUpdate,
-    "projectile update",
-    ProjectileUpdateCb);
-  AlfAssert(ok, "could not add packet type projectile update");
-
-  // ============================================================ //
-
-  const auto TileUpdateCb = [this](const Packet& packet) {
-    auto& registry = world_->GetEntityManager().GetRegistry();
-    auto mr = packet.GetMemoryReader();
-    auto tile_data = mr.Read<TileData>();
-
-    if (!system::Replace(registry, tile_data)) {
-      if (!system::SafeCreate(registry, tile_data)) {
-        AlfAssert(false, "could not replace, or create TileData");
-      }
-    }
-  };
-  ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kTileUpdate, "tile update", TileUpdateCb);
-  AlfAssert(ok, "could not add packet type tile update");
 }
 
 // ============================================================ //
@@ -662,7 +646,7 @@ Network<Side::kServer>::SetupPacketHandler()
       Packet new_packet{};
       new_packet.SetHeader(*packet.GetHeader());
       auto mw = new_packet.GetMemoryWriter();
-      mw->Write(msg);
+      AlfAssert(mw->Write(msg), "write failed");
       mw.Finalize();
       PacketBroadcast(new_packet);
     } else {
@@ -708,6 +692,7 @@ Network<Side::kServer>::SetupPacketHandler()
         server->PacketBroadcastExclude(
           packet, SendStrategy::kUnreliableNoNagle, packet.GetFromConnection());
         SendPlayerList(packet.GetFromConnection());
+        SendNpcList(packet.GetFromConnection());
       } else {
         DLOG_WARNING("failed to create PlayerData, disconnecting the "
                      "connection {}",
@@ -783,7 +768,7 @@ Network<Side::kServer>::SetupPacketHandler()
             Packet modified_packet(packet.GetPacketSize());
             modified_packet.SetHeader(*packet.GetHeader());
             auto mw = modified_packet.GetMemoryWriter();
-            mw->Write(player_data);
+            AlfAssert(mw->Write(player_data), "write failed");
             mw.Finalize();
             PacketBroadcastExclude(modified_packet, player_data.connection_id);
           }
@@ -795,7 +780,7 @@ Network<Side::kServer>::SetupPacketHandler()
           packet_handler_.BuildPacketHeader(
             reject_packet, PacketHeaderStaticTypes::kPlayerUpdateRejected);
           auto mw = reject_packet.GetMemoryWriter();
-          mw->Write(**maybe_pd);
+          AlfAssert(mw->Write(**maybe_pd), "write failed");
           mw.Finalize();
           auto server = GetServer();
           server->PacketUnicast(reject_packet,
@@ -900,18 +885,6 @@ Network<Side::kServer>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto ItemUpdateCb = [this](const Packet& packet) {
-    DLOG_WARNING("got a ItemUpdate packet, but client should "
-                 "not send those, disconnecting the client");
-    auto server = GetServer();
-    server->DisconnectConnection(packet.GetFromConnection());
-  };
-  ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kItemUpdate, "item update", ItemUpdateCb);
-  AlfAssert(ok, "could not add packet type item update");
-
-  // ============================================================ //
-
   const auto NpcUpdateCb = [this](const Packet& packet) {
     DLOG_WARNING("got a NpcUpdate packet, but client should "
                  "not send those, disconnecting the client");
@@ -921,32 +894,6 @@ Network<Side::kServer>::SetupPacketHandler()
   ok = packet_handler_.AddStaticPacketType(
     PacketHeaderStaticTypes::kNpcUpdate, "npc update", NpcUpdateCb);
   AlfAssert(ok, "could not add packet type npc update");
-
-  // ============================================================ //
-
-  const auto ProjectileUpdateCb = [this](const Packet& packet) {
-    DLOG_WARNING("got a ProjectileUpdate packet, but client should "
-                 "not send those, disconnecting the client");
-    auto server = GetServer();
-    server->DisconnectConnection(packet.GetFromConnection());
-  };
-  ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kProjectileUpdate,
-    "projectile update",
-    ProjectileUpdateCb);
-  AlfAssert(ok, "could not add packet type projectile update");
-
-  // ============================================================ //
-
-  const auto TileUpdateCb = [this](const Packet& packet) {
-    DLOG_WARNING("got a TileUpdate packet, but client should "
-                 "not send those, disconnecting the client");
-    auto server = GetServer();
-    server->DisconnectConnection(packet.GetFromConnection());
-  };
-  ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kTileUpdate, "tile update", TileUpdateCb);
-  AlfAssert(ok, "could not add packet type tile update");
 }
 
 template<>
