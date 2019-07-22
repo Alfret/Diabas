@@ -121,7 +121,7 @@ MoveableMakeDefault()
   m.width = 24;
   m.height = 48;
   m.force.duration_s = -1.0f;
-  m.velocity_input = 20.0f;
+  m.velocity_input = 40.0f;
   m.velocity_max = 10.0f;
   m.velocity_jump = 14.0f;
   m.jumping = false;

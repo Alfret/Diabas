@@ -24,7 +24,8 @@ class Npc
 
   virtual ~Npc() = default;
 
-  /// Each frame, update will be called
+  /// Each frame, update will be called. Typically you do things like
+  /// deciding how to move the characters.
   virtual void Update(World& world, f64 delta);
 
   virtual void OnSpawn(World& world);

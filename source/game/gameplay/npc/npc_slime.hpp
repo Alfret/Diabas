@@ -2,6 +2,7 @@
 #define NPC_SLIME_HPP_
 
 #include "game/npc/npc.hpp"
+#include "game/npc/brain/brain_simple.hpp"
 
 namespace dib::game
 {
@@ -23,7 +24,7 @@ class NpcSlime : public Npc
    void Load(EntityManager& em, alflib::RawMemoryReader& mr) final;
 
  private:
-
+  BrainSimple brain{};
 };
 
 Npc*

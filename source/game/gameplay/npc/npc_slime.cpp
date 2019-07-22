@@ -1,12 +1,15 @@
 #include "npc_slime.hpp"
 #include <dlog.hpp>
 #include "game/npc/npc_registry.hpp"
+#include "game/world.hpp"
 
 namespace dib::game {
 
 void
-NpcSlime::Update(World&, f64 )
+NpcSlime::Update(World& world, f64 delta)
 {
+  auto& moveable = world.GetEntityManager().GetRegistry().get<Moveable>(entity_);
+  brain.Think(moveable, static_cast<f32>(delta));
 }
 
 void
@@ -38,8 +41,8 @@ SlimeFactory(EntityManager& em, NpcID id, NpcType type)
 {
   Moveable m{};
   m.velocity_input = 10.0f;
-  m.velocity_max = 20.0f;
-  m.velocity_jump = 20.0f;
+  m.velocity_max = 10.0f;
+  m.velocity_jump = 10.0f;
   m.position = Position(TileToMeter(10), TileToMeter(13));
   m.width = 32;
   m.height = 48;

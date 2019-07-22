@@ -281,10 +281,10 @@ UpdateMoveable(World& world,
   f32 v_vel = 0.0f;
 
   if (moveable.input.Left()) {
-    h_vel -= moveable.velocity_input;
+    h_vel -= moveable.velocity_input * delta;
   }
   if (moveable.input.Right()) {
-    h_vel += moveable.velocity_input;
+    h_vel += moveable.velocity_input * delta;
   }
   if (moveable.input.Jump()) {
     if (on_ground && alflib::FloatEqual(moveable.vertical_velocity, 0.0f)) {
