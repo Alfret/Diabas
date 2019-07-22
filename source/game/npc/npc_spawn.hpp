@@ -11,8 +11,14 @@ namespace dib::game
 
 class World;
 
+/// kServer: Spawn the npc.
+/// kClient: Send a spawn request.
 template <Side side>
 void NpcSpawn(World& world, NpcType type, Position position);
+
+/// Use a lookup table for type_name to call the spawn function above.
+template <Side side>
+void NpcSpawn(World& world, String type_name, Position position);
 
 }
 

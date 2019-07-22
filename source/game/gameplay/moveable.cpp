@@ -33,7 +33,7 @@ MoveableIncrement::FromBytes(alflib::RawMemoryReader& mr)
   data.jumping = mr.Read<u8>();
   data.position.x = mr.Read<f32>();
   data.position.y = mr.Read<f32>();
-  data.input = mr.Read<PlayerInput>();
+  data.input = mr.Read<GameInput>();
   return data;
 }
 

@@ -6,7 +6,7 @@
 #include "game/physics/units.hpp"
 #include "core/types.hpp"
 #include "game/physics/collideable.hpp"
-#include "game/gameplay/player.hpp"
+#include "game/misc/game_input.hpp"
 
 namespace dib::game {
 
@@ -25,7 +25,7 @@ struct MoveableIncrement
   Force force;
   u8 jumping : 1;
   Position position;
-  PlayerInput input;
+  GameInput input;
 
   bool ToBytes(alflib::RawMemoryWriter& mw) const;
 
@@ -62,7 +62,7 @@ struct Moveable
    */
   Position position;
 
-  PlayerInput input;
+  GameInput input;
 
   /**
    * Visual width and height.

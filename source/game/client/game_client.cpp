@@ -104,7 +104,6 @@ GameClient::Render()
 
   mWorldRenderer.Render(mRenderer, mCamera);
   RenderEntities(mRenderer, mCamera, mWorld.GetEntityManager());
-  RenderNpcs(mRenderer, mCamera, mWorld.GetNpcRegistry());
 }
 
 // -------------------------------------------------------------------------- //

@@ -21,7 +21,7 @@ Player::Update(GameClient& game, [[maybe_unused]] const f64 delta)
     if (auto maybe_entity = network.GetOurPlayerEntity(); maybe_entity) {
       auto& registry = world.GetEntityManager().GetRegistry();
       Moveable& moveable = registry.get<Moveable>(*maybe_entity);
-      moveable.input = PlayerInput{};
+      moveable.input = GameInput{};
 
       if (game.IsKeyDown(Key::kKeyA)) {
         moveable.input.ActionLeft();
@@ -36,7 +36,14 @@ Player::Update(GameClient& game, [[maybe_unused]] const f64 delta)
         static dutil::Stopwatch spawn_timer{};
         if (spawn_timer.now_ms() > 100) {
           spawn_timer.Start();
-          NpcSpawn<kSide>(world, 0, moveable.position);
+          NpcSpawn<kSide>(world, "slime", moveable.position);
+        }
+      }
+      if (game.IsKeyDown(Key::kKey2)) {
+        static dutil::Stopwatch spawn_timer{};
+        if (spawn_timer.now_ms() > 100) {
+          spawn_timer.Start();
+          NpcSpawn<kSide>(world, "rabbit", moveable.position);
         }
       }
     }

@@ -3,12 +3,14 @@
 
 /// Npc factory functions
 #include "game/gameplay/npc/npc_slime.hpp"
+#include "game/gameplay/npc/npc_rabbit.hpp"
 
 namespace dib::game {
 
 NpcRegistry::NpcRegistry()
 {
   RegisterNpcType("slime", SlimeFactory);
+  RegisterNpcType("rabbit", RabbitFactory);
 }
 
 NpcRegistry::~NpcRegistry() {}

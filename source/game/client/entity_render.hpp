@@ -19,9 +19,4 @@ void
 RenderEntities(graphics::Renderer& renderer,
                const graphics::Camera& camera,
                EntityManager& entityManager);
-
-void
-RenderNpcs(graphics::Renderer& renderer,
-           const graphics::Camera& camera,
-           NpcRegistry& npc_registry);
 }

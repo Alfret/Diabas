@@ -8,7 +8,7 @@ BrainSimple::Think(Moveable& m, f32 delta)
   static dutil::RNG<s32> action_rng{ 0, 3 };
   static dutil::RNG<f32> think_rng{ 0.5f, 5.0f };
 
-  m.input = PlayerInput{};
+  m.input = GameInput{};
 
   if (think_time_ > 0.0f) {
     switch (action_) {

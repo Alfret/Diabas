@@ -54,4 +54,25 @@ NpcSpawn<Side::kClient>(World& world,
   network.PacketBroadcast(packet);
 }
 
+template<>
+void
+NpcSpawn<Side::kServer>(World& world, String type_name, Position position)
+{
+  const auto it = world.GetNpcRegistry().GetNpcTypeNames().find(type_name);
+  AlfAssert(it != world.GetNpcRegistry().GetNpcTypeNames().end(),
+            "could not find npc type with name {}",
+            type_name);
+  NpcSpawn<Side::kServer>(world, it->second, position);
+}
+
+template<>
+void NpcSpawn<Side::kClient>(World& world,
+                             String type_name,
+                             Position position)
+{
+  const auto it = world.GetNpcRegistry().GetNpcTypeNames().find(type_name);
+  AlfAssert(it != world.GetNpcRegistry().GetNpcTypeNames().end(),
+            "could not find npc type with name {}", type_name);
+  NpcSpawn<Side::kClient>(world, it->second, position);
+}
 }
