@@ -94,6 +94,11 @@ public:
 
   PacketHandler& GetPacketHandler() { return packet_handler_; }
 
+  /**
+   * If you need a packet, but don't want to allocate memory, use mine!
+   */
+  Packet& GetReusablePacket() { packet_.ClearPayload(); return packet_; }
+
   // ============================================================ //
   // Client Only Methods
   // ============================================================ //
@@ -162,7 +167,7 @@ private:
 
   PacketHandler packet_handler_{};
 
-  Packet packet_{ 10000 };
+  Packet packet_{ 100000 };
 
   game::World* world_;
 };

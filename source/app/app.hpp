@@ -29,5 +29,8 @@ public:
 
   /** Called to update application **/
   virtual void Update(f64 delta) = 0;
+
+  /// Called when it's time to send our game state over network.
+  virtual void OnNetworkTick() = 0;
 };
 }

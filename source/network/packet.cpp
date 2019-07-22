@@ -1,6 +1,7 @@
 #include "packet.hpp"
 #include <alflib/core/assert.hpp>
 #include <dlog.hpp>
+#include "network/packet_handler.hpp"
 
 namespace dib {
 
@@ -161,6 +162,12 @@ Packet::GetHeaderSize() const
 {
   AlfAssert(container_.capacity() >= kHeaderSize, "container too small");
   return kHeaderSize;
+}
+
+void
+Packet::SetHeader(const PacketHandler& ph, const PacketHeaderStaticTypes type)
+{
+  ph.BuildPacketHeader(*this, type);
 }
 
 void

@@ -5,10 +5,6 @@
 #include "game/client/player_data_storage.hpp"
 #include "game/ecs/systems/player_system.hpp"
 #include "game/ecs/systems/generic_system.hpp"
-#include "game/ecs/components/item_data_component.hpp"
-#include "game/ecs/components/npc_data_component.hpp"
-#include "game/ecs/components/projectile_data_component.hpp"
-#include "game/ecs/components/tile_data_component.hpp"
 #include "game/gameplay/moveable.hpp"
 #include "game/gameplay/soul.hpp"
 #include "game/npc/npc_id.hpp"
@@ -341,7 +337,7 @@ Network<Side::kServer>::SendNpcList(const ConnectionId connection_id) const
 
 template<>
 void
-Network<Side::kClient>::SendNpcList(const ConnectionId connection_id) const
+Network<Side::kClient>::SendNpcList(const ConnectionId) const
 {
   AlfAssert(false, "cannot send npc list from client");
 }
@@ -536,37 +532,6 @@ Network<Side::kClient>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto PlayerIncrementCb = [this](const Packet& packet) {
-    auto mr = packet.GetMemoryReader();
-    auto size = mr.Read<u32>();
-    game::MoveableIncrement inc;
-    Uuid uuid;
-    auto view = world_->GetEntityManager()
-                  .GetRegistry()
-                  .view<PlayerData, game::Moveable>();
-    auto maybe_our_entity = GetOurPlayerEntity();
-    if (maybe_our_entity) {
-      for (u32 i = 0; i < size; i++) {
-        inc = mr.Read<game::MoveableIncrement>();
-        uuid = mr.Read<Uuid>();
-        for (const auto entity : view) {
-          if (view.get<PlayerData>(entity).uuid == uuid) {
-            game::ApplyMoveableIncrement(view.get<game::Moveable>(entity),
-                                         inc,
-                                         *maybe_our_entity == entity);
-          }
-        }
-      }
-    }
-  };
-  ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kPlayerIncrement,
-    "player increment",
-    PlayerIncrementCb);
-  AlfAssert(ok, "could not add packet type player increment");
-
-  // ============================================================ //
-
   const auto PlayerInputCb = [](const Packet&) {
     DLOG_WARNING("got a PlayerInput packet, but server should "
                  "not send those, ignoring it");
@@ -604,20 +569,52 @@ Network<Side::kClient>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto NpcUpdateCb = [this](const Packet& packet) {
+  const auto TickCb = [this](const Packet& packet) {
     auto& registry = world_->GetEntityManager().GetRegistry();
     auto mr = packet.GetMemoryReader();
-    auto npc_data = mr.Read<NpcData>();
 
-    if (!system::Replace(registry, npc_data)) {
-      if (!system::SafeCreate(registry, npc_data)) {
-        AlfAssert(false, "could not replace, or create NpcData");
+    { // 1. Players
+      const auto size = mr.Read<u32>();
+      Uuid uuid;
+      game::MoveableIncrement inc;
+      game::Soul soul;
+      auto view = registry.view<PlayerData, game::Moveable, game::Soul>();
+      auto maybe_our_entity = GetOurPlayerEntity();
+      if (maybe_our_entity) {
+        for (u32 i = 0; i < size; i++) {
+          uuid = mr.Read<Uuid>();
+          inc = mr.Read<game::MoveableIncrement>();
+          soul = mr.Read<game::Soul>();
+          for (const auto entity : view) {
+            if (view.get<PlayerData>(entity).uuid == uuid) {
+              game::ApplyMoveableIncrement(view.get<game::Moveable>(entity),
+                                           inc,
+                                           *maybe_our_entity == entity);
+              view.get<game::Soul>(entity) = soul;
+            }
+          }
+        }
+      }
+    }
+
+    { // 2. Npc's
+      const auto size = mr.Read<u32>();
+      game::NpcID id;
+      game::Npc* npc;
+      for (u32 i=0; i<size; i++) {
+        id = mr.Read<game::NpcID>();
+        npc = world_->GetNpcRegistry().Get(id);
+        if (npc != nullptr) {
+          npc->FromIncrement(world_->GetEntityManager(), mr);
+        }
       }
     }
   };
   ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kNpcUpdate, "npc update", NpcUpdateCb);
-  AlfAssert(ok, "could not add packet type npc update");
+    PacketHeaderStaticTypes::kTick,
+    "tick",
+    TickCb);
+  AlfAssert(ok, "could not add packet type tick");
 }
 
 // ============================================================ //
@@ -827,35 +824,6 @@ Network<Side::kServer>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto PlayerIncrementCb = [this](const Packet& packet) {
-    MICROPROFILE_SCOPEI("network", "PlayerIncrementCb", MP_YELLOW2);
-    auto mr = packet.GetMemoryReader();
-    const auto moveable_increment = mr.Read<game::MoveableIncrement>();
-    auto& registry = world_->GetEntityManager().GetRegistry();
-    auto view = registry.view<PlayerData, game::Moveable>();
-    bool found = false;
-    for (const auto entity : view) {
-      if (view.get<PlayerData>(entity).connection_id ==
-          packet.GetFromConnection()) {
-        found = true;
-        auto& moveable = view.get<game::Moveable>(entity);
-        // TODO do some cheat checking
-        moveable.FromIncrement(moveable_increment);
-      }
-    }
-    if (!found) {
-      DLOG_WARNING("Got PlayerIncrement, but player was not found, {}",
-                   packet.GetFromConnection());
-    }
-  };
-  ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kPlayerIncrement,
-    "player increment",
-    PlayerIncrementCb);
-  AlfAssert(ok, "could not add packet type player increment");
-
-  // ============================================================ //
-
   const auto PlayerInputCb = [this](const Packet& packet) {
     DLOG_WARNING("got a PlayerInput packet, but client should "
                  "not send those, disconnecting the client");
@@ -885,15 +853,33 @@ Network<Side::kServer>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto NpcUpdateCb = [this](const Packet& packet) {
-    DLOG_WARNING("got a NpcUpdate packet, but client should "
-                 "not send those, disconnecting the client");
-    auto server = GetServer();
-    server->DisconnectConnection(packet.GetFromConnection());
+  const auto TickCb = [this](const Packet& packet) {
+    MICROPROFILE_SCOPEI("network", "PlayerIncrementCb", MP_YELLOW2);
+    auto& registry = world_->GetEntityManager().GetRegistry();
+
+    auto mr = packet.GetMemoryReader();
+    const auto moveable_increment = mr.Read<game::MoveableIncrement>();
+
+    auto view = registry.view<PlayerData, game::Moveable>();
+    bool found = false;
+    for (const auto entity : view) {
+      if (view.get<PlayerData>(entity).connection_id ==
+          packet.GetFromConnection()) {
+        found = true;
+        // TODO do some cheat checking
+        view.get<game::Moveable>(entity).FromIncrement(moveable_increment);
+      }
+    }
+    if (!found) {
+      DLOG_WARNING("Got Tick, but player was not found, {}",
+                   packet.GetFromConnection());
+    }
   };
   ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kNpcUpdate, "npc update", NpcUpdateCb);
-  AlfAssert(ok, "could not add packet type npc update");
+    PacketHeaderStaticTypes::kTick,
+    "tick",
+    TickCb);
+  AlfAssert(ok, "could not add packet type tick");
 }
 
 template<>

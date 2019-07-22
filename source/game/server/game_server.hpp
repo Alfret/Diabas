@@ -37,6 +37,9 @@ public:
   /** Update server **/
   void Update(f64 delta) override;
 
+  /// Send our game state to clients
+  void OnNetworkTick() final;
+
   /** Returns the world **/
   World& GetWorld() { return mWorld; }
 

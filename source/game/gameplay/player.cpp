@@ -39,17 +39,6 @@ Player::Update(GameClient& game, [[maybe_unused]] const f64 delta)
           NpcSpawn<kSide>(world, 0, moveable.position);
         }
       }
-
-      dutil::FixedTimeUpdate(60, [&]() {
-        Packet packet{};
-        const auto& packet_handler = network.GetPacketHandler();
-        packet_handler.BuildPacketHeader(
-          packet, PacketHeaderStaticTypes::kPlayerIncrement);
-        auto mw = packet.GetMemoryWriter();
-        mw->Write(moveable.ToIncrement());
-        mw.Finalize();
-        network.PacketBroadcast(packet);
-      });
     }
   }
 }

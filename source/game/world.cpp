@@ -20,7 +20,7 @@
 namespace dib::game {
 
 World::World()
-  : mTerrain(this, Terrain::Size::kNormal)
+  : mTerrain(this, Terrain::Size::kTiny)
 {}
 
 // -------------------------------------------------------------------------- //
@@ -55,6 +55,10 @@ World::Update(const f64 delta)
   network_.Update();
   UpdateMoveables(*this, delta);
   UpdateSoul(*this, delta);
+
+  if constexpr(kSide == Side::kServer) {
+      UpdateNpcs(*this, delta);
+    }
 }
 
 // -------------------------------------------------------------------------- //

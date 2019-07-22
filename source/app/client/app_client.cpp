@@ -196,6 +196,7 @@ AppClient::Run()
     // Update
     glfwPollEvents();
     Update(timeDelta);
+    dutil::FixedTimeUpdate(60, [this] { OnNetworkTick(); });
 
     // Render
     Render();

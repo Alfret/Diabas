@@ -1,5 +1,6 @@
 #include "npc.hpp"
 #include "game/world.hpp"
+#include <dutil/stopwatch.hpp>
 
 namespace dib::game
 {
@@ -42,5 +43,27 @@ Npc::Load(EntityManager& em, alflib::RawMemoryReader& mr)
   type_ = mr.Read<decltype(type_)>();
   em.GetRegistry().assign_or_replace<Moveable>(entity_) = mr.Read<Moveable>();
   em.GetRegistry().assign_or_replace<Soul>(entity_) = mr.Read<Soul>();
+}
+
+bool
+Npc::ToIncrement(const EntityManager& em, alflib::RawMemoryWriter& mw) const
+{
+  mw.Write(em.GetRegistry().get<Moveable>(entity_).ToIncrement());
+  return mw.Write(em.GetRegistry().get<Soul>(entity_));
+}
+
+void
+Npc::FromIncrement(EntityManager& em, alflib::RawMemoryReader& mr)
+{
+  em.GetRegistry().get<Moveable>(entity_).FromIncrement(mr.Read<MoveableIncrement>());
+  em.GetRegistry().assign_or_replace<Soul>(entity_) = mr.Read<Soul>();
+}
+
+void
+UpdateNpcs(World& world, f64 delta)
+{
+  for (auto npc : world.GetNpcRegistry().GetNpcs()) {
+    npc.second->Update(world, delta);
+  }
 }
 }

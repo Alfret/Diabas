@@ -45,12 +45,23 @@ class Npc
   /// NOTE: must call this base method from derived methods.
   virtual void Load(EntityManager& em, alflib::RawMemoryReader& mr);
 
+  /// Write the subset of information that may change, frame to frame, to
+  /// memory writer.
+  virtual bool ToIncrement(const EntityManager& em,
+                                   alflib::RawMemoryWriter& mw) const;
+  /// Read the subset of information that may change, frame to frame, from
+  /// memory reader.
+  virtual void FromIncrement(EntityManager& em, alflib::RawMemoryReader& mr);
+
 protected:
 
   NpcID id_;
   NpcType type_;
   Entity entity_;
 };
+
+void UpdateNpcs(World& world, f64 delta);
+
 }
 
 #endif//NPC_HPP_

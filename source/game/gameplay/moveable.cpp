@@ -349,34 +349,17 @@ UpdateMoveables(World& world, const f64 delta)
     auto view = registry.view<Moveable>();
     for (const auto entity : view) {
       MICROPROFILE_SCOPEI("player", "simulate moveable", MP_PURPLE1);
-      Moveable& moveable = view.get(entity);
-      UpdateMoveable(world, delta, moveable, entity);
+      UpdateMoveable(world, delta, view.get(entity), entity);
     }
-  } else {
-    // prepare player packet
-    auto view = registry.view<PlayerData, Moveable>();
-    Packet packet{};
-    world.GetNetwork().GetPacketHandler().BuildPacketHeader(
-      packet, PacketHeaderStaticTypes::kPlayerIncrement);
-    auto mw = packet.GetMemoryWriter();
-    mw->Write(static_cast<u32>(view.size()));
-    for (const auto entity : view) {
-      MICROPROFILE_SCOPEI("player", "simulate moveable", MP_PURPLE1);
-      Moveable& moveable = view.get<Moveable>(entity);
-      // TODO do we need to simulate on server?
-      //UpdateMoveable(world, delta, moveable, entity);
-      mw->Write(moveable.ToIncrement());
-      mw->Write(view.get<PlayerData>(entity).uuid);
-    }
-    mw.Finalize();
-
-    // prepare npc packet
-
-
-    // TODO update npc's
-
-    dutil::FixedTimeUpdate(
-      60, [&]() { world.GetNetwork().PacketBroadcast(packet); });
+    } else /* if (kSide == Side==kServer) */ {
+      auto view = registry.view<Moveable>();
+      for (const auto entity : view) {
+        // We don't update players on server.
+        if (!registry.has<PlayerData>(entity)) {
+          MICROPROFILE_SCOPEI("player", "simulate moveable", MP_PURPLE1);
+          UpdateMoveable(world, delta, view.get(entity), entity);
+        }
+      }
   }
 }
 

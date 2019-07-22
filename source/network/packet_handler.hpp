@@ -58,12 +58,6 @@ enum class PacketHeaderStaticTypes : std::size_t
   kPlayerUpdateRejected,
 
   /**
-   * Client sender: Holds its incremental update.
-   * Server sender: Holds x amount of player incremental updates.
-   */
-  kPlayerIncrement,
-
-  /**
    * Holds the players current player input.
    */
   kPlayerInput,
@@ -75,14 +69,9 @@ enum class PacketHeaderStaticTypes : std::size_t
   kNpcSpawn,
 
   /**
-   * Incremental update for an npc.
+   * Holds all information between each network tick, aka fast changing info.
    */
-  kNpcIncrement,
-
-  /**
-   * TODO
-   */
-  kNpcUpdate,
+  kTick,
 
   // ============================================================ //
   // Must be last, used to count number of elements in the enum

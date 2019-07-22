@@ -12,6 +12,9 @@ namespace dib {
 
 using ContainerValueType = u8;
 
+class PacketHandler;
+enum class PacketHeaderStaticTypes : std::size_t;
+
 // ============================================================ //
 // Memory Writer helpers
 // ============================================================ //
@@ -71,6 +74,10 @@ private:
   std::size_t pos_;
   ContainerValueType* payload_;
 };
+
+// ============================================================ //
+// Packet class
+// ============================================================ //
 
 /**
  * A packet consists of a header and a payload, stored in contiguous memory.
@@ -172,6 +179,8 @@ public:
   // ============================================================ //
 public:
   std::size_t GetHeaderSize() const;
+
+  void SetHeader(const PacketHandler& ph, PacketHeaderStaticTypes type);
 
   void SetHeader(const PacketHeader header);
 

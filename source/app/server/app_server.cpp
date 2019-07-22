@@ -51,6 +51,7 @@ AppServer::Run()
 
     // Update
     Update(timeDelta);
+    dutil::FixedTimeUpdate(60, [this] { OnNetworkTick(); });
 
     MicroProfileFlip(nullptr);
   }

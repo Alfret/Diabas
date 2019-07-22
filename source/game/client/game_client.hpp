@@ -47,6 +47,9 @@ public:
   /** Update client **/
   void Update(f64 delta) override;
 
+  /// Send our client state to server
+  void OnNetworkTick() final;
+
   /** Render client **/
   void Render() override;
 
