@@ -83,7 +83,8 @@ GameClient::OnNetworkTick()
   if (auto maybe_entity = network.GetOurPlayerEntity(); maybe_entity) {
     auto& registry = mWorld.GetEntityManager().GetRegistry();
     auto& packet = network.GetReusablePacket();
-    packet.SetHeader(network.GetPacketHandler(), PacketHeaderStaticTypes::kTick);
+    packet.SetHeader(network.GetPacketHandler(),
+                     PacketHeaderStaticTypes::kTick);
     auto mw = packet.GetMemoryWriter();
 
     { // 1. Player data

@@ -2,14 +2,36 @@
 #include <dlog.hpp>
 #include "game/npc/npc_registry.hpp"
 #include "game/world.hpp"
+#include <optional>
 
 namespace dib::game {
 
 void
 NpcSlime::Update(World& world, f64 delta)
 {
-  auto& moveable = world.GetEntityManager().GetRegistry().get<Moveable>(entity_);
-  brain.Think(moveable, static_cast<f32>(delta));
+  auto& moveable =
+    world.GetEntityManager().GetRegistry().get<Moveable>(entity_);
+
+  const auto FindClosestPlayer =
+    [&world](Position source) -> std::optional<Position> {
+    auto view =
+      world.GetEntityManager().GetRegistry().view<PlayerData, Moveable>();
+    Position target{ 99999999999.0f, 99999999999.0f };
+    for (const auto entity : view) {
+      if (Distance(view.get<Moveable>(entity).position, source) <
+          Distance(target, source)) {
+        target = view.get<Moveable>(entity).position;
+      }
+    }
+    if (Distance(target, source) < 100.0f) {
+      return target;
+    }
+    return std::nullopt;
+  };
+
+  if (auto maybe_pos = FindClosestPlayer(moveable.position); maybe_pos) {
+    brain.Think(world, static_cast<f32>(delta), moveable, *maybe_pos);
+  }
 }
 
 void
@@ -49,7 +71,7 @@ SlimeFactory(EntityManager& em, NpcID id, NpcType type)
   Collideable c{};
   CollideableRect* cr = reinterpret_cast<CollideableRect*>(&c);
   cr->type = CollisionType::kRect;
-  cr->rect = CollisionRectNoOffset{PixelToMeter(32), PixelToMeter(16)};
+  cr->rect = CollisionRectNoOffset{ PixelToMeter(32), PixelToMeter(16) };
   m.collideable = c;
 
   Soul s{};
@@ -64,7 +86,8 @@ SlimeFactory(EntityManager& em, NpcID id, NpcType type)
   RenderComponent rc{};
 #endif
 
-  NpcSlime* npc = new NpcSlime{em, id, type, std::move(m), std::move(s), std::move(rc)};
+  NpcSlime* npc =
+    new NpcSlime{ em, id, type, std::move(m), std::move(s), std::move(rc) };
   return npc;
 }
 

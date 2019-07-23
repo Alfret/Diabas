@@ -15,7 +15,10 @@ NpcSpawn<Side::kServer>(World& world,
   npc_registry.Add(world.GetEntityManager(), id, type);
   Npc* npc = npc_registry.Get(id);
   if (npc != nullptr) {
-    world.GetEntityManager().GetRegistry().get<Moveable>(npc->GetEntity()).position = position;
+    world.GetEntityManager()
+      .GetRegistry()
+      .get<Moveable>(npc->GetEntity())
+      .position = position;
   } else {
     DLOG_ERROR("failed to find npc after adding");
     return;
@@ -66,13 +69,13 @@ NpcSpawn<Side::kServer>(World& world, String type_name, Position position)
 }
 
 template<>
-void NpcSpawn<Side::kClient>(World& world,
-                             String type_name,
-                             Position position)
+void
+NpcSpawn<Side::kClient>(World& world, String type_name, Position position)
 {
   const auto it = world.GetNpcRegistry().GetNpcTypeNames().find(type_name);
   AlfAssert(it != world.GetNpcRegistry().GetNpcTypeNames().end(),
-            "could not find npc type with name {}", type_name);
+            "could not find npc type with name {}",
+            type_name);
   NpcSpawn<Side::kClient>(world, it->second, position);
 }
 }

@@ -10,26 +10,31 @@
 #include <alflib/memory/raw_memory_reader.hpp>
 #include "game/ecs/entity_manager.hpp"
 
-namespace dib::game
-{
+namespace dib::game {
 
 class World;
 class NpcRegistry;
 
 class Npc
 {
- public:
-
-  Npc(EntityManager& em, NpcID id, NpcType type, Moveable m, Soul s, RenderComponent rc);
+public:
+  Npc(EntityManager& em,
+      NpcID id,
+      NpcType type,
+      Moveable m,
+      Soul s,
+      RenderComponent rc);
 
   virtual ~Npc() = default;
 
   /// Each frame, update will be called. Typically you do things like
-  /// deciding how to move the characters.
+  /// deciding how to move the characters, by setting the moveable.input.
   virtual void Update(World& world, f64 delta);
 
+  // TODO
   virtual void OnSpawn(World& world);
 
+  // TODO
   virtual void OnDeath(World& world);
 
   auto GetID() const { return id_; }
@@ -40,7 +45,8 @@ class Npc
 
   /// Store all data via the memory writer.
   /// NOTE: Must call this base method from derived methods.
-  virtual bool Store(const EntityManager& em, alflib::RawMemoryWriter& mw) const;
+  virtual bool Store(const EntityManager& em,
+                     alflib::RawMemoryWriter& mw) const;
 
   /// Load the data from the memory reader.
   /// NOTE: must call this base method from derived methods.
@@ -49,20 +55,20 @@ class Npc
   /// Write the subset of information that may change, frame to frame, to
   /// memory writer.
   virtual bool ToIncrement(const EntityManager& em,
-                                   alflib::RawMemoryWriter& mw) const;
+                           alflib::RawMemoryWriter& mw) const;
   /// Read the subset of information that may change, frame to frame, from
   /// memory reader.
   virtual void FromIncrement(EntityManager& em, alflib::RawMemoryReader& mr);
 
 protected:
-
   NpcID id_;
   NpcType type_;
   Entity entity_;
 };
 
-void UpdateNpcs(World& world, f64 delta);
+void
+UpdateNpcs(World& world, f64 delta);
 
 }
 
-#endif//NPC_HPP_
+#endif // NPC_HPP_

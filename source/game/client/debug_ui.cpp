@@ -15,6 +15,7 @@
 #include "game/ecs/systems/generic_system.hpp"
 #include "game/gameplay/moveable.hpp"
 #include "game/gameplay/soul.hpp"
+#include "game/physics/path_finding.hpp"
 
 // ========================================================================== //
 // DebugUI Implementation
@@ -33,10 +34,10 @@ ShowStatisticsDebug(GameClient& gameClient, f32 delta)
     ImGui::BulletText("Sprites drawn: %i",
                       gameClient.GetRenderer().GetDrawSpriteCount());
     ImGui::BulletText(
-        "Moveable Entities: %lu",
-        gameClient.GetWorld().GetEntityManager().GetRegistry().size<Moveable>());
+      "Moveable Entities: %lu",
+      gameClient.GetWorld().GetEntityManager().GetRegistry().size<Moveable>());
 
-      static u32 maxFps = 0;
+    static u32 maxFps = 0;
     if (u32(1.0f / delta) > maxFps) {
       maxFps = u32(1.0f / delta);
     }
@@ -771,7 +772,7 @@ ShowPlayerDebug(GameClient& gameClient)
       ImGui::SliderFloat(
         "velocity max", &m.velocity_max, 0.0f, 1000.0f, "%.2f");
       ImGui::SliderFloat(
-        "velocity jump", &m.velocity_jump, 0.0f, 1000.0f, "%.2f");
+        "velocity jump", &m.velocity_jump, 0.0f, 50.0f, "%.2f");
       ImGui::InputFloat("x position (meter)", &m.position.x);
       ImGui::InputFloat("y position (meter)", &m.position.y);
 
@@ -804,6 +805,17 @@ ShowMisc(GameClient& gameClient)
 
     ImGui::Checkbox("Draw Collision",
                     &gameClient.GetRenderer().GetDebugDrawCollision());
+
+    const bool before = world.GetDrawAStar();
+    ImGui::Checkbox("Draw Pathfinding", &world.GetDrawAStar());
+    if (before && before != world.GetDrawAStar()) {
+      // clear the existing paths
+      auto view =
+        world.GetEntityManager().GetRegistry().view<game::AStarPathDebug>();
+      for (auto entity : view) {
+        view.get(entity) = game::AStarPathDebug{};
+      }
+    }
   }
 }
 }

@@ -153,6 +153,7 @@ CoreContent::SetupTiles()
     ->SetCollisionType(CollisionType::kNone)
     ->SetIsDestructible(false)
     ->SetCanBeReplaced(true);
+  mTiles.air->SetCollisionIsSolid(false);
   tileRegistry.RegisterTile(MOD_ID, "air", mTiles.air);
 
   // Tile: Dirt

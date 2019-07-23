@@ -71,6 +71,9 @@ public:
 
   bool ToBytes(alflib::MemoryWriter& writer) const;
 
+  bool& GetDrawAStar() { return draw_astar; }
+  bool GetDrawAStar() const { return draw_astar; }
+
 public:
   static World FromBytes(alflib::MemoryReader& reader);
 
@@ -85,6 +88,8 @@ private:
   Chat chat_{ this };
 
   NpcRegistry npc_registry_{};
+
+  bool draw_astar = false;
 };
 }
 

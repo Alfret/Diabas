@@ -10,7 +10,6 @@ namespace dib::game {
 class Soul
 {
 public:
-
   s32 hp = 100;
   s32 defense = 1;
   f32 damage_timeout = -1.0f;

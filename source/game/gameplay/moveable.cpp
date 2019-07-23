@@ -140,8 +140,8 @@ MoveSubTileOnCollision(const World& world, Moveable& moveable, Position col_pos)
 
   // what direction did we collide in?
   CollisionInfo col_info{};
-  const Position horizontal { col_pos.x, ok_pos.y };
-  const Position vertical { ok_pos.x, col_pos.y};
+  const Position horizontal{ col_pos.x, ok_pos.y };
+  const Position vertical{ ok_pos.x, col_pos.y };
 
   if (maybe_pos = CollidesOnPosition(world, moveable.collideable, horizontal);
       maybe_pos &&
@@ -351,15 +351,15 @@ UpdateMoveables(World& world, const f64 delta)
       MICROPROFILE_SCOPEI("player", "simulate moveable", MP_PURPLE1);
       UpdateMoveable(world, delta, view.get(entity), entity);
     }
-    } else /* if (kSide == Side==kServer) */ {
-      auto view = registry.view<Moveable>();
-      for (const auto entity : view) {
-        // We don't update players on server.
-        if (!registry.has<PlayerData>(entity)) {
-          MICROPROFILE_SCOPEI("player", "simulate moveable", MP_PURPLE1);
-          UpdateMoveable(world, delta, view.get(entity), entity);
-        }
+  } else /* if (kSide == Side==kServer) */ {
+    auto view = registry.view<Moveable>();
+    for (const auto entity : view) {
+      // We don't update players on server.
+      if (!registry.has<PlayerData>(entity)) {
+        MICROPROFILE_SCOPEI("player", "simulate moveable", MP_PURPLE1);
+        UpdateMoveable(world, delta, view.get(entity), entity);
       }
+    }
   }
 }
 

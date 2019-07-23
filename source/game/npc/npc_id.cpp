@@ -2,7 +2,8 @@
 
 namespace dib::game {
 
-NpcID NpcIDGenerateUnique()
+NpcID
+NpcIDGenerateUnique()
 {
   static NpcID id = 0;
   return id++;

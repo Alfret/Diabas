@@ -44,7 +44,8 @@ set(COMMON_SOURCE
   source/game/chat/chat_message.cpp
   source/game/chat/chat_message.hpp
   source/game/physics/collision.cpp
-  source/game/physics/collision.hpp
+  source/game/physics/units.cpp
+  source/game/physics/path_finding.cpp
   source/game/ecs/entity_manager.cpp
   source/game/ecs/entity_manager.hpp
   source/game/ecs/components/player_data_component.hpp
@@ -69,6 +70,7 @@ set(COMMON_SOURCE
   source/game/npc/npc_registry.cpp
   source/game/npc/npc_spawn.cpp
   source/game/npc/brain/brain_simple.cpp
+  source/game/npc/brain/brain_follow.cpp
   source/game/resource.cpp
   source/game/resource.hpp
   source/game/terrain.cpp

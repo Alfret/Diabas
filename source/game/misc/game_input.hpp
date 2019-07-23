@@ -6,8 +6,7 @@
 #include <bitset>
 #include "core/types.hpp"
 
-namespace dib::game
-{
+namespace dib::game {
 
 class GameInput
 {
@@ -42,4 +41,4 @@ public:
 
 }
 
-#endif//GAME_INPUT_HPP_
+#endif // GAME_INPUT_HPP_

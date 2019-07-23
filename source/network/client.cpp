@@ -55,6 +55,8 @@ Client::CloseConnection()
 
   // clear ourPlayerEntity
   our_player_entity_ = std::nullopt;
+
+  world_->OnDisconnect();
 }
 
 SendResult

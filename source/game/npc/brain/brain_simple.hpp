@@ -2,10 +2,12 @@
 #define BRAIN_SIMPLE_HPP_
 
 #include <dutil/random.hpp>
-#include "game/gameplay/moveable.hpp"
+#include "core/types.hpp"
 
-namespace dib::game
-{
+namespace dib::game {
+
+class Moveable;
+
 class BrainSimple
 {
 public:
@@ -26,4 +28,4 @@ private:
 
 }
 
-#endif//BRAIN_SIMPLE_HPP_
+#endif // BRAIN_SIMPLE_HPP_

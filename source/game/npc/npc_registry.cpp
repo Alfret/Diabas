@@ -42,7 +42,8 @@ void
 NpcRegistry::Add(EntityManager& em, NpcID id, String type_name)
 {
   AlfAssert(npc_type_names_.find(type_name) != npc_type_names_.end(),
-            "failed to find npc type [{}]", type_name);
+            "failed to find npc type [{}]",
+            type_name);
   Add(em, id, npc_type_names_[type_name]);
 }
 

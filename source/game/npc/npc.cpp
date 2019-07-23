@@ -2,11 +2,16 @@
 #include "game/world.hpp"
 #include <dutil/stopwatch.hpp>
 
-namespace dib::game
-{
+namespace dib::game {
 
-Npc::Npc(EntityManager& em, NpcID id, NpcType type, Moveable m, Soul s, RenderComponent rc)
-    : id_(id), type_(type)
+Npc::Npc(EntityManager& em,
+         NpcID id,
+         NpcType type,
+         Moveable m,
+         Soul s,
+         RenderComponent rc)
+  : id_(id)
+  , type_(type)
 {
   auto& registry = em.GetRegistry();
   entity_ = registry.create();
@@ -55,7 +60,8 @@ Npc::ToIncrement(const EntityManager& em, alflib::RawMemoryWriter& mw) const
 void
 Npc::FromIncrement(EntityManager& em, alflib::RawMemoryReader& mr)
 {
-  em.GetRegistry().get<Moveable>(entity_).FromIncrement(mr.Read<MoveableIncrement>());
+  em.GetRegistry().get<Moveable>(entity_).FromIncrement(
+    mr.Read<MoveableIncrement>());
   em.GetRegistry().assign_or_replace<Soul>(entity_) = mr.Read<Soul>();
 }
 

@@ -309,7 +309,7 @@ Network<Side::kClient>::SendPlayerList(const ConnectionId) const
   AlfAssert(false, "cannot send player list from client");
 }
 
-template <>
+template<>
 void
 Network<Side::kServer>::SendNpcList(const ConnectionId connection_id) const
 {
@@ -332,7 +332,8 @@ Network<Side::kServer>::SendNpcList(const ConnectionId connection_id) const
   }
   mw.Finalize();
   auto server = GetServer();
-  server->PacketUnicast(packet, SendStrategy::kUnreliableNoDelay, connection_id);
+  server->PacketUnicast(
+    packet, SendStrategy::kUnreliableNoDelay, connection_id);
 }
 
 template<>
@@ -550,7 +551,7 @@ Network<Side::kClient>::SetupPacketHandler()
     game::NpcID id;
     game::Npc* npc;
     auto& npc_registry = world_->GetNpcRegistry();
-    for (u32 i=0; i<size; i++) {
+    for (u32 i = 0; i < size; i++) {
       type = mr.Read<game::NpcType>();
       id = mr.Read<game::NpcID>();
       npc_registry.Add(world_->GetEntityManager(), id, type);
@@ -601,7 +602,7 @@ Network<Side::kClient>::SetupPacketHandler()
       const auto size = mr.Read<u32>();
       game::NpcID id;
       game::Npc* npc;
-      for (u32 i=0; i<size; i++) {
+      for (u32 i = 0; i < size; i++) {
         id = mr.Read<game::NpcID>();
         npc = world_->GetNpcRegistry().Get(id);
         if (npc != nullptr) {
@@ -611,9 +612,7 @@ Network<Side::kClient>::SetupPacketHandler()
     }
   };
   ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kTick,
-    "tick",
-    TickCb);
+    PacketHeaderStaticTypes::kTick, "tick", TickCb);
   AlfAssert(ok, "could not add packet type tick");
 }
 
@@ -840,7 +839,7 @@ Network<Side::kServer>::SetupPacketHandler()
     // 1. Parse the packet
     auto mr = packet.GetMemoryReader();
     auto type = mr.Read<game::NpcType>();
-    game::Position p{mr.Read<decltype(p.x)>(), mr.Read<decltype(p.y)>()};
+    game::Position p{ mr.Read<decltype(p.x)>(), mr.Read<decltype(p.y)>() };
 
     // TODO do we want to verify the spawn request somehow?
 
@@ -876,9 +875,7 @@ Network<Side::kServer>::SetupPacketHandler()
     }
   };
   ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kTick,
-    "tick",
-    TickCb);
+    PacketHeaderStaticTypes::kTick, "tick", TickCb);
   AlfAssert(ok, "could not add packet type tick");
 }
 

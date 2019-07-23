@@ -97,7 +97,11 @@ public:
   /**
    * If you need a packet, but don't want to allocate memory, use mine!
    */
-  Packet& GetReusablePacket() { packet_.ClearPayload(); return packet_; }
+  Packet& GetReusablePacket()
+  {
+    packet_.ClearPayload();
+    return packet_;
+  }
 
   // ============================================================ //
   // Client Only Methods

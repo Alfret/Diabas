@@ -7,6 +7,7 @@
 #include "game/physics/units.hpp"
 #include "game/client/render_component.hpp"
 #include "game/gameplay/moveable.hpp"
+#include "game/physics/path_finding.hpp"
 
 // ========================================================================== //
 // Functions
@@ -34,8 +35,7 @@ RenderEntities(graphics::Renderer& renderer,
       Vector3F{ MeterToPixel(movableComponent.position.x),
                 MeterToPixel(movableComponent.position.y),
                 0.5f },
-      Vector2F{ movableComponent.width,
-                movableComponent.height });
+      Vector2F{ movableComponent.width, movableComponent.height });
   }
 
   // Done
@@ -59,6 +59,27 @@ RenderEntities(graphics::Renderer& renderer,
       }
       renderer.GetDebugDraw().Submit(rect);
     }
+    renderer.GetDebugDraw().End();
+  }
+
+  auto astar_view = entityManager.GetRegistry().view<AStarPathDebug>();
+  if (astar_view.size() > 0) {
+    renderer.GetDebugDraw().Begin(&camera);
+
+    for (const auto entity : astar_view) {
+      auto& astar = astar_view.get(entity);
+      for (u32 i = 0; i < astar.path.size(); i++) {
+        graphics::DebugDraw::Circle circle{};
+        circle.position =
+          Position{ TileToPixel(astar.path[i].X()) + TileToPixel(1) / 2,
+                    TileToPixel(astar.path[i].Y()) + TileToPixel(1) / 2 };
+        circle.radius = 3.5f;
+        circle.color = alflib::Color{ 20, 255, 10 };
+        circle.color.Alpha() = 255;
+        renderer.GetDebugDraw().Submit(circle);
+      }
+    }
+
     renderer.GetDebugDraw().End();
   }
 }

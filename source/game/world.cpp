@@ -56,9 +56,9 @@ World::Update(const f64 delta)
   UpdateMoveables(*this, delta);
   UpdateSoul(*this, delta);
 
-  if constexpr(kSide == Side::kServer) {
-      UpdateNpcs(*this, delta);
-    }
+  // if constexpr(kSide == Side::kServer) {
+  UpdateNpcs(*this, delta);
+  //    }
 }
 
 // -------------------------------------------------------------------------- //

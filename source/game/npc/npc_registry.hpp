@@ -7,8 +7,7 @@
 #include "game/npc/npc_id.hpp"
 #include <alflib/memory/raw_memory_reader.hpp>
 
-namespace dib::game
-{
+namespace dib::game {
 
 /**
  * This factory function should allocate memory for a npc type, and
@@ -28,7 +27,7 @@ public:
 
   /// Add a npc with the given id.
   /// @param npc Takes ownership.
-  //void Add(NpcID id, Npc* npc);
+  // void Add(NpcID id, Npc* npc);
 
   /// Add a npc by default constructing the given npc type.
   /// @type The type to default construct
@@ -70,4 +69,4 @@ private:
 };
 }
 
-#endif//NPC_REGISTRY_HPP_
+#endif // NPC_REGISTRY_HPP_

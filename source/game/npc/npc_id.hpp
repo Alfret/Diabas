@@ -3,8 +3,7 @@
 
 #include "core/types.hpp"
 
-namespace dib::game
-{
+namespace dib::game {
 
 /// Identifier for the type of npc.
 using NpcType = u32;
@@ -13,8 +12,9 @@ using NpcType = u32;
 using NpcID = u32;
 
 /// Generates a unique npc id.
-NpcID NpcIDGenerateUnique();
+NpcID
+NpcIDGenerateUnique();
 
 }
 
-#endif//NPC_ID_HPP_
+#endif // NPC_ID_HPP_

@@ -1,4 +1,5 @@
 #include "brain_simple.hpp"
+#include "game/gameplay/moveable.hpp"
 
 namespace dib::game {
 

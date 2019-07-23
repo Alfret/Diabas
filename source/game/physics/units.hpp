@@ -38,6 +38,12 @@ constexpr f32 kTileInMeters = kDoorHeightInMeters / kDoorHeightInTiles;
 constexpr f32 kPixelInMeter = kTileInMeters / kTileInPixels;
 
 constexpr f32
+Distance(const Position a, const Position b)
+{
+  return std::abs(a.x - b.x) + std::abs(a.y - b.y);
+}
+
+constexpr f32
 PixelToMeter(const f32 pixels)
 {
   return pixels * kPixelInMeter;
@@ -87,6 +93,12 @@ MeterPosToWorldPos(const Position meter_pos)
   WorldPos world_pos(MeterToTile(meter_pos.x), MeterToTile(meter_pos.y));
   return world_pos;
 }
+
+/**
+ * Given a jump velocity, it will say how many tiles you can jump
+ */
+s32
+JumpVelocityToTiles(f32 jump_height);
 
 }
 

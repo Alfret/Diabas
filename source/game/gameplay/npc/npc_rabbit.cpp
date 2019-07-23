@@ -8,7 +8,8 @@ namespace dib::game {
 void
 NpcRabbit::Update(World& world, f64 delta)
 {
-  auto& moveable = world.GetEntityManager().GetRegistry().get<Moveable>(entity_);
+  auto& moveable =
+    world.GetEntityManager().GetRegistry().get<Moveable>(entity_);
   brain.Think(moveable, static_cast<f32>(delta));
 }
 
@@ -49,7 +50,7 @@ RabbitFactory(EntityManager& em, NpcID id, NpcType type)
   Collideable c{};
   CollideableRect* cr = reinterpret_cast<CollideableRect*>(&c);
   cr->type = CollisionType::kRect;
-  cr->rect = CollisionRectNoOffset{PixelToMeter(32), PixelToMeter(16)};
+  cr->rect = CollisionRectNoOffset{ PixelToMeter(32), PixelToMeter(16) };
   m.collideable = c;
 
   Soul s{};
@@ -64,7 +65,8 @@ RabbitFactory(EntityManager& em, NpcID id, NpcType type)
   RenderComponent rc{};
 #endif
 
-  NpcRabbit* npc = new NpcRabbit{em, id, type, std::move(m), std::move(s), std::move(rc)};
+  NpcRabbit* npc =
+    new NpcRabbit{ em, id, type, std::move(m), std::move(s), std::move(rc) };
   return npc;
 }
 
