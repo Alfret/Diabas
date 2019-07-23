@@ -533,16 +533,6 @@ Network<Side::kClient>::SetupPacketHandler()
 
   // ============================================================ //
 
-  const auto PlayerInputCb = [](const Packet&) {
-    DLOG_WARNING("got a PlayerInput packet, but server should "
-                 "not send those, ignoring it");
-  };
-  ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kPlayerInput, "player input", PlayerInputCb);
-  AlfAssert(ok, "could not add packet type player input");
-
-  // ============================================================ //
-
   const auto NpcSpawnCb = [this](const Packet& packet) {
     auto mr = packet.GetMemoryReader();
     auto size = mr.Read<u32>();
@@ -820,18 +810,6 @@ Network<Side::kServer>::SetupPacketHandler()
     "player update rejected",
     PlayerUpdateRejectedCb);
   AlfAssert(ok, "could not add packet type player update rejected");
-
-  // ============================================================ //
-
-  const auto PlayerInputCb = [this](const Packet& packet) {
-    DLOG_WARNING("got a PlayerInput packet, but client should "
-                 "not send those, disconnecting the client");
-    auto server = GetServer();
-    server->DisconnectConnection(packet.GetFromConnection());
-  };
-  ok = packet_handler_.AddStaticPacketType(
-    PacketHeaderStaticTypes::kPlayerInput, "player input", PlayerInputCb);
-  AlfAssert(ok, "could not add packet type player input");
 
   // ============================================================ //
 

@@ -58,11 +58,6 @@ enum class PacketHeaderStaticTypes : std::size_t
   kPlayerUpdateRejected,
 
   /**
-   * Holds the players current player input.
-   */
-  kPlayerInput,
-
-  /**
    * Client sender: Request to spawn a npc.
    * Server sender: Hold information about x amount of newly spawned npc.
    */
