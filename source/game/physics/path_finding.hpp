@@ -20,8 +20,9 @@ struct Node
   WorldPos origin;
   s32 g;
   s32 h;
-  s32 jump_x;
-  s32 jump_y;
+  s8 jump_x;
+  s8 jump_y;
+  s8 did_jump_x;
   constexpr s32 F() const { return g + h; }
 };
 

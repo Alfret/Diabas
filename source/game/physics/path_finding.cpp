@@ -28,7 +28,7 @@ AStar(const World& world, const Moveable& moveable, const WorldPos goal)
   const auto FindNode = [](const std::vector<Node>& list,
                            Node node) -> std::optional<Node> {
     for (const auto n : list) {
-      if (n.pos == node.pos) {
+      if (n.pos == node.pos and n.jump_y == node.jump_y) {
         return n;
       }
     }
@@ -46,7 +46,7 @@ AStar(const World& world, const Moveable& moveable, const WorldPos goal)
   std::vector<Node> successors{};
 
   // 2. put starting node on open list (/w f=0)
-  open_list.push_back({ start, start, 0, 0, 0, 0 });
+  open_list.push_back({ start, start, 0, 0, 0, 0, 0 });
 
   // 3. while open list not empty
   while (open_list.size() > 0) {
@@ -72,116 +72,72 @@ AStar(const World& world, const Moveable& moveable, const WorldPos goal)
     {
       // left
       if (q.pos.X() > 0) {
-        Node left = Node{ q.pos.Left(), q.pos, q.g + 1, 0, q.jump_x, q.jump_y};
+        Node left = Node{ q.pos.Left(), q.pos, q.g + 1, 0, q.jump_x, q.jump_y, 0};
         if (!CollidesOnPosition(
                world, moveable.collideable, WorldPosToMeterPos(left.pos))
                .has_value()) {
           // left with ground under
-          if (OnGround(world, moveable, WorldPosToMeterPos(left.pos))) {
+          if (OnGround(world, moveable, WorldPosToMeterPos(left.pos)) and
+              (q.jump_y == 0 or q.did_jump_x == 0)) {
             left.h = ManhattanDist(left.pos, goal);
             left.jump_x = 0;
             left.jump_y = 0;
             successors.push_back(left);
           }
-          // left with jump
-          if (q.jump_x < max_jump_x) {
+          // left in air
+          else if (q.jump_x < max_jump_x and q.jump_x < q.jump_y and
+                   not q.did_jump_x) {
             left.h = ManhattanDist(left.pos, goal);
             left.jump_x = q.jump_x + 1;
-            // left up
-            if (q.jump_y < max_jump_y) {
-              left.jump_y = q.jump_y + 1;
-              if (left.pos.Y() < terrain.GetHeight()) {
-                Node left_jump = left;
-                left_jump.pos = left.pos.Top();
-                if (!CollidesOnPosition(
-                        world, moveable.collideable, WorldPosToMeterPos(left_jump.pos))
-                    .has_value()) {
-                  successors.push_back(left_jump);
-                }
-              }
-            }
-            // left down
-            else {
-              left.jump_y = q.jump_y;
-              if (left.pos.Y() > 0) {
-                Node left_fall = left;
-                left_fall.pos = left.pos.Bottom();
-                if (!CollidesOnPosition(world,
-                                        moveable.collideable,
-                                        WorldPosToMeterPos(left_fall.pos))
-                       .has_value()) {
-                  successors.push_back(left_fall);
-                }
-              }
-            }
+            left.did_jump_x = 1;
+            successors.push_back(left);
           }
         }
       }
 
       // right
       if (q.pos.X() < terrain.GetWidth()) {
-        Node right = Node{ q.pos.Right(), q.pos, q.g + 1, 0, q.jump_x, q.jump_y};
+        Node right = Node{ q.pos.Right(), q.pos, q.g + 1, 0, q.jump_x, q.jump_y, 0};
         if (!CollidesOnPosition(
                world, moveable.collideable, WorldPosToMeterPos(right.pos))
                .has_value()) {
           // right with ground under
-          if (OnGround(world, moveable, WorldPosToMeterPos(right.pos))) {
-            right.h = ManhattanDist(right.pos, goal);
-            right.jump_x = 0;
-            right.jump_y = 0;
-            successors.push_back(right);
-          }
-          // right with jump
-          if (q.jump_x < max_jump_x) {
+          if (OnGround(world, moveable, WorldPosToMeterPos(right.pos)) and
+              (q.jump_y == 0 or q.did_jump_x == 0)) {
+              right.h = ManhattanDist(right.pos, goal);
+              right.jump_x = 0;
+              right.jump_y = 0;
+              successors.push_back(right);
+            }
+          // right in air
+          else if (q.jump_x < max_jump_x and q.jump_x < q.jump_y and
+                   not q.did_jump_x) {
             right.h = ManhattanDist(right.pos, goal);
             right.jump_x = q.jump_x + 1;
-            // right up
-            if (q.jump_y < max_jump_y) {
-              right.jump_y = q.jump_y + 1;
-              if (right.pos.Y() < terrain.GetHeight()) {
-                Node right_jump = right;
-                right_jump.pos = right.pos.Top();
-                if (!CollidesOnPosition(
-                        world, moveable.collideable, WorldPosToMeterPos(right_jump.pos))
-                    .has_value()) {
-                  successors.push_back(right_jump);
-                }
-              }
-            }
-            // right down
-            else {
-              right.jump_y = q.jump_y;
-              if (right.pos.Y() > 0) {
-                Node right_fall = right;
-                right_fall.pos = right.pos.Bottom();
-                if (!CollidesOnPosition(world,
-                                        moveable.collideable,
-                                        WorldPosToMeterPos(right_fall.pos))
-                       .has_value()) {
-                  successors.push_back(right_fall);
-                }
-              }
-            }
+            right.did_jump_x = 1;
+            successors.push_back(right);
           }
         }
       }
 
       // down
       if (q.pos.Y() > 0) {
-        Node down = Node { q.pos.Bottom(), q.pos, q.g + 1, 0, 0, 0};
+        Node down = Node { q.pos.Bottom(), q.pos, q.g + 1, 0, 0, 0, 0};
         if (!CollidesOnPosition(
                world, moveable.collideable, WorldPosToMeterPos(down.pos))
                .has_value()) {
           down.h = ManhattanDist(down.pos, goal);
-          down.jump_y = max_jump_y;
-          down.jump_x = q.jump_x;
+          if (!OnGround(world, moveable, WorldPosToMeterPos(down.pos))) {
+            down.jump_y = max_jump_y;
+            down.jump_x = q.jump_x;
+          }
           successors.push_back(down);
         }
       }
 
       // up
       if (q.pos.Y() < terrain.GetHeight()) {
-        Node up = Node{ q.pos.Top(), q.pos, q.g + 1, 0, 0, 0 };
+        Node up = Node{ q.pos.Top(), q.pos, q.g + 1, 0, 0, 0, 0 };
         if (!CollidesOnPosition(
                world, moveable.collideable, WorldPosToMeterPos(up.pos))
                .has_value()) {

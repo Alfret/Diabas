@@ -102,6 +102,23 @@ CoreContent::GenerateWorld(World& world)
   world.GetTerrain().GenSetTile(WorldPos{ 40, 23 }, instance.mTiles.rock);
   world.GetTerrain().GenSetTile(WorldPos{ 41, 23 }, instance.mTiles.rock);
 
+
+  world.GetTerrain().GenSetTile(WorldPos{ 50, 16 }, instance.mTiles.rock);
+  world.GetTerrain().GenSetTile(WorldPos{ 50, 17 }, instance.mTiles.rock);
+  world.GetTerrain().GenSetTile(WorldPos{ 50, 18 }, instance.mTiles.rock);
+  world.GetTerrain().GenSetTile(WorldPos{ 51, 19 }, instance.mTiles.rock);
+  world.GetTerrain().GenSetTile(WorldPos{ 52, 19 }, instance.mTiles.rock);
+
+  world.GetTerrain().GenSetTile(WorldPos{ 56, 19 }, instance.mTiles.rock);
+  world.GetTerrain().GenSetTile(WorldPos{ 57, 19 }, instance.mTiles.rock);
+  world.GetTerrain().GenSetTile(WorldPos{ 58, 19 }, instance.mTiles.rock);
+
+  world.GetTerrain().GenSetTile(WorldPos{ 62, 19 }, instance.mTiles.rock);
+  world.GetTerrain().GenSetTile(WorldPos{ 63, 19 }, instance.mTiles.rock);
+  world.GetTerrain().GenSetTile(WorldPos{ 64, 19 }, instance.mTiles.rock);
+
+  world.GetTerrain().GenSetTile(WorldPos{ 67, 16 }, instance.mTiles.rock);
+
 #if 0
   for (u32 i = 0; i < 256; i++) {
     u32 x = 20 + (i % 16) * 4;
