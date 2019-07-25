@@ -68,16 +68,16 @@ Npc*
 SlimeFactory(EntityManager& em, NpcID id, NpcType type)
 {
   Moveable m{};
-  m.velocity_input = 12.0f;
+  m.velocity_input = 10.0f;
   m.velocity_max = 10.0f;
-  m.velocity_jump = 13.0f;
+  m.velocity_jump = 14.0f;
   m.position = Position(TileToMeter(10), TileToMeter(13));
   m.width = 32;
   m.height = 48;
   Collideable c{};
   CollideableRect* cr = reinterpret_cast<CollideableRect*>(&c);
   cr->type = CollisionType::kRect;
-  cr->rect = CollisionRectNoOffset{ PixelToMeter(32), PixelToMeter(16) };
+  cr->rect = CollisionRectNoOffset{ PixelToMeter(31), PixelToMeter(15) };
   m.collideable = c;
 
   Soul s{};

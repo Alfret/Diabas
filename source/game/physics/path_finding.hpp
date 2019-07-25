@@ -26,6 +26,12 @@ struct Node
   constexpr s32 F() const { return g + h; }
 };
 
+// ============================================================ //
+// Path finding with modified A*
+// ============================================================ //
+/// we pick next node depending on f value, the sum g and h.
+/// g = current total cost to get to this node
+/// h = estimated cost to get from this node, to final node. (Manhattan).
 std::vector<WorldPos>
 AStar(const World& world,
       const Moveable& moveable,

@@ -349,7 +349,9 @@ UpdateMoveables(World& world, const f64 delta)
     auto view = registry.view<Moveable>();
     for (const auto entity : view) {
       MICROPROFILE_SCOPEI("player", "simulate moveable", MP_PURPLE1);
-      UpdateMoveable(world, delta, view.get(entity), entity);
+      if (registry.has<PlayerData>(entity)) {
+        UpdateMoveable(world, delta, view.get(entity), entity);
+      }
     }
   } else /* if (kSide == Side==kServer) */ {
     auto view = registry.view<Moveable>();

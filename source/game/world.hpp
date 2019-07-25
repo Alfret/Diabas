@@ -74,6 +74,8 @@ public:
   bool& GetDrawAStar() { return draw_astar; }
   bool GetDrawAStar() const { return draw_astar; }
 
+  f64 GetTime() const;
+
 public:
   static World FromBytes(alflib::MemoryReader& reader);
 

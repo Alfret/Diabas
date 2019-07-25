@@ -15,6 +15,12 @@ namespace dib::game {
 class World;
 class NpcRegistry;
 
+/**
+ * How make a new custom npc:
+ *   1. Derive a class from the Npc class.
+ *   2. Make a factory function, that default constructs your own Npc
+ *   3. Register the new Npc in npc_registry's constructor.
+ */
 class Npc
 {
 public:

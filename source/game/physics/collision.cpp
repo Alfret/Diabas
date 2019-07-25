@@ -25,6 +25,10 @@ CollidesOnTiles(const World& world,
 {
   std::optional<WorldPos> res = std::nullopt;
 
+  if (rect.x >32.68f) {
+    int a = 0;
+  }
+
   for (const auto tile : tiles) {
     const auto tileptr = world.GetTerrain().GetTile(tile);
     const auto collision = tileptr->GetCollisionType(world, tile);
@@ -173,6 +177,12 @@ CollidesOnPosition(const World& world,
 bool
 OnGround(const World& world, const Moveable& moveable)
 {
+  CollisionRect rect{33.3333359, 10.666667, 1.33333337, 0.666666687};
+  Position origo{33.3333359, 10.666667};
+  std::vector<WorldPos> tiles;
+  GenerateTiles(world, rect, origo, tiles);
+
+
   // check @offset pixel(s) below us
   constexpr f32 offset = kPixelInMeter * 1;
   const Position pos_under(moveable.position.x, moveable.position.y - offset);

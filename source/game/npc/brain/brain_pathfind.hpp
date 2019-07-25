@@ -22,7 +22,8 @@ public:
 
 private:
   Entity entity_;
-  std::vector<WorldPos> astar_list_;
+  std::vector<WorldPos> path_;
+  f64 path_timer_;
 };
 }
 

@@ -264,4 +264,10 @@ World::FromBytes(alflib::MemoryReader& reader)
   return world;
 }
 
+f64
+World::GetTime() const
+{
+  static dutil::Stopwatch sw{};
+  return sw.fnow_s();
+}
 }

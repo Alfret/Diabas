@@ -5,18 +5,10 @@
 
 namespace dib::game {
 
-// ============================================================ //
-// Path finding with modified A*
-// ============================================================ //
-/// we pick next node depending on f value, the sum g and h.
-/// g = current total cost to get to this node
-/// h = estimated cost to get from this node, to final node. (Manhattan).
 std::vector<WorldPos>
 AStar(const World& world, const Moveable& moveable, const WorldPos goal)
 {
-  const WorldPos start = MeterPosToWorldPos(moveable.position);
-  const auto& terrain = world.GetTerrain();
-
+  // aux functions
   const auto ManhattanDist = [](WorldPos node, WorldPos goal) {
     const s32 nx = static_cast<s32>(node.X());
     const s32 ny = static_cast<s32>(node.Y());
@@ -35,10 +27,17 @@ AStar(const World& world, const Moveable& moveable, const WorldPos goal)
     return std::nullopt;
   };
 
+  // constants and variables
+  const WorldPos start = MeterPosToWorldPos(moveable.position);
+  const auto& terrain = world.GetTerrain();
   const s32 max_jump_y = JumpVelocityToTiles(moveable.velocity_jump);
   const s32 max_jump_x = 3; // TMP value
   constexpr s32 kMaxLoopCount = 500;
   s32 loop_count = 0;
+
+  // ============================================================ //
+  // A* begins
+  // ============================================================ //
 
   // 1. init lists
   std::vector<Node> open_list{};
