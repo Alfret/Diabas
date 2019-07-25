@@ -63,6 +63,7 @@ set(COMMON_SOURCE
   source/game/gameplay/moveable.cpp
   source/game/gameplay/moveable.hpp
   source/game/gameplay/npc/npc_slime.cpp
+  source/game/gameplay/npc/npc_blue_blob.cpp
   source/game/gameplay/npc/npc_rabbit.cpp
   source/game/gameplay/soul.cpp
   source/game/npc/npc.cpp
@@ -71,6 +72,7 @@ set(COMMON_SOURCE
   source/game/npc/npc_spawn.cpp
   source/game/npc/brain/brain_simple.cpp
   source/game/npc/brain/brain_follow.cpp
+  source/game/npc/brain/brain_pathfind.cpp
   source/game/resource.cpp
   source/game/resource.hpp
   source/game/terrain.cpp

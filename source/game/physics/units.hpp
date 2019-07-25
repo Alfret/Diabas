@@ -94,6 +94,13 @@ MeterPosToWorldPos(const Position meter_pos)
   return world_pos;
 }
 
+inline Position
+WorldPosToMeterPos(const WorldPos world_pos)
+{
+  Position meter_pos{TileToMeter(world_pos.X()), TileToMeter(world_pos.Y())};
+  return meter_pos;
+}
+
 /**
  * Given a jump velocity, it will say how many tiles you can jump
  */

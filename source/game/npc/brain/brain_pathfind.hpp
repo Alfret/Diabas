@@ -1,5 +1,5 @@
-#ifndef BRAIN_FOLLOW_HPP_
-#define BRAIN_FOLLOW_HPP_
+#ifndef BRAIN_PATHFIND_HPP_
+#define BRAIN_PATHFIND_HPP_
 
 #include "core/types.hpp"
 #include "game/physics/units.hpp"
@@ -10,19 +10,20 @@ namespace dib::game {
 class World;
 class Moveable;
 
-class BrainFollow
+class BrainPathfind
 {
 public:
-  BrainFollow(Entity entity)
+  BrainPathfind(Entity entity)
     : entity_(entity)
   {}
 
   /// @return If a path to target was found.
-  void Think(World& world, f32 delta, Moveable& me, Position target);
+  bool Think(World& world, f32 delta, Moveable& me, Position target);
 
 private:
   Entity entity_;
+  std::vector<WorldPos> astar_list_;
 };
 }
 
-#endif // BRAIN_FOLLOW_HPP_
+#endif // BRAIN_PATHFIND_HPP_

@@ -4,6 +4,7 @@
 /// Npc factory functions
 #include "game/gameplay/npc/npc_slime.hpp"
 #include "game/gameplay/npc/npc_rabbit.hpp"
+#include "game/gameplay/npc/npc_blue_blob.hpp"
 
 namespace dib::game {
 
@@ -11,17 +12,10 @@ NpcRegistry::NpcRegistry()
 {
   RegisterNpcType("slime", SlimeFactory);
   RegisterNpcType("rabbit", RabbitFactory);
+  RegisterNpcType("blue blob", BlueBlobFactory);
 }
 
 NpcRegistry::~NpcRegistry() {}
-
-// void
-// NpcRegistry::Add(NpcID id, Npc* npc)
-// {
-//   AlfAssert(npcs_.find(id) == npcs_.end(),
-//             "NpcID is not unique");
-//   npcs_.insert({id, npc});
-// }
 
 void
 NpcRegistry::Add(EntityManager& em, NpcID id, NpcType type)

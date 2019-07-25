@@ -25,10 +25,6 @@ public:
   NpcRegistry();
   ~NpcRegistry();
 
-  /// Add a npc with the given id.
-  /// @param npc Takes ownership.
-  // void Add(NpcID id, Npc* npc);
-
   /// Add a npc by default constructing the given npc type.
   /// @type The type to default construct
   /// @return Iterator to the newly created npc.

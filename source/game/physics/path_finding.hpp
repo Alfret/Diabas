@@ -6,7 +6,8 @@
 
 namespace dib::game {
 
-class Terrain;
+class World;
+class Moveable;
 
 struct AStarPathDebug
 {
@@ -19,12 +20,15 @@ struct Node
   WorldPos origin;
   s32 g;
   s32 h;
+  s32 jump_x;
+  s32 jump_y;
   constexpr s32 F() const { return g + h; }
 };
 
 std::vector<WorldPos>
-AStar(const WorldPos start, const WorldPos goal, const Terrain& terrain);
-
+AStar(const World& world,
+      const Moveable& moveable,
+      WorldPos goal);
 }
 
 #endif // PATH_FINDING_HPP_

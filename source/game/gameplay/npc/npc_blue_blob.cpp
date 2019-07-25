@@ -1,4 +1,4 @@
-#include "npc_slime.hpp"
+#include "npc_blue_blob.hpp"
 #include <dlog.hpp>
 #include "game/npc/npc_registry.hpp"
 #include "game/world.hpp"
@@ -7,7 +7,7 @@
 namespace dib::game {
 
 void
-NpcSlime::Update(World& world, f64 delta)
+NpcBlueBlob::Update(World& world, f64 delta)
 {
   auto& moveable =
     world.GetEntityManager().GetRegistry().get<Moveable>(entity_);
@@ -29,71 +29,72 @@ NpcSlime::Update(World& world, f64 delta)
     return std::nullopt;
   };
 
+  bool found_player = false;
   if (auto maybe_pos = FindClosestPlayer(moveable.position); maybe_pos) {
-    [[maybe_unused]]const bool could_follow =
-        brain_.Think(world, static_cast<f32>(delta), moveable, *maybe_pos);
-    if constexpr(kSide == Side::kServer) {
-        if (!could_follow) {
-          //simple_brain_.Think(moveable, static_cast<f32>(delta));
-        }
-      }
+    found_player = true;
+    brain_.Think(world, static_cast<f32>(delta), moveable, *maybe_pos);
   }
+  if constexpr(kSide == Side::kServer) {
+      if (!found_player) {
+        simple_brain_.Think(moveable, static_cast<f32>(delta));
+      }
+    }
 }
 
 void
-NpcSlime::OnSpawn(World&)
+NpcBlueBlob::OnSpawn(World&)
 {
   DLOG_VERBOSE("I spawned!");
 }
 
 void
-NpcSlime::OnDeath(World&)
+NpcBlueBlob::OnDeath(World&)
 {
   DLOG_VERBOSE("I died!");
 }
 
 bool
-NpcSlime::Store(const EntityManager& em, alflib::RawMemoryWriter& mw) const
+NpcBlueBlob::Store(const EntityManager& em, alflib::RawMemoryWriter& mw) const
 {
   return Npc::Store(em, mw);
 }
 
 void
-NpcSlime::Load(EntityManager& em, alflib::RawMemoryReader& mr)
+NpcBlueBlob::Load(EntityManager& em, alflib::RawMemoryReader& mr)
 {
   Npc::Load(em, mr);
 }
 
 Npc*
-SlimeFactory(EntityManager& em, NpcID id, NpcType type)
+BlueBlobFactory(EntityManager& em, NpcID id, NpcType type)
 {
   Moveable m{};
-  m.velocity_input = 12.0f;
+  m.velocity_input = 10.0f;
   m.velocity_max = 10.0f;
-  m.velocity_jump = 13.0f;
+  m.velocity_jump = 10.0f;
   m.position = Position(TileToMeter(10), TileToMeter(13));
   m.width = 32;
-  m.height = 48;
+  m.height = 32;
   Collideable c{};
   CollideableRect* cr = reinterpret_cast<CollideableRect*>(&c);
   cr->type = CollisionType::kRect;
-  cr->rect = CollisionRectNoOffset{ PixelToMeter(32), PixelToMeter(16) };
+  cr->rect = CollisionRectNoOffset{ PixelToMeter(32), PixelToMeter(32) };
   m.collideable = c;
 
   Soul s{};
-  s.hp = 15;
-  s.defense = 1;
+  s.hp = 300;
+  s.defense = 10;
 
 #if !defined(DIB_IS_SERVER)
-  auto texture = std::make_shared<graphics::Texture>("Slime");
-  texture->Load(Path{ "./res/entity/slime.tga" });
+  auto texture = std::make_shared<graphics::Texture>("Blue Blob");
+  texture->Load(Path{ "./res/entity/blue_blob.tga" });
   RenderComponent rc{ texture };
 #else
   RenderComponent rc{};
 #endif
 
-  NpcSlime* npc =
-    new NpcSlime{ em, id, type, std::move(m), std::move(s), std::move(rc) };
+  NpcBlueBlob* npc =
+    new NpcBlueBlob{ em, id, type, std::move(m), std::move(s), std::move(rc) };
   return npc;
 }
 

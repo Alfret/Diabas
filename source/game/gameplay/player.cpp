@@ -46,6 +46,13 @@ Player::Update(GameClient& game, [[maybe_unused]] const f64 delta)
           NpcSpawn<kSide>(world, "rabbit", moveable.position);
         }
       }
+      if (game.IsKeyDown(Key::kKey3)) {
+        static dutil::Stopwatch spawn_timer{};
+        if (spawn_timer.now_ms() > 100) {
+          spawn_timer.Start();
+          NpcSpawn<kSide>(world, "blue blob", moveable.position);
+        }
+      }
     }
   }
 }

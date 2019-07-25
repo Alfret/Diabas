@@ -1,15 +1,15 @@
-#ifndef NPC_SLIME_HPP_
-#define NPC_SLIME_HPP_
+#ifndef NPC_BLUE_BLOB_HPP_
+#define NPC_BLUE_BLOB_HPP_
 
 #include "game/npc/npc.hpp"
-#include "game/npc/brain/brain_pathfind.hpp"
 #include "game/npc/brain/brain_simple.hpp"
+#include "game/npc/brain/brain_follow.hpp"
 
 namespace dib::game {
-class NpcSlime : public Npc
+class NpcBlueBlob : public Npc
 {
 public:
-  NpcSlime(EntityManager& em,
+  NpcBlueBlob(EntityManager& em,
            NpcID id,
            NpcType type,
            Moveable m,
@@ -29,12 +29,12 @@ public:
   void Load(EntityManager& em, alflib::RawMemoryReader& mr) final;
 
 private:
-  BrainPathfind brain_{ entity_ };
+  BrainFollow brain_{ entity_ };
   BrainSimple simple_brain_;
 };
 
 Npc*
-SlimeFactory(EntityManager& em, NpcID id, NpcType type);
+BlueBlobFactory(EntityManager& em, NpcID id, NpcType type);
 }
 
-#endif // NPC_SLIME_HPP_
+#endif // NPC_BLUE_BLOB_HPP_

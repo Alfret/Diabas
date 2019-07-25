@@ -50,7 +50,7 @@ RabbitFactory(EntityManager& em, NpcID id, NpcType type)
   Collideable c{};
   CollideableRect* cr = reinterpret_cast<CollideableRect*>(&c);
   cr->type = CollisionType::kRect;
-  cr->rect = CollisionRectNoOffset{ PixelToMeter(32), PixelToMeter(16) };
+  cr->rect = CollisionRectNoOffset{ PixelToMeter(16), PixelToMeter(16) };
   m.collideable = c;
 
   Soul s{};

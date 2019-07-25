@@ -45,6 +45,12 @@ bool
 OnGround(const World& world, const Moveable& moveable);
 
 /**
+ * Would the moveable stand on ground at position @pos?
+ */
+bool
+OnGround(const World& world, const Moveable& moveable, const Position pos);
+
+/**
  * Make a collection of positions on the range [@a, @b], in steps of
  * @d_stepsize. Useful for generating a set of possible collisions
  * when moving from @a to @b.

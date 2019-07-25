@@ -181,6 +181,17 @@ OnGround(const World& world, const Moveable& moveable)
          world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid();
 }
 
+bool
+OnGround(const World& world, const Moveable& moveable, const Position pos)
+{
+  // check @offset pixel(s) below us
+  constexpr f32 offset = kPixelInMeter * 1;
+  const Position pos_under(pos.x, pos.y - offset);
+  auto maybe_pos = CollidesOnPosition(world, moveable.collideable, pos_under);
+  return maybe_pos &&
+         world.GetTerrain().GetTile(*maybe_pos)->GetCollisionIsSolid();
+}
+
 /**
  *
  * @pre a and b must correspond to valid tiles.
